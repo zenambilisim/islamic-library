@@ -1,0 +1,75 @@
+{
+  "common": {
+    "home": "Главная",
+    "categories": "Категории",
+    "authors": "Авторы",
+    "search": "Поиск",
+    "download": "Скачать",
+    "read": "Читать",
+    "readOnline": "Читать онлайн",
+    "about": "О нас",
+    "contact": "Контакты",
+    "usefulInfo": "Полезная информация",
+    "language": "Язык",
+    "allBooks": "Все книги",
+    "loading": "Загрузка...",
+    "error": "Произошла ошибка",
+    "noResults": "Результаты не найдены",
+    "showMore": "Показать больше",
+    "close": "Закрыть"
+  },
+  "navigation": {
+    "home": "Главная",
+    "categories": "Категории",
+    "authors": "Авторы",
+    "usefulInfo": "Полезная информация",
+    "about": "О нас",
+    "contact": "Контакты"
+  },
+  "search": {
+    "placeholder": "Поиск книг, авторов или категорий...",
+    "authorsPlaceholder": "Поиск авторов...",
+    "categoriesPlaceholder": "Поиск категорий...",
+    "noResults": "Не найдено книг, соответствующих вашим критериям поиска",
+    "resultsFor": "результатов для",
+    "tryDifferentKeywords": "Попробуйте другие ключевые слова",
+    "filters": "Фильтры",
+    "filterByCategory": "Фильтр по категории",
+    "filterByAuthor": "Фильтр по автору",
+    "filterByFormat": "Фильтр по формату",
+    "clearFilters": "Очистить фильтры"
+  },
+  "book": {
+    "details": "Детали книги",
+    "author": "Автор",
+    "category": "Категория",
+    "pages": "Страницы",
+    "publishYear": "Год публикации",
+    "fileSize": "Размер файла",
+    "downloads": "Загрузки",
+    "rating": "Рейтинг",
+    "formats": "Форматы",
+    "description": "Описание",
+    "tags": "Теги",
+    "relatedBooks": "Связанные книги"
+  },
+  "formats": {
+    "epub": "EPUB",
+    "pdf": "PDF",
+    "doc": "DOC"
+  },
+  "authors": {
+    "browseByLetter": "Просмотр по буквам",
+    "all": "Все",
+    "noAuthorsFound": "Авторы не найдены",
+    "booksCount": "книг",
+    "totalStats": "Общая статистика",
+    "backToAuthors": "Назад к авторам"
+  },
+  "footer": {
+    "description": "Скачивайте и читайте религиозные книги бесплатно онлайн",
+    "quickLinks": "Быстрые ссылки",
+    "contact": "Контакты",
+    "copyright": "Все права защищены"
+  }
+}

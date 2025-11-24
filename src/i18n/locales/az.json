@@ -1,0 +1,75 @@
+{
+  "common": {
+    "home": "Əsas səhifə",
+    "categories": "Kateqoriyalar",
+    "authors": "Müəlliflər",
+    "search": "Axtar",
+    "download": "Yüklə",
+    "read": "Oxu",
+    "readOnline": "Onlayn Oxu",
+    "about": "Haqqımızda",
+    "contact": "Əlaqə",
+    "usefulInfo": "Faydalı Məlumatlar",
+    "language": "Dil",
+    "allBooks": "Bütün Kitablar",
+    "loading": "Yüklənir...",
+    "error": "Xəta baş verdi",
+    "noResults": "Nəticə tapılmadı",
+    "showMore": "Daha çox",
+    "close": "Bağla"
+  },
+  "navigation": {
+    "home": "Əsas səhifə",
+    "categories": "Kateqoriyalar",
+    "authors": "Müəlliflər",
+    "usefulInfo": "Faydalı Məlumatlar",
+    "about": "Haqqımızda",
+    "contact": "Əlaqə"
+  },
+  "search": {
+    "placeholder": "Kitab, müəllif və ya kateqoriya axtarın...",
+    "authorsPlaceholder": "Müəllif axtarın...",
+    "categoriesPlaceholder": "Kateqoriya axtarın...",
+    "noResults": "Axtarış kriteriyalarınıza uyğun kitab tapılmadı",
+    "resultsFor": "üçün nəticələr",
+    "tryDifferentKeywords": "Fərqli açar sözlər sınayın",
+    "filters": "Filtrlər",
+    "filterByCategory": "Kateqoriyaya görə filtr",
+    "filterByAuthor": "Müəllifə görə filtr",
+    "filterByFormat": "Formata görə filtr",
+    "clearFilters": "Filtrləri Təmizlə"
+  },
+  "book": {
+    "details": "Kitab Təfərrüatları",
+    "author": "Müəllif",
+    "category": "Kateqoriya",
+    "pages": "Səhifə",
+    "publishYear": "Nəşr İli",
+    "fileSize": "Fayl Ölçüsü",
+    "downloads": "Yükləmələr",
+    "rating": "Reytinq",
+    "formats": "Formatlar",
+    "description": "Təsvir",
+    "tags": "Etiketlər",
+    "relatedBooks": "Əlaqəli Kitablar"
+  },
+  "formats": {
+    "epub": "EPUB",
+    "pdf": "PDF",
+    "doc": "DOC"
+  },
+  "authors": {
+    "browseByLetter": "Hərflərə görə gəzin",
+    "all": "Hamısı",
+    "noAuthorsFound": "Müəllif tapılmadı",
+    "booksCount": "kitab",
+    "totalStats": "Ümumi Statistika",
+    "backToAuthors": "Müəlliflərin yanına qayıt"
+  },
+  "footer": {
+    "description": "Dini kitabları pulsuz yüklə və onlayn oxu",
+    "quickLinks": "Sürətli Keçidlər",
+    "contact": "Əlaqə",
+    "copyright": "Bütün hüquqlar qorunur"
+  }
+}

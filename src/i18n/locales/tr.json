@@ -1,0 +1,76 @@
+{
+  "common": {
+    "home": "Ana Sayfa",
+    "categories": "Kategoriler",
+    "authors": "Yazarlar",
+    "search": "Ara",
+    "download": "İndir",
+    "read": "Oku",
+    "readOnline": "Çevrimiçi Oku",
+    "about": "Hakkımızda",
+    "contact": "İletişim",
+    "usefulInfo": "Faydalı Bilgiler",
+    "language": "Dil",
+    "allBooks": "Tüm Kitaplar",
+    "loading": "Yükleniyor...",
+    "error": "Hata oluştu",
+    "noResults": "Sonuç bulunamadı",
+    "showMore": "Daha Fazla",
+    "close": "Kapat",
+    "logoAlt": "Islamic Library Logo"
+  },
+  "navigation": {
+    "home": "Ana Sayfa",
+    "categories": "Kategoriler", 
+    "authors": "Yazarlar",
+    "usefulInfo": "Faydalı Bilgiler",
+    "about": "Hakkımızda",
+    "contact": "İletişim"
+  },
+  "search": {
+    "placeholder": "Kitap, yazar veya kategori ara...",
+    "authorsPlaceholder": "Yazar ara...",
+    "categoriesPlaceholder": "Kategori ara...",
+    "noResults": "Arama kriterlerinize uygun kitap bulunamadı",
+    "resultsFor": "için sonuçlar",
+    "tryDifferentKeywords": "Farklı anahtar kelimeler deneyebilirsiniz",
+    "filters": "Filtreler",
+    "filterByCategory": "Kategoriye göre filtrele",
+    "filterByAuthor": "Yazara göre filtrele",
+    "filterByFormat": "Formata göre filtrele",
+    "clearFilters": "Filtreleri Temizle"
+  },
+  "book": {
+    "details": "Kitap Detayları",
+    "author": "Yazar",
+    "category": "Kategori",
+    "pages": "Sayfa",
+    "publishYear": "Yayın Yılı",
+    "fileSize": "Dosya Boyutu",
+    "downloads": "İndirme",
+    "rating": "Değerlendirme",
+    "formats": "Formatlar",
+    "description": "Açıklama",
+    "tags": "Etiketler",
+    "relatedBooks": "İlgili Kitaplar"
+  },
+  "formats": {
+    "epub": "EPUB",
+    "pdf": "PDF", 
+    "doc": "DOC"
+  },
+  "authors": {
+    "browseByLetter": "Harflere Göre Gezin",
+    "all": "Tümü",
+    "noAuthorsFound": "Yazar bulunamadı",
+    "booksCount": "kitap",
+    "totalStats": "Toplam İstatistikler",
+    "backToAuthors": "Yazarlara Dön"
+  },
+  "footer": {
+    "description": "Dini kitapları ücretsiz indirin ve çevrimiçi okuyun",
+    "quickLinks": "Hızlı Bağlantılar",
+    "contact": "İletişim",
+    "copyright": "Tüm hakları saklıdır"
+  }
+}

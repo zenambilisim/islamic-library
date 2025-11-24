@@ -1,0 +1,270 @@
+import { useTranslation } from 'react-i18next';
+import { useState, useEffect, useMemo } from 'react';
+import { Grid3X3, List, BookOpen } from 'lucide-react';
+import { useSearch } from '../contexts/SearchContext';
+import { mockCategories, mockBooks } from '../data/mockData';
+import BookCard from '../components/books/BookCard';
+import type { Book } from '../types';
+
+interface CategoriesPageProps {
+  onViewBookDetails: (book: Book) => void;
+  onReadOnline: (book: Book) => void;
+}
+
+const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps) => {
+  const { t, i18n } = useTranslation();
+  const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const currentLang = i18n.language as keyof (typeof mockCategories)[0]['nameTranslations'];
+
+  useEffect(() => {
+    setSearchMode('categories');
+    setPlaceholder(t('search.categoriesPlaceholder') || 'Kategori ara...');
+  }, [setSearchMode, setPlaceholder, t]);
+
+  const getLocalizedText = (translations: any, fallback: string) => {
+    return translations[currentLang] || translations.tr || fallback;
+  };
+
+  // Get books by category
+  const getBooksByCategory = (categoryId: string) => {
+    return mockBooks.filter(book => book.category === categoryId);
+  };
+
+  // Filter categories based on search term
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return mockCategories;
+    }
+    
+    const term = searchTerm.toLowerCase();
+    return mockCategories.filter(category => 
+      category.name.toLowerCase().includes(term) ||
+      Object.values(category.nameTranslations).some(name => 
+        name.toLowerCase().includes(term)
+      ) ||
+      category.description.toLowerCase().includes(term) ||
+      Object.values(category.descriptionTranslations).some(desc => 
+        desc.toLowerCase().includes(term)
+      )
+    );
+  }, [searchTerm]);
+
+  // If a category is selected, show its books
+  if (selectedCategory) {
+    const category = mockCategories.find(cat => cat.id === selectedCategory);
+    const categoryBooks = getBooksByCategory(selectedCategory);
+
+    if (!category) return null;
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          {/* Back Button & Category Header */}
+          <div className="mb-8">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="text-primary-600 hover:text-primary-700 font-medium mb-4 flex items-center space-x-2"
+            >
+              <span>←</span>
+              <span>Kategorilere Dön</span>
+            </button>
+            
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="text-4xl">{category.icon}</div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {getLocalizedText(category.nameTranslations, category.name)}
+                </h1>
+                <p className="text-gray-600">
+                  {getLocalizedText(category.descriptionTranslations, category.description)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-gray-600">
+                {categoryBooks.length} kitap bulundu
+              </p>
+              
+              {/* View Mode Toggle */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <Grid3X3 size={20} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <List size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Category Books */}
+          {categoryBooks.length > 0 ? (
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              : "space-y-4"
+            }>
+              {categoryBooks.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onViewDetails={onViewBookDetails}
+                  onReadOnline={onReadOnline}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <BookOpen size={64} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                Bu kategoride henüz kitap bulunmuyor
+              </h3>
+              <p className="text-gray-600">
+                Yakında bu kategoriye yeni kitaplar eklenecek.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Show categories overview
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t('navigation.categories')}
+          </h1>
+          <p className="text-gray-600">
+            İslami kitapları kategorilerine göre keşfedin
+          </p>
+        </div>
+
+        {/* Search Results Header */}
+        {searchTerm && (
+          <div className="mb-6">
+            <p className="text-gray-600">
+              {filteredCategories.length} kategori "{searchTerm}" için bulundu
+            </p>
+          </div>
+        )}
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {filteredCategories.map((category) => {
+            const categoryBooks = getBooksByCategory(category.id);
+            
+            return (
+              <div
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer overflow-hidden group"
+              >
+                <div className="p-6">
+                  {/* Category Icon & Title */}
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="text-4xl">{category.icon}</div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                        {getLocalizedText(category.nameTranslations, category.name)}
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {categoryBooks.length} kitap
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Category Description */}
+                  <p className="text-gray-600 mb-4 line-clamp-2">
+                    {getLocalizedText(category.descriptionTranslations, category.description)}
+                  </p>
+
+                  {/* Sample Books */}
+                  {categoryBooks.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Popüler Kitaplar:</p>
+                      <div className="space-y-1">
+                        {categoryBooks.slice(0, 3).map((book) => (
+                          <div key={book.id} className="text-sm text-gray-600 truncate">
+                            • {book.title}
+                          </div>
+                        ))}
+                        {categoryBooks.length > 3 && (
+                          <div className="text-sm text-primary-600 font-medium">
+                            +{categoryBooks.length - 3} tane daha
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="text-primary-600 font-medium text-sm group-hover:text-primary-700 transition-colors">
+                      Kategoriye Git →
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* No results message */}
+        {searchTerm && filteredCategories.length === 0 && (
+          <div className="text-center py-16">
+            <Grid3X3 size={48} className="mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Kategori bulunamadı
+            </h3>
+            <p className="text-gray-600">
+              "{searchTerm}" için herhangi bir kategori bulunamadı. Farklı anahtar kelimeler deneyebilirsiniz.
+            </p>
+          </div>
+        )}
+
+        {/* Category Stats */}
+        <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-8">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Toplam İstatistikler
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary-600">
+                  {mockCategories.length}
+                </div>
+                <div className="text-gray-600">Kategori</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary-600">
+                  {mockBooks.length}
+                </div>
+                <div className="text-gray-600">Toplam Kitap</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary-600">
+                  {mockBooks.reduce((sum, book) => sum + book.downloadCount, 0).toLocaleString()}
+                </div>
+                <div className="text-gray-600">Toplam İndirme</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CategoriesPage;

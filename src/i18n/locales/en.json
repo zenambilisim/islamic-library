@@ -1,0 +1,75 @@
+{
+  "common": {
+    "home": "Home",
+    "categories": "Categories",
+    "authors": "Authors",
+    "search": "Search",
+    "download": "Download",
+    "read": "Read",
+    "readOnline": "Read Online",
+    "about": "About",
+    "contact": "Contact",
+    "usefulInfo": "Useful Information",
+    "language": "Language",
+    "allBooks": "All Books",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "noResults": "No results found",
+    "showMore": "Show More",
+    "close": "Close"
+  },
+  "navigation": {
+    "home": "Home",
+    "categories": "Categories",
+    "authors": "Authors", 
+    "usefulInfo": "Useful Information",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "search": {
+    "placeholder": "Search for books, authors or categories...",
+    "authorsPlaceholder": "Search authors...",
+    "categoriesPlaceholder": "Search categories...",
+    "noResults": "No books found matching your search criteria",
+    "resultsFor": "results for",
+    "tryDifferentKeywords": "Try different keywords",
+    "filters": "Filters",
+    "filterByCategory": "Filter by category",
+    "filterByAuthor": "Filter by author",
+    "filterByFormat": "Filter by format",
+    "clearFilters": "Clear Filters"
+  },
+  "book": {
+    "details": "Book Details",
+    "author": "Author",
+    "category": "Category",
+    "pages": "Pages",
+    "publishYear": "Publication Year",
+    "fileSize": "File Size",
+    "downloads": "Downloads",
+    "rating": "Rating",
+    "formats": "Formats",
+    "description": "Description",
+    "tags": "Tags",
+    "relatedBooks": "Related Books"
+  },
+  "formats": {
+    "epub": "EPUB",
+    "pdf": "PDF",
+    "doc": "DOC"
+  },
+  "authors": {
+    "browseByLetter": "Browse by Letter",
+    "all": "All",
+    "noAuthorsFound": "No authors found",
+    "booksCount": "books",
+    "totalStats": "Total Statistics",
+    "backToAuthors": "Back to Authors"
+  },
+  "footer": {
+    "description": "Download and read religious books online for free",
+    "quickLinks": "Quick Links",
+    "contact": "Contact",
+    "copyright": "All rights reserved"
+  }
+}

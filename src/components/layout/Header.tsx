@@ -38,14 +38,14 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-50">
+    <header className="bg-white/80 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-white/20">
       <div className="container mx-auto px-4">
         {/* Top bar with language selector */}
-        <div className="flex justify-end py-2 border-b border-gray-100">
+        <div className="flex justify-end py-2 border-b border-gradient-to-r from-primary-100 to-purple-100">
           <div className="relative group">
-            <button className="flex items-center space-x-2 px-3 py-1 rounded-md hover:bg-gray-100 transition-colors">
-              <Globe size={16} />
-              <span className="text-sm font-medium">{t('common.language')}</span>
+            <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 transform hover:scale-105 shadow-sm">
+              <Globe size={16} className="text-primary-600" />
+              <span className="text-sm font-medium text-gray-700">{t('common.language')}</span>
             </button>
             
             {/* Language dropdown */}
@@ -67,17 +67,17 @@ const Header = () => {
         </div>
 
         {/* Main header */}
-        <div className="py-4">
+        <div className="py-6">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <Link to="/" className="flex items-center space-x-3 hover:scale-105 transition-all duration-300">
               <div className="flex items-center">
                 <img 
                   src="/images/logo/ISLAMIC.png" 
                   alt={t('common.logoAlt', 'Islamic Library')} 
                   width={140} 
                   height={140} 
-                  className="object-contain"
+                  className="object-contain filter drop-shadow-lg"
                   onError={(e) => {
                     // Fallback to BookOpen icon if image fails to load
                     const target = e.target as HTMLImageElement;
@@ -86,35 +86,39 @@ const Header = () => {
                     if (fallback) fallback.classList.remove('hidden');
                   }}
                 />
-                <div className="bg-primary-600 p-2 rounded-lg hidden fallback-icon">
+                <div className="bg-gradient-to-r from-primary-600 to-purple-600 p-3 rounded-xl hidden fallback-icon shadow-lg">
                   <BookOpen className="text-white" size={32} />
                 </div>
               </div>
             </Link>
+            
             {/* Search bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="hidden md:flex flex-1 max-w-lg mx-8">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder={placeholder}
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="search-input pl-10"
-                />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-purple-100 rounded-2xl blur opacity-30"></div>
+                <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary-500" size={20} />
+                  <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="w-full pl-12 pr-4 py-4 bg-transparent border-none outline-none text-gray-700 placeholder-gray-500 font-medium"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-6">
+            <nav className="hidden lg:flex items-center space-x-2">
               {navigationItems.map((item) => (
                 <Link
                   key={item.key}
                   to={item.href}
-                  className={`font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                     location.pathname === item.href 
-                      ? 'text-primary-600 border-b-2 border-primary-600' 
-                      : 'text-gray-700 hover:text-primary-600'
+                      ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg transform scale-105' 
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-purple-50 hover:text-primary-700'
                   }`}
                 >
                   {item.label}

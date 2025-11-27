@@ -132,10 +132,7 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
 
                 {/* Rating */}
                 <div className="flex items-center space-x-2 mb-4">
-                  <div className="flex items-center space-x-1">
-                    {formatRating(book.rating)}
-                  </div>
-                  <span className="text-lg font-semibold">{book.rating.toFixed(1)}</span>
+
                   <span className="text-gray-500">({book.downloadCount.toLocaleString()} {t('book.downloads').toLowerCase()})</span>
                 </div>
               </div>

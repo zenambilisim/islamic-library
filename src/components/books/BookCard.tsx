@@ -18,28 +18,34 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
   };
 
   return (
-    <div className="book-card group cursor-pointer" onClick={() => onViewDetails(book)}>
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100" onClick={() => onViewDetails(book)}>
       {/* Book Cover */}
       <div className="relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary-500 via-purple-500 to-blue-500"></div>
         <img
           src={book.coverImage || '/placeholder-book.svg'}
           alt={getLocalizedText(book.titleTranslations, book.title)}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-book.svg';
           }}
         />
         
+        {/* Download Count Badge */}
+        <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
+          {book.downloadCount.toLocaleString()} ⬇
+        </div>
+        
         {/* Overlay with actions */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-4">
+          <div className="flex space-x-3">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onReadOnline(book);
               }}
-              className="bg-white text-gray-900 px-3 py-2 rounded-md font-medium hover:bg-gray-100 transition-colors flex items-center space-x-1"
+              className="bg-gradient-to-r from-primary-600 to-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:from-primary-700 hover:to-purple-700 transition-all duration-300 flex items-center space-x-2 shadow-lg transform hover:scale-105"
             >
               <Eye size={16} />
               <span className="text-sm">{t('common.read')}</span>
@@ -49,80 +55,75 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
       </div>
 
       {/* Book Info */}
-      <div className="p-4">
+      <div className="p-6">
         {/* Title */}
-        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+        <h3 className="font-bold text-xl text-gray-900 mb-3 line-clamp-2 group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
           {getLocalizedText(book.titleTranslations, book.title)}
         </h3>
 
-        {/* Author */}
-        <div className="flex items-center text-gray-600 mb-2">
-          <User size={14} className="mr-2" />
-          <span className="text-sm">{getLocalizedText(book.authorTranslations, book.author)}</span>
-        </div>
-
-        {/* Category */}
-        <div className="flex items-center text-gray-600 mb-2">
-          <FileText size={14} className="mr-2" />
-          <span className="text-sm">{getLocalizedText(book.categoryTranslations, book.category)}</span>
-        </div>
-
-        {/* Publish Year & Pages */}
-        <div className="flex items-center justify-between text-gray-500 text-sm mb-3">
-          <div className="flex items-center">
-            <Calendar size={14} className="mr-1" />
-            <span>{book.publishYear}</span>
+        {/* Author & Category */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center text-gray-600">
+            <User size={16} className="mr-2 text-primary-500" />
+            <span className="text-sm font-medium">{getLocalizedText(book.authorTranslations, book.author)}</span>
           </div>
-          <span>{book.pages} {t('book.pages').toLowerCase()}</span>
+          <div className="flex items-center text-gray-500">
+            <FileText size={14} className="mr-1" />
+            <span className="text-xs">{getLocalizedText(book.categoryTranslations, book.category)}</span>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl">
+          <div className="flex items-center text-gray-600">
+            <Calendar size={14} className="mr-1 text-blue-500" />
+            <span className="text-sm font-medium">{book.publishYear}</span>
+          </div>
+          <div className="text-sm font-medium text-purple-600">
+            {book.pages} sayfa
+          </div>
+          <div className="text-xs text-gray-500 font-medium">
+            {book.fileSize}
+          </div>
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+        <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
           {getLocalizedText(book.descriptionTranslations, book.description)}
         </p>
 
-        {/* Book Info Bar */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">({book.downloadCount.toLocaleString()} indirme)</span>
-          </div>
-          <span className="text-xs text-gray-500">{book.fileSize}</span>
-        </div>
-
         {/* Download formats */}
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-1">
-            {Object.entries(book.formats).map(([format, url]) => (
-              url && (
-                <a
-                  key={format}
-                  href={url}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-gray-100 hover:bg-primary-100 hover:text-primary-700 text-gray-700 px-2 py-1 rounded text-xs font-medium transition-colors flex items-center space-x-1"
-                  download
-                >
-                  <Download size={12} />
-                  <span>{format.toUpperCase()}</span>
-                </a>
-              )
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {Object.entries(book.formats).map(([format, url]) => (
+            url && (
+              <a
+                key={format}
+                href={url}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-r from-primary-100 to-purple-100 hover:from-primary-200 hover:to-purple-200 text-primary-700 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center space-x-1 transform hover:scale-105 shadow-sm"
+                download
+              >
+                <Download size={12} />
+                <span>{format.toUpperCase()}</span>
+              </a>
+            )
+          ))}
         </div>
 
         {/* Tags */}
         {book.tags && book.tags.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <div className="flex flex-wrap gap-1">
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex flex-wrap gap-2">
               {book.tags.slice(0, 3).map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full"
+                  className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium"
                 >
-                  {tag}
+                  #{tag}
                 </span>
               ))}
               {book.tags.length > 3 && (
-                <span className="text-xs text-gray-500">+{book.tags.length - 3}</span>
+                <span className="text-xs text-gray-500 font-medium">+{book.tags.length - 3} etiket</span>
               )}
             </div>
           </div>

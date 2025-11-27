@@ -19,21 +19,24 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 via-purple-600/10 to-blue-600/10"></div>
+      
+      <div className="container mx-auto px-4 py-16 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Logo & Description */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-primary-600 p-2 rounded-lg">
-                <BookOpen className="text-white" size={32} />
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="bg-gradient-to-r from-primary-600 to-purple-600 p-4 rounded-2xl shadow-lg">
+                <BookOpen className="text-white" size={40} />
               </div>
               <div>
-                <h3 className="text-2xl font-bold">Islamic Library</h3>
-                <p className="text-gray-400 text-sm">{t('footer.description')}</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Islamic Library</h3>
+                <p className="text-blue-200 text-sm font-medium">{t('footer.description')}</p>
               </div>
             </div>
-            <p className="text-gray-300 mb-6 max-w-md">
+            <p className="text-gray-300 mb-8 max-w-lg text-lg leading-relaxed">
               Binlerce İslami kitabı ücretsiz indirin, çevrimiçi okuyun ve bilginizi artırın. 
               Modern teknoloji ile geleneksel bilginin buluştuğu platform.
             </p>
@@ -44,10 +47,10 @@ const Footer = () => {
                 <a
                   key={social.label}
                   href={social.href}
-                  className="bg-gray-800 hover:bg-primary-600 p-2 rounded-lg transition-colors"
+                  className="bg-gray-800/50 backdrop-blur-sm hover:bg-gradient-to-r hover:from-primary-600 hover:to-purple-600 p-3 rounded-xl transition-all duration-300 transform hover:scale-110 border border-gray-700 hover:border-primary-500"
                   aria-label={social.label}
                 >
-                  <social.icon size={20} />
+                  <social.icon size={22} />
                 </a>
               ))}
             </div>

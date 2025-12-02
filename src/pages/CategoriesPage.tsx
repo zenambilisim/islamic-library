@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useMemo } from 'react';
 import { Grid3X3, List, BookOpen } from 'lucide-react';
 import { useSearch } from '../contexts/SearchContext';
-import { mockCategories, mockBooks } from '../data/mockData';
+import { useSupabaseCategories } from '../hooks/useSupabaseCategories';
+import { useSupabaseBooks } from '../hooks/useSupabaseBooks';
 import BookCard from '../components/books/BookCard';
 import type { Book } from '../types';
 
@@ -16,7 +17,12 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const currentLang = i18n.language as keyof (typeof mockCategories)[0]['nameTranslations'];
+  
+  // Supabase'den kategorileri ve kitapları çek
+  const { categories: supabaseCategories, loading: categoriesLoading, error: categoriesError } = useSupabaseCategories();
+  const { books: supabaseBooks, loading: booksLoading } = useSupabaseBooks();
+  
+  const currentLang = i18n.language as 'tr' | 'en' | 'ru' | 'az';
 
   useEffect(() => {
     setSearchMode('categories');
@@ -28,18 +34,18 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
   };
 
   // Get books by category
-  const getBooksByCategory = (categoryId: string) => {
-    return mockBooks.filter(book => book.category === categoryId);
+  const getBooksByCategory = (categoryName: string) => {
+    return supabaseBooks.filter(book => book.category === categoryName);
   };
 
   // Filter categories based on search term
   const filteredCategories = useMemo(() => {
     if (!searchTerm.trim()) {
-      return mockCategories;
+      return supabaseCategories;
     }
     
     const term = searchTerm.toLowerCase();
-    return mockCategories.filter(category => 
+    return supabaseCategories.filter(category => 
       category.name.toLowerCase().includes(term) ||
       Object.values(category.nameTranslations).some(name => 
         name.toLowerCase().includes(term)
@@ -49,11 +55,56 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         desc.toLowerCase().includes(term)
       )
     );
-  }, [searchTerm]);
+  }, [searchTerm, supabaseCategories]);
+
+  // Calculate total statistics
+  const totalStats = useMemo(() => {
+    const totalCategories = supabaseCategories.length;
+    const totalBooks = supabaseBooks.length;
+    const totalDownloads = supabaseBooks.reduce((sum, book) => sum + (book.downloadCount || 0), 0);
+    
+    return {
+      categories: totalCategories,
+      books: totalBooks,
+      downloads: totalDownloads
+    };
+  }, [supabaseCategories, supabaseBooks]);
+
+  // Loading state
+  if (categoriesLoading || booksLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-primary-600 mx-auto mb-6"></div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('common.loading')}</h2>
+          <p className="text-gray-600">Kategoriler yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (categoriesError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-xl max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-3">Hata Oluştu</h2>
+          <p className="text-gray-700 mb-6">{categoriesError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
+          >
+            Tekrar Dene
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // If a category is selected, show its books
   if (selectedCategory) {
-    const category = mockCategories.find(cat => cat.id === selectedCategory);
+    const category = supabaseCategories.find(cat => cat.name === selectedCategory);
     const categoryBooks = getBooksByCategory(selectedCategory);
 
     if (!category) return null;
@@ -163,12 +214,12 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {filteredCategories.map((category) => {
-            const categoryBooks = getBooksByCategory(category.id);
+            const categoryBooks = getBooksByCategory(category.name);
             
             return (
               <div
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => setSelectedCategory(category.name)}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer overflow-hidden group"
               >
                 <div className="p-6">
@@ -240,24 +291,18 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Toplam İstatistikler
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-600">
-                  {mockCategories.length}
+                  {totalStats.categories}
                 </div>
                 <div className="text-gray-600">Kategori</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-600">
-                  {mockBooks.length}
+                  {totalStats.books}
                 </div>
                 <div className="text-gray-600">Toplam Kitap</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary-600">
-                  {mockBooks.reduce((sum, book) => sum + book.downloadCount, 0).toLocaleString()}
-                </div>
-                <div className="text-gray-600">Toplam İndirme</div>
               </div>
             </div>
           </div>

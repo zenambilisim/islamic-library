@@ -2,9 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import BookCard from '../components/books/BookCard';
 import FilterSidebar from '../components/books/FilterSidebar';
-import Stats from '../components/Stats';
 import { useSearch } from '../contexts/SearchContext';
-import { mockBooks } from '../data/mockData';
+import { useSupabaseBooks } from '../hooks/useSupabaseBooks';
 import type { Book, SearchFilters } from '../types';
 
 interface HomePageProps {
@@ -17,6 +16,9 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [filters, setFilters] = useState<SearchFilters>({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Supabase'den kitapları çek
+  const { books: supabaseBooks, loading, error } = useSupabaseBooks();
 
   useEffect(() => {
     setSearchMode('books');
@@ -37,7 +39,7 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
 
   // Filter books based on search term and filters
   const filteredBooks = useMemo(() => {
-    let books = mockBooks;
+    let books = supabaseBooks;
 
     // Apply search term filter
     if (searchTerm.trim()) {
@@ -63,7 +65,39 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
     }
 
     return books;
-  }, [searchTerm, filters]);
+  }, [supabaseBooks, searchTerm, filters]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-primary-600 mx-auto mb-6"></div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('common.loading')}</h2>
+          <p className="text-gray-600">Kitaplar yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-xl max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-3">Hata Oluştu</h2>
+          <p className="text-gray-700 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
+          >
+            Tekrar Dene
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -97,7 +131,7 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
                 </p>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
-                    <div className="text-2xl font-bold text-primary-600">{mockBooks.length}</div>
+                    <div className="text-2xl font-bold text-primary-600">{supabaseBooks.length}</div>
                     <div className="text-sm text-gray-600">Kitap</div>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">

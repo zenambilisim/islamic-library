@@ -1,0 +1,256 @@
+import { useTranslation } from 'react-i18next';
+import { Filter, X } from 'lucide-react';
+import { useBooksData } from '../../hooks/useBooks';
+import type { SearchFilters, Language } from '../../types';
+
+interface FilterSidebarProps {
+  filters: SearchFilters;
+  onFiltersChange: (filters: SearchFilters) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+// Helper function to get localized text
+const getLocalizedText = (translations: Record<string, string> | undefined, fallback: string): string => {
+  if (!translations) return fallback;
+  return translations['tr'] || translations['en'] || fallback;
+};
+
+const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSidebarProps) => {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language as Language;
+  const { categories: { categories, loading: categoriesLoading, error: categoriesError } } = useBooksData();
+
+  const formats = [
+    { value: 'epub', label: 'EPUB', icon: '📚' },
+    { value: 'pdf', label: 'PDF', icon: '📄' },
+    { value: 'doc', label: 'DOC', icon: '📝' },
+    { value: 'online', label: 'Online', icon: '🌐' },
+  ];
+
+  const languages = [
+    { value: 'tr', label: 'Türkçe', icon: '🇹🇷' },
+    { value: 'ar', label: 'العربية', icon: '🇸🇦' },
+    { value: 'en', label: 'English', icon: '🇺🇸' },
+    { value: 'ru', label: 'Русский', icon: '🇷🇺' },
+  ];
+
+  const handleClearFilters = () => {
+    onFiltersChange({
+      category: '',
+      format: '',
+      language: '',
+      yearRange: { min: undefined, max: undefined },
+    });
+  };
+
+  const updateFilter = (key: keyof SearchFilters, value: any) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value,
+    });
+  };
+
+  return (
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={onToggle}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 bg-white shadow-xl z-50 
+        transform transition-transform duration-300 ease-in-out overflow-y-auto
+        md:sticky md:top-24 md:h-[calc(100vh-6rem)] md:transform-none md:shadow-lg
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center space-x-3">
+            <Filter className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-bold text-gray-800">{t('search.filters')}</h3>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleClearFilters}
+              className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            >
+              {t('search.clearFilters')}
+            </button>
+            <button
+              onClick={onToggle}
+              className="md:hidden p-1 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Content */}
+        <div className="p-6 space-y-8">
+          {/* Categories Filter */}
+          <div className="mb-8">
+            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+              <span>🏷️</span>
+              <span>{t('search.filterByCategory')}</span>
+            </h4>
+            
+            {categoriesLoading && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              </div>
+            )}
+
+            {categoriesError && (
+              <div className="text-red-600 text-sm p-3 bg-red-50 rounded-lg mb-4">
+                {t('common.error')}: {categoriesError}
+              </div>
+            )}
+
+            {!categoriesLoading && !categoriesError && (
+              <div className="space-y-3">
+                {categories.map((category, index) => (
+                  <button
+                    key={category.id || index}
+                    onClick={() => updateFilter('category', category.name)}
+                    className={`
+                      w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                      ${filters.category === category.name
+                        ? 'border-blue-500 bg-blue-50 shadow-lg transform scale-105'
+                        : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25 hover:shadow-md'
+                      }
+                    `}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="text-2xl">📚</div>
+                      <div className="flex-1">
+                        <span className="font-semibold text-sm">
+                          {category.name}
+                        </span>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">
+                            {category.book_count || 0} kitap
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Format Filter */}
+          <div>
+            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+              <span>📎</span>
+              <span>{t('search.filterByFormat')}</span>
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {formats.map((format) => (
+                <button
+                  key={format.value}
+                  onClick={() => updateFilter('format', format.value)}
+                  className={`
+                    p-3 rounded-lg border-2 transition-all duration-200
+                    ${filters.format === format.value
+                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                    }
+                  `}
+                >
+                  <div className="flex flex-col items-center space-y-2">
+                    <span className="text-xl">{format.icon}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {format.label}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Language Filter */}
+          <div>
+            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+              <span>🌍</span>
+              <span>{t('search.filterByLanguage')}</span>
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {languages.map((language) => (
+                <button
+                  key={language.value}
+                  onClick={() => updateFilter('language', language.value)}
+                  className={`
+                    p-3 rounded-lg border-2 transition-all duration-200
+                    ${filters.language === language.value
+                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                    }
+                  `}
+                >
+                  <div className="flex flex-col items-center space-y-2">
+                    <span className="text-xl">{language.icon}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {language.label}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Year Range Filter */}
+          <div>
+            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+              <span>📅</span>
+              <span>{t('search.filterByYear')}</span>
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('search.yearFrom')}
+                </label>
+                <input
+                  type="number"
+                  min="1000"
+                  max="2024"
+                  value={filters.yearRange?.min || ''}
+                  onChange={(e) => updateFilter('yearRange', {
+                    ...filters.yearRange,
+                    min: e.target.value ? parseInt(e.target.value) : undefined
+                  })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="1900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('search.yearTo')}
+                </label>
+                <input
+                  type="number"
+                  min="1000"
+                  max="2024"
+                  value={filters.yearRange?.max || ''}
+                  onChange={(e) => updateFilter('yearRange', {
+                    ...filters.yearRange,
+                    max: e.target.value ? parseInt(e.target.value) : undefined
+                  })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="2024"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default FilterSidebar;

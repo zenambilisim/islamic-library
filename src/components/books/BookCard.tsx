@@ -21,11 +21,10 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100" onClick={() => onViewDetails(book)}>
       {/* Book Cover */}
       <div className="relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary-500 via-purple-500 to-blue-500"></div>
         <img
           src={book.coverImage || '/placeholder-book.svg'}
           alt={getLocalizedText(book.titleTranslations, book.title)}
-          className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-book.svg';
@@ -67,23 +66,9 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
             <User size={16} className="mr-2 text-primary-500" />
             <span className="text-sm font-medium">{getLocalizedText(book.authorTranslations, book.author)}</span>
           </div>
-          <div className="flex items-center text-gray-500">
-            <FileText size={14} className="mr-1" />
-            <span className="text-xs">{getLocalizedText(book.categoryTranslations, book.category)}</span>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl">
           <div className="flex items-center text-gray-600">
-            <Calendar size={14} className="mr-1 text-blue-500" />
-            <span className="text-sm font-medium">{book.publishYear}</span>
-          </div>
-          <div className="text-sm font-medium text-purple-600">
-            {book.pages} sayfa
-          </div>
-          <div className="text-xs text-gray-500 font-medium">
-            {book.fileSize}
+            <FileText size={14} className="mr-2" />
+            <span className="text-xs">{getLocalizedText(book.categoryTranslations, book.category)}</span>
           </div>
         </div>
 
@@ -100,8 +85,10 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
                 key={format}
                 href={url}
                 onClick={(e) => e.stopPropagation()}
+                download={`${book.title}.${format}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-gradient-to-r from-primary-100 to-purple-100 hover:from-primary-200 hover:to-purple-200 text-primary-700 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center space-x-1 transform hover:scale-105 shadow-sm"
-                download
               >
                 <Download size={12} />
                 <span>{format.toUpperCase()}</span>
@@ -109,25 +96,6 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
             )
           ))}
         </div>
-
-        {/* Tags */}
-        {book.tags && book.tags.length > 0 && (
-          <div className="border-t border-gray-100 pt-4">
-            <div className="flex flex-wrap gap-2">
-              {book.tags.slice(0, 3).map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium"
-                >
-                  #{tag}
-                </span>
-              ))}
-              {book.tags.length > 3 && (
-                <span className="text-xs text-gray-500 font-medium">+{book.tags.length - 3} etiket</span>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

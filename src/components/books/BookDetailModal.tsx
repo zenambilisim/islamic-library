@@ -92,7 +92,9 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
                         <a
                           key={format}
                           href={url}
-                          download
+                          download={`${book.title}.${format}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
                         >
                           <Download size={16} />

@@ -22,7 +22,7 @@ const ContactPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Handle form submission
-    alert('Mesajınız gönderildi! En kısa sürede size dönüş yapacağız.');
+    alert(t('contact.successMessage'));
     setFormData({ name: '', email: '', subject: '', message: '' });
   };
 
@@ -32,11 +32,10 @@ const ContactPage = () => {
         {/* Page Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {t('navigation.contact')}
+            {t('contact.pageTitle')}
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Sorularınız, önerileriniz veya katkılarınız için bizimle iletişime geçin. 
-            Size yardımcı olmaktan memnuniyet duyarız.
+            {t('contact.pageDescription')}
           </p>
         </div>
 
@@ -45,13 +44,13 @@ const ContactPage = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
               <MessageCircle className="text-primary-600 mr-3" size={24} />
-              Bize Mesaj Gönderin
+              {t('contact.formTitle')}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Adınız Soyadınız *
+                  {t('contact.nameLabel')}
                 </label>
                 <input
                   type="text"
@@ -61,13 +60,13 @@ const ContactPage = () => {
                   onChange={handleInputChange}
                   required
                   className="search-input"
-                  placeholder="Adınızı ve soyadınızı girin"
+                  placeholder={t('contact.namePlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  E-posta Adresiniz *
+                  {t('contact.emailLabel')}
                 </label>
                 <input
                   type="email"
@@ -77,13 +76,13 @@ const ContactPage = () => {
                   onChange={handleInputChange}
                   required
                   className="search-input"
-                  placeholder="ornek@email.com"
+                  placeholder={t('contact.emailPlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  Konu *
+                  {t('contact.subjectLabel')}
                 </label>
                 <select
                   id="subject"
@@ -93,20 +92,20 @@ const ContactPage = () => {
                   required
                   className="search-input"
                 >
-                  <option value="">Konu seçin</option>
-                  <option value="book-request">Kitap Talebi</option>
-                  <option value="bug-report">Hata Bildirimi</option>
-                  <option value="feature-request">Özellik Önerisi</option>
-                  <option value="general-inquiry">Genel Soru</option>
-                  <option value="collaboration">İş Birliği</option>
-                  <option value="technical-support">Teknik Destek</option>
-                  <option value="other">Diğer</option>
+                  <option value="">{t('contact.subjectPlaceholder')}</option>
+                  <option value="book-request">{t('contact.subjectBookRequest')}</option>
+                  <option value="bug-report">{t('contact.subjectBugReport')}</option>
+                  <option value="feature-request">{t('contact.subjectFeatureRequest')}</option>
+                  <option value="general-inquiry">{t('contact.subjectGeneralInquiry')}</option>
+                  <option value="collaboration">{t('contact.subjectCollaboration')}</option>
+                  <option value="technical-support">{t('contact.subjectTechnicalSupport')}</option>
+                  <option value="other">{t('contact.subjectOther')}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mesajınız *
+                  {t('contact.messageLabel')}
                 </label>
                 <textarea
                   id="message"
@@ -116,7 +115,7 @@ const ContactPage = () => {
                   required
                   rows={6}
                   className="search-input resize-none"
-                  placeholder="Mesajınızı detaylı bir şekilde yazın..."
+                  placeholder={t('contact.messagePlaceholder')}
                 />
               </div>
 
@@ -125,7 +124,7 @@ const ContactPage = () => {
                 className="w-full btn-primary flex items-center justify-center space-x-2"
               >
                 <Send size={20} />
-                <span>Mesajı Gönder</span>
+                <span>{t('contact.sendButton')}</span>
               </button>
             </form>
           </div>
@@ -134,7 +133,7 @@ const ContactPage = () => {
           <div className="space-y-8">
             {/* Contact Cards */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">İletişim Bilgileri</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">{t('contact.contactInfoTitle')}</h2>
               
               <div className="space-y-4">
                 <div className="flex items-start space-x-4">
@@ -142,7 +141,7 @@ const ContactPage = () => {
                     <Mail className="text-primary-600" size={20} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">E-posta</h3>
+                    <h3 className="font-semibold text-gray-900">{t('contact.emailTitle')}</h3>
                     <p className="text-gray-600">info@islamiclibrary.com</p>
                     <p className="text-gray-600">destek@islamiclibrary.com</p>
                   </div>
@@ -153,9 +152,9 @@ const ContactPage = () => {
                     <Phone className="text-green-600" size={20} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Telefon</h3>
+                    <h3 className="font-semibold text-gray-900">{t('contact.phoneTitle')}</h3>
                     <p className="text-gray-600">+90 (212) 555 0123</p>
-                    <p className="text-sm text-gray-500">Hafta içi 09:00 - 18:00</p>
+                    <p className="text-sm text-gray-500">{t('contact.phoneHours')}</p>
                   </div>
                 </div>
 
@@ -164,11 +163,11 @@ const ContactPage = () => {
                     <MapPin className="text-blue-600" size={20} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Adres</h3>
+                    <h3 className="font-semibold text-gray-900">{t('contact.addressTitle')}</h3>
                     <p className="text-gray-600">
-                      Fatih Mahallesi<br />
-                      İslam Sokak No: 123<br />
-                      34000 İstanbul, Türkiye
+                      {t('contact.address1')}<br />
+                      {t('contact.address2')}<br />
+                      {t('contact.address3')}
                     </p>
                   </div>
                 </div>
@@ -179,36 +178,36 @@ const ContactPage = () => {
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <Clock className="text-blue-600" size={24} />
-                <h3 className="text-lg font-semibold text-gray-900">Yanıt Süremiz</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('contact.responseTimeTitle')}</h3>
               </div>
               <div className="space-y-2 text-sm text-gray-600">
-                <p>• Genel sorular: 24 saat içinde</p>
-                <p>• Teknik destek: 48 saat içinde</p>
-                <p>• Kitap talepleri: 1 hafta içinde</p>
-                <p>• İş birliği önerileri: 3-5 iş günü içinde</p>
+                <p>• {t('contact.responseGeneral')}</p>
+                <p>• {t('contact.responseTechnical')}</p>
+                <p>• {t('contact.responseBooks')}</p>
+                <p>• {t('contact.responseCollaboration')}</p>
               </div>
             </div>
 
             {/* FAQ Link */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Sık Sorulan Sorular
+                {t('contact.faqTitle')}
               </h3>
               <p className="text-gray-600 mb-4">
-                Merak ettiklerinizin cevapları SSS bölümünde bulunabilir.
+                {t('contact.faqDescription')}
               </p>
               <button className="text-primary-600 hover:text-primary-700 font-medium">
-                SSS'yi İnceleyin →
+                {t('contact.faqButton')}
               </button>
             </div>
 
             {/* Social Media */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Sosyal Medya
+                {t('contact.socialMediaTitle')}
               </h3>
               <p className="text-gray-600 mb-4">
-                Güncellemeler ve duyurular için bizi takip edin:
+                {t('contact.socialMediaDescription')}
               </p>
               <div className="flex space-x-4">
                 <button className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors">
@@ -227,22 +226,22 @@ const ContactPage = () => {
 
         {/* Help Section */}
         <div className="mt-16 bg-gradient-to-r from-primary-600 to-blue-600 rounded-xl p-8 text-white text-center">
-          <h2 className="text-2xl font-bold mb-4">Nasıl Yardımcı Olabiliriz?</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('contact.helpTitle')}</h2>
           <p className="mb-6 opacity-90">
-            Islamic Library topluluğunun bir parçası olarak size en iyi hizmeti vermek için buradayız.
+            {t('contact.helpDescription')}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white bg-opacity-20 rounded-lg p-4">
-              <h4 className="font-semibold mb-2">Kitap Önerisi</h4>
-              <p className="text-sm opacity-90">Kütüphanemize eklemek istediğiniz kitapları önerebilirsiniz.</p>
+              <h4 className="font-semibold mb-2">{t('contact.help1Title')}</h4>
+              <p className="text-sm opacity-90">{t('contact.help1Desc')}</p>
             </div>
             <div className="bg-white bg-opacity-20 rounded-lg p-4">
-              <h4 className="font-semibold mb-2">Geri Bildirim</h4>
-              <p className="text-sm opacity-90">Platformu iyileştirmek için önerilerinizi paylaşın.</p>
+              <h4 className="font-semibold mb-2">{t('contact.help2Title')}</h4>
+              <p className="text-sm opacity-90">{t('contact.help2Desc')}</p>
             </div>
             <div className="bg-white bg-opacity-20 rounded-lg p-4">
-              <h4 className="font-semibild mb-2">Katkı Sağlayın</h4>
-              <p className="text-sm opacity-90">Çeviri, düzenleme ve geliştirme konularında destek olun.</p>
+              <h4 className="font-semibold mb-2">{t('contact.help3Title')}</h4>
+              <p className="text-sm opacity-90">{t('contact.help3Desc')}</p>
             </div>
           </div>
         </div>

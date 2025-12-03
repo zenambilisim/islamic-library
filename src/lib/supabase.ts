@@ -130,3 +130,21 @@ export interface Category {
   book_count: number
   created_at: string
 }
+
+// Author view interface - books tablosundan türetilen
+export interface SupabaseAuthor {
+  id: string
+  name: string
+  name_translations: Record<string, string>
+  biography?: string
+  biography_translations?: Record<string, string>
+  book_count: number
+  total_downloads: number
+  first_publish_year?: number
+  last_publish_year?: number
+  categories: string[]
+  languages: string[]
+  profile_image?: string
+  first_book_created_at: string
+  last_updated_at: string
+}

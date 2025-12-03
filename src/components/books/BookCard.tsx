@@ -31,10 +31,6 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
           }}
         />
         
-        {/* Download Count Badge */}
-        <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
-          {book.downloadCount.toLocaleString()} ⬇
-        </div>
         
         {/* Overlay with actions */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-4">

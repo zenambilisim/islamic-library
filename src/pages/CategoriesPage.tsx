@@ -241,25 +241,6 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
                     {getLocalizedText(category.descriptionTranslations, category.description)}
                   </p>
 
-                  {/* Sample Books */}
-                  {categoryBooks.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Popüler Kitaplar:</p>
-                      <div className="space-y-1">
-                        {categoryBooks.slice(0, 3).map((book) => (
-                          <div key={book.id} className="text-sm text-gray-600 truncate">
-                            • {book.title}
-                          </div>
-                        ))}
-                        {categoryBooks.length > 3 && (
-                          <div className="text-sm text-primary-600 font-medium">
-                            +{categoryBooks.length - 3} tane daha
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Action Button */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="text-primary-600 font-medium text-sm group-hover:text-primary-700 transition-colors">

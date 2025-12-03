@@ -1,5 +1,5 @@
-import type { Book, Category } from '../types'
-import type { SupabaseBook, BookFile, Category as SupabaseCategory } from './supabase'
+import type { Book, Category, Author } from '../types'
+import type { SupabaseBook, BookFile, Category as SupabaseCategory, SupabaseAuthor } from './supabase'
 import { getBookCoverUrl, getBookFileUrl } from './supabase'
 
 /**
@@ -77,6 +77,33 @@ export function convertSupabaseCategoryToCategory(supabaseCategory: SupabaseCate
     descriptionTranslations: getTranslations(supabaseCategory.description_translations, supabaseCategory.description || ''),
     bookCount: supabaseCategory.book_count || 0,
     icon: supabaseCategory.icon
+  }
+}
+
+/**
+ * Supabase author verisini frontend Author formatına dönüştürür
+ * @param supabaseAuthor - Supabase'den gelen yazar verisi (authors_view'dan)
+ * @returns Frontend Author objesi
+ */
+export function convertSupabaseAuthorToAuthor(supabaseAuthor: SupabaseAuthor): Author {
+  // Translation helper function
+  const getTranslations = (translations: Record<string, string> | undefined, fallback: string) => ({
+    tr: translations?.tr || fallback,
+    en: translations?.en || fallback,
+    ru: translations?.ru || fallback,
+    az: translations?.az || fallback
+  });
+
+  return {
+    id: supabaseAuthor.id,
+    name: supabaseAuthor.name,
+    nameTranslations: getTranslations(supabaseAuthor.name_translations, supabaseAuthor.name),
+    biography: supabaseAuthor.biography || '',
+    biographyTranslations: getTranslations(supabaseAuthor.biography_translations, supabaseAuthor.biography || ''),
+    photo: supabaseAuthor.profile_image || undefined,
+    bookCount: supabaseAuthor.book_count || 0,
+    birthYear: supabaseAuthor.first_publish_year,
+    deathYear: supabaseAuthor.last_publish_year
   }
 }
 

@@ -61,7 +61,10 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
 
     // Apply category filter
     if (filters.category) {
-      books = books.filter(book => book.category === filters.category);
+      books = books.filter(book => {
+        // Kategori adı ile eşleştirme (case-insensitive)
+        return book.category.toLowerCase() === filters.category?.toLowerCase();
+      });
     }
 
     return books;
@@ -101,8 +104,8 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      {!searchTerm && Object.keys(filters).length === 0 && (
+      {/* Hero Section - Always visible unless searching */}
+      {!searchTerm && (
         <div className="relative overflow-hidden min-h-[600px] flex items-center">
           {/* Background Banner Image */}
           <div className="absolute inset-0">
@@ -123,24 +126,24 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
               <div className="text-center lg:text-left">
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
                   <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
-                    İslami Kütüphane
+                    {t('hero.title')}
                   </span>
                 </h1>
                 <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed drop-shadow-md">
-                  Binlerce İslami esere kolayca erişin. Modern arayüz ile geleneksel bilgiyi keşfedin.
+                  {t('hero.subtitle')}
                 </p>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
                     <div className="text-2xl font-bold text-primary-600">{supabaseBooks.length}</div>
-                    <div className="text-sm text-gray-600">Kitap</div>
+                    <div className="text-sm text-gray-600">{t('hero.booksCount')}</div>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
                     <div className="text-2xl font-bold text-purple-600">4</div>
-                    <div className="text-sm text-gray-600">Dil</div>
+                    <div className="text-sm text-gray-600">{t('hero.languagesCount')}</div>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
                     <div className="text-2xl font-bold text-blue-600">∞</div>
-                    <div className="text-sm text-gray-600">Bilgi</div>
+                    <div className="text-sm text-gray-600">{t('hero.knowledgeCount')}</div>
                   </div>
                 </div>
                 
@@ -149,7 +152,7 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
                   onClick={scrollToBooks}
                   className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 animate-pulse-slow"
                 >
-                  Kitapları Keşfet ↓
+                  {t('hero.exploreButton')}
                 </button>
               </div>
               

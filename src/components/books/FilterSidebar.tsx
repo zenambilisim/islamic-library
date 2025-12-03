@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Filter, X } from 'lucide-react';
-import { mockCategories } from '../../data/mockData';
+import { Filter, X, Loader2 } from 'lucide-react';
+import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
 import type { SearchFilters, Language } from '../../types';
 
 interface FilterSidebarProps {
@@ -13,15 +13,16 @@ interface FilterSidebarProps {
 const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSidebarProps) => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language as Language;
+  const { categories, loading, error } = useSupabaseCategories();
 
   const getLocalizedText = (translations: any, fallback: string) => {
     return translations[currentLang] || translations.tr || fallback;
   };
 
-  const handleCategoryChange = (categoryId: string) => {
+  const handleCategoryChange = (categoryName: string) => {
     onFiltersChange({
       ...filters,
-      category: filters.category === categoryId ? undefined : categoryId,
+      category: filters.category === categoryName ? undefined : categoryName,
     });
   };
 
@@ -94,37 +95,57 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSid
             <span>🏷️</span>
             <span>{t('search.filterByCategory')}</span>
           </h4>
-          <div className="space-y-3">
-            {mockCategories.map((category, index) => (
-              <button
-                key={category.id}
-                onClick={() => handleCategoryChange(category.id)}
-                className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 transform hover:scale-[1.02] ${
-                  filters.category === category.id
-                    ? 'bg-gradient-to-r from-primary-100 to-purple-100 text-primary-800 border-2 border-primary-300 shadow-lg'
-                    : 'bg-white/70 hover:bg-white border-2 border-gray-100 hover:border-primary-200 hover:shadow-md'
-                }`}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="text-2xl">{category.icon}</div>
-                <div className="flex-1">
-                  <span className="font-semibold text-sm">
-                    {getLocalizedText(category.nameTranslations, category.name)}
-                  </span>
-                  <div className="flex items-center space-x-1 mt-1">
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">
-                      {category.bookCount} kitap
+          
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            </div>
+          )}
+          
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+          
+          {/* Categories List */}
+          {!loading && !error && categories.length > 0 && (
+            <div className="space-y-3">
+              {categories.map((category, index) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryChange(category.name)}
+                  className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 transform hover:scale-[1.02] ${
+                    filters.category === category.name
+                      ? 'bg-gradient-to-r from-primary-100 to-purple-100 text-primary-800 border-2 border-primary-300 shadow-lg'
+                      : 'bg-white/70 hover:bg-white border-2 border-gray-100 hover:border-primary-200 hover:shadow-md'
+                  }`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="text-2xl">{category.icon}</div>
+                  <div className="flex-1">
+                    <span className="font-semibold text-sm">
+                      {getLocalizedText(category.nameTranslations, category.name)}
                     </span>
                   </div>
-                </div>
-                {filters.category === category.id && (
-                  <div className="text-primary-600">✓</div>
-                )}
-              </button>
-            ))}
-          </div>
+                  {filters.category === category.name && (
+                    <div className="text-primary-600">✓</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* No Categories State */}
+          {!loading && !error && categories.length === 0 && (
+            <div className="text-center p-6 bg-gray-50 rounded-xl">
+              <p className="text-gray-500 text-sm">{t('categories.noCategories')}</p>
+            </div>
+          )}
         </div>
-
+ 
       </div>
     </>
   );

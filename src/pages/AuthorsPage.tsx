@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, BookOpen, Calendar, Grid3X3, List } from 'lucide-react';
 import { useSearch } from '../contexts/SearchContext';
-import { mockAuthors, mockBooks } from '../data/mockData';
+import { useSupabaseAuthors, getBooksByAuthor as fetchBooksByAuthor } from '../hooks/useSupabaseAuthors';
+import { convertSupabaseBookToBook } from '../lib/converters';
 import BookCard from '../components/books/BookCard';
 import type { Book } from '../types';
 
@@ -17,7 +18,13 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const currentLang = i18n.language as keyof (typeof mockAuthors)[0]['nameTranslations'];
+  const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
+  const [loadingBooks, setLoadingBooks] = useState(false);
+  
+  // Supabase'den yazarları çek
+  const { authors: supabaseAuthors, loading: authorsLoading, error: authorsError } = useSupabaseAuthors();
+  
+  const currentLang = i18n.language as 'tr' | 'en' | 'ru' | 'az';
 
   useEffect(() => {
     setSearchMode('authors');
@@ -28,33 +35,73 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
     return translations[currentLang] || translations.tr || fallback;
   };
 
-  // Get books by author
-  const getBooksByAuthor = (authorName: string) => {
-    return mockBooks.filter(book => 
-      book.author.toLowerCase().includes(authorName.toLowerCase()) ||
-      Object.values(book.authorTranslations).some(name => 
-        name.toLowerCase().includes(authorName.toLowerCase())
-      )
-    );
-  };
+  // Fetch author books when author is selected
+  useEffect(() => {
+    if (selectedAuthor) {
+      const fetchBooks = async () => {
+        setLoadingBooks(true);
+        try {
+          const { books, error } = await fetchBooksByAuthor(selectedAuthor);
+          if (error) {
+            console.error('Error fetching author books:', error);
+            setAuthorBooks([]);
+          } else if (books && books.length > 0) {
+            // Convert books - books zaten doğru formatta geldiği için direkt cast edelim
+            const convertedBooks = books.map((book: any) => {
+              // Ensure book_files is properly formatted
+              const bookWithFiles = {
+                ...book,
+                book_files: book.book_files || []
+              };
+              return convertSupabaseBookToBook(bookWithFiles);
+            });
+            setAuthorBooks(convertedBooks);
+          } else {
+            setAuthorBooks([]);
+          }
+        } catch (err) {
+          console.error('Error in fetchBooks:', err);
+          setAuthorBooks([]);
+        } finally {
+          setLoadingBooks(false);
+        }
+      };
+      fetchBooks();
+    } else {
+      // Reset books when no author is selected
+      setAuthorBooks([]);
+    }
+  }, [selectedAuthor]);
 
-  // Generate alphabet for navigation
-  const alphabet = 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ'.split('');
+  // Generate alphabet for navigation based on current language
+  const alphabet = useMemo(() => {
+    switch (currentLang) {
+      case 'en':
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      case 'ru':
+        return 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
+      case 'az':
+        return 'ABCÇDEƏFGĞHXIİJKLMNOÖPQRSŞTUÜVYZ'.split('');
+      case 'tr':
+      default:
+        return 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ'.split('');
+    }
+  }, [currentLang]);
   
   // Get available letters (letters that have authors)
   const availableLetters = useMemo(() => {
     const letters = new Set<string>();
-    mockAuthors.forEach(author => {
+    supabaseAuthors.forEach(author => {
       const name = getLocalizedText(author.nameTranslations, author.name);
       const firstLetter = name.charAt(0).toUpperCase();
       letters.add(firstLetter);
     });
     return Array.from(letters).sort();
-  }, [currentLang]);
+  }, [supabaseAuthors, currentLang]);
 
   // Filter authors based on search term and selected letter
   const filteredAuthors = useMemo(() => {
-    let authors = mockAuthors;
+    let authors = supabaseAuthors;
     
     // Filter by search term
     if (searchTerm.trim()) {
@@ -80,12 +127,56 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
     }
     
     return authors;
-  }, [searchTerm, selectedLetter, currentLang]);
+  }, [searchTerm, selectedLetter, supabaseAuthors, currentLang]);
+
+  // Calculate total stats
+  const totalStats = useMemo(() => {
+    const totalAuthors = supabaseAuthors.length;
+    const totalBooks = supabaseAuthors.reduce((sum, author) => sum + (author.bookCount || 0), 0);
+    const totalDownloads = supabaseAuthors.reduce((sum, author) => sum + (author.bookCount || 0), 0);
+    
+    return {
+      authors: totalAuthors,
+      books: totalBooks,
+      downloads: totalDownloads
+    };
+  }, [supabaseAuthors]);
+
+  // Loading state
+  if (authorsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-primary-600 mx-auto mb-6"></div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('common.loading')}</h2>
+          <p className="text-gray-600">{t('authors.loadingAuthors')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (authorsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-xl max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-3">{t('common.error')}</h2>
+          <p className="text-gray-700 mb-6">{authorsError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
+          >
+            {t('common.showMore')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // If an author is selected, show their books
   if (selectedAuthor) {
-    const author = mockAuthors.find(auth => auth.id === selectedAuthor);
-    const authorBooks = author ? getBooksByAuthor(author.name) : [];
+    const author = supabaseAuthors.find(auth => auth.name === selectedAuthor);
 
     if (!author) return null;
 
@@ -102,35 +193,30 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
               className="text-primary-600 hover:text-primary-700 font-medium mb-4 flex items-center space-x-2"
             >
               <span>←</span>
-              <span>{t('navigation.authors')}</span>
+              <span>{t('authors.backToAuthors')}</span>
             </button>
             
-            <div className="flex items-start space-x-4 mb-4">
-              <div className="bg-primary-100 p-4 rounded-full">
-                <User size={48} className="text-primary-600" />
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                <User size={48} />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">
                   {getLocalizedText(author.nameTranslations, author.name)}
                 </h1>
-                <p className="text-gray-600 mb-4 leading-relaxed">
+                <p className="text-gray-600 mt-2">
                   {getLocalizedText(author.biographyTranslations, author.biography)}
                 </p>
-                
-                {/* Author Stats */}
-                <div className="flex items-center space-x-6 text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-4 mt-4 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2">
                     <BookOpen size={16} />
-                    <span>{authorBooks.length} kitap</span>
+                    <span>{author.bookCount} {t('authors.booksCount')}</span>
                   </div>
-                  
                   {author.birthYear && (
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-2">
                       <Calendar size={16} />
-                      <span>
-                        {author.birthYear}
-                        {author.deathYear && ` - ${author.deathYear}`}
-                      </span>
+                      <span>{author.birthYear}</span>
+                      {author.deathYear && <span>- {author.deathYear}</span>}
                     </div>
                   )}
                 </div>
@@ -139,7 +225,7 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
 
             <div className="flex items-center justify-between">
               <p className="text-gray-600">
-                {authorBooks.length} kitap bulundu
+                {authorBooks.length} {t('authors.booksFound')}
               </p>
               
               {/* View Mode Toggle */}
@@ -161,7 +247,12 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
           </div>
 
           {/* Author Books */}
-          {authorBooks.length > 0 ? (
+          {loadingBooks ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">{t('authors.loadingBooks')}</p>
+            </div>
+          ) : authorBooks.length > 0 ? (
             <div className={viewMode === 'grid' 
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
               : "space-y-4"
@@ -179,10 +270,10 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
             <div className="text-center py-16">
               <BookOpen size={64} className="mx-auto text-gray-300 mb-4" />
               <h3 className="text-xl font-medium text-gray-900 mb-2">
-                Bu yazarın henüz kitabı bulunmuyor
+                {t('authors.noBooksForAuthor')}
               </h3>
               <p className="text-gray-600">
-                Yakında bu yazarın kitapları eklenecek.
+                {t('authors.noBooksMessage')}
               </p>
             </div>
           )}
@@ -198,50 +289,46 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('navigation.authors')}
+            {t('authors.pageTitle')}
           </h1>
           <p className="text-gray-600">
-            İslami eserlerin değerli müelliflerini keşfedin
+            {t('authors.pageDescription')}
           </p>
         </div>
 
-        {/* A-Z Navigation */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {t('authors.browseByLetter')}
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedLetter(null)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedLetter === null
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {t('authors.all')}
-              </button>
-              {alphabet.map((letter) => {
-                const hasAuthors = availableLetters.includes(letter);
-                return (
-                  <button
-                    key={letter}
-                    onClick={() => hasAuthors && setSelectedLetter(letter)}
-                    disabled={!hasAuthors}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedLetter === letter
-                        ? 'bg-primary-600 text-white'
-                        : hasAuthors
-                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    {letter}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Alphabet Navigation */}
+        <div className="mb-8 bg-white rounded-2xl shadow-sm p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('authors.alphabetSort')}</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedLetter(null)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                !selectedLetter
+                  ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {t('authors.all')}
+            </button>
+            {alphabet.map((letter) => {
+              const isAvailable = availableLetters.includes(letter);
+              return (
+                <button
+                  key={letter}
+                  onClick={() => isAvailable && setSelectedLetter(letter)}
+                  disabled={!isAvailable}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    selectedLetter === letter
+                      ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-md'
+                      : isAvailable
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                  }`}
+                >
+                  {letter}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -249,12 +336,9 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
         {(searchTerm || selectedLetter) && (
           <div className="mb-6">
             <p className="text-gray-600">
-              {searchTerm && selectedLetter 
-                ? `${filteredAuthors.length} yazar "${searchTerm}" ve "${selectedLetter}" harfi için bulundu`
-                : searchTerm 
-                ? `${filteredAuthors.length} yazar "${searchTerm}" için bulundu`
-                : `${filteredAuthors.length} yazar "${selectedLetter}" harfi ile başlıyor`
-              }
+              {filteredAuthors.length} {t('authors.authorsFound')}
+              {selectedLetter && ` (${selectedLetter} ${t('authors.letterFilter')})`}
+              {searchTerm && ` ("${searchTerm}" ${t('authors.searchFor')})`}
             </p>
           </div>
         )}
@@ -262,69 +346,48 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
         {/* Authors Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {filteredAuthors.map((author) => {
-            const authorBooks = getBooksByAuthor(author.name);
-            
             return (
               <div
                 key={author.id}
-                onClick={() => setSelectedAuthor(author.id)}
+                onClick={() => setSelectedAuthor(author.name)}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer overflow-hidden group"
               >
                 <div className="p-6">
-                  {/* Author Header */}
+                  {/* Author Avatar */}
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="bg-primary-100 p-3 rounded-full">
-                      <User size={32} className="text-primary-600" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-400 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                      <User size={32} />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
                         {getLocalizedText(author.nameTranslations, author.name)}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
-                        {authorBooks.length} kitap
+                        {author.bookCount} {t('authors.booksCount')}
                       </p>
                     </div>
                   </div>
 
-                  {/* Author Bio */}
-                  <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
+                  {/* Author Biography */}
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                     {getLocalizedText(author.biographyTranslations, author.biography)}
                   </p>
 
                   {/* Author Stats */}
-                  {author.birthYear && (
-                    <div className="flex items-center space-x-1 text-sm text-gray-500 mb-4">
-                      <Calendar size={14} />
-                      <span>
-                        {author.birthYear}
-                        {author.deathYear && ` - ${author.deathYear}`}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Sample Books */}
-                  {authorBooks.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Popüler Eserleri:</p>
-                      <div className="space-y-1">
-                        {authorBooks.slice(0, 3).map((book) => (
-                          <div key={book.id} className="text-sm text-gray-600 truncate">
-                            • {book.title}
-                          </div>
-                        ))}
-                        {authorBooks.length > 3 && (
-                          <div className="text-sm text-primary-600 font-medium">
-                            +{authorBooks.length - 3} eser daha
-                          </div>
-                        )}
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    {author.birthYear && (
+                      <div className="flex items-center space-x-1">
+                        <Calendar size={14} />
+                        <span>{author.birthYear}</span>
+                        {author.deathYear && <span>- {author.deathYear}</span>}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Action Button */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="text-primary-600 font-medium text-sm group-hover:text-primary-700 transition-colors">
-                      Yazarın Eserlerine Git →
+                      {t('authors.viewBooks')}
                     </div>
                   </div>
                 </div>
@@ -334,19 +397,18 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
         </div>
 
         {/* No results message */}
-        {(searchTerm || selectedLetter) && filteredAuthors.length === 0 && (
+        {filteredAuthors.length === 0 && (
           <div className="text-center py-16">
             <User size={48} className="mx-auto mb-4 text-gray-300" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
               {t('authors.noAuthorsFound')}
             </h3>
             <p className="text-gray-600">
-              {searchTerm && selectedLetter 
-                ? `"${searchTerm}" ve "${selectedLetter}" harfi için herhangi bir yazar bulunamadı.`
-                : searchTerm 
-                ? `"${searchTerm}" için herhangi bir yazar bulunamadı. Farklı anahtar kelimeler deneyebilirsiniz.`
-                : `"${selectedLetter}" harfi ile başlayan yazar bulunmuyor.`
-              }
+              {searchTerm 
+                ? `"${searchTerm}" ${t('authors.noAuthorsForSearch')}`
+                : selectedLetter
+                ? `"${selectedLetter}" ${t('authors.noAuthorsForLetter')}`
+                : t('authors.noAuthorsYet')}
             </p>
           </div>
         )}
@@ -355,26 +417,20 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
         <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-8">
           <div className="text-center">
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Toplam İstatistikler
+              {t('authors.totalStats')}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-600">
-                  {mockAuthors.length}
+                  {totalStats.authors}
                 </div>
-                <div className="text-gray-600">Yazar</div>
+                <div className="text-gray-600">{t('authors.totalAuthors')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-600">
-                  {mockBooks.length}
+                  {totalStats.books}
                 </div>
-                <div className="text-gray-600">Toplam Kitap</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary-600">
-                  {mockBooks.reduce((sum, book) => sum + book.downloadCount, 0).toLocaleString()}
-                </div>
-                <div className="text-gray-600">Toplam İndirme</div>
+                <div className="text-gray-600">{t('authors.totalBooks')}</div>
               </div>
             </div>
           </div>

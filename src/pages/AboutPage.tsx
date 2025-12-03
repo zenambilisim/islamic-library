@@ -13,11 +13,10 @@ const AboutPage = () => {
             <BookOpen className="text-white" size={40} />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {t('navigation.about')}
+            {t('about.pageTitle')}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            İslamic Library, dini kitapları dijital ortamda erişilebilir kılmak amacıyla oluşturulmuş 
-            ücretsiz bir elektronik kütüphane platformudur.
+            {t('about.pageDescription')}
           </p>
         </div>
 
@@ -26,30 +25,26 @@ const AboutPage = () => {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
               <Heart className="text-red-500 mr-3" size={24} />
-              Misyonumuz
+              {t('about.missionTitle')}
             </h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              İslami ilimler alanındaki değerli eserleri dijital ortamda toplumun hizmetine sunmak, 
-              İslam kültürünün ve biliminin yaygınlaşmasına katkıda bulunmak temel misyonumuzdur.
+              {t('about.missionText1')}
             </p>
             <p className="text-gray-700 leading-relaxed">
-              Kuran-ı Kerim, hadis, tefsir, tasavvuf ve diğer İslami konularda kaliteli kaynakları 
-              ücretsiz olarak erişilebilir kılıyoruz.
+              {t('about.missionText2')}
             </p>
           </div>
           
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
               <Award className="text-yellow-500 mr-3" size={24} />
-              Vizyonumuz
+              {t('about.visionTitle')}
             </h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Dünyanın her yerindeki Müslümanların İslami bilgiye kolayca erişebileceği, 
-              en kapsamlı dijital İslami kütüphane olmayı hedefliyoruz.
+              {t('about.visionText1')}
             </p>
             <p className="text-gray-700 leading-relaxed">
-              Teknoloji ile İslami bilimi buluşturarak, gelecek nesillere değerli mirası 
-              aktarmak için çalışıyoruz.
+              {t('about.visionText2')}
             </p>
           </div>
         </div>
@@ -61,10 +56,10 @@ const AboutPage = () => {
               <Globe size={24} className="text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Çok Dilli Destek
+              {t('about.feature1Title')}
             </h3>
             <p className="text-gray-600">
-              Türkçe, İngilizce, Rusça ve Azerbaycan Türkçesi olmak üzere 4 dilde hizmet veriyoruz.
+              {t('about.feature1Desc')}
             </p>
           </div>
 
@@ -73,10 +68,10 @@ const AboutPage = () => {
               <BookOpen size={24} className="text-green-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Çoklu Format
+              {t('about.feature2Title')}
             </h3>
             <p className="text-gray-600">
-              PDF, EPUB ve DOC formatlarında kitapları indirip, online okuma imkanı sunuyoruz.
+              {t('about.feature2Desc')}
             </p>
           </div>
 
@@ -85,10 +80,10 @@ const AboutPage = () => {
               <Shield size={24} className="text-purple-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Ücretsiz Erişim
+              {t('about.feature3Title')}
             </h3>
             <p className="text-gray-600">
-              Tüm kitaplarımıza tamamen ücretsiz erişim sağlıyor, hiçbir ücret talep etmiyoruz.
+              {t('about.feature3Desc')}
             </p>
           </div>
 
@@ -97,10 +92,10 @@ const AboutPage = () => {
               <Users size={24} className="text-red-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Topluluk Odaklı
+              {t('about.feature4Title')}
             </h3>
             <p className="text-gray-600">
-              Kullanıcı geri bildirimleri ile sürekli gelişiyor, ihtiyaçlara uygun çözümler üretiyoruz.
+              {t('about.feature4Desc')}
             </p>
           </div>
 
@@ -109,10 +104,10 @@ const AboutPage = () => {
               <BookOpen size={24} className="text-indigo-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Kaliteli İçerik
+              {t('about.feature5Title')}
             </h3>
             <p className="text-gray-600">
-              Güvenilir kaynaklar ve uzman kontrolünden geçmiş, kaliteli İslami eserler sunuyoruz.
+              {t('about.feature5Desc')}
             </p>
           </div>
 
@@ -121,56 +116,11 @@ const AboutPage = () => {
               <Award size={24} className="text-yellow-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Sürekli Güncelleme
+              {t('about.feature6Title')}
             </h3>
             <p className="text-gray-600">
-              Düzenli olarak yeni kitaplar ekliyور, mevcut içeriği güncel tutuyoruz.
+              {t('about.feature6Desc')}
             </p>
-          </div>
-        </div>
-
-        {/* Statistics */}
-        <div className="bg-gradient-to-r from-primary-600 to-blue-600 rounded-xl p-8 text-white text-center mb-16">
-          <h2 className="text-2xl font-bold mb-8">Rakamlarla Islamic Library</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <div className="text-3xl font-bold mb-2">500+</div>
-              <div className="text-primary-100">Kitap</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">50+</div>
-              <div className="text-primary-100">Yazar</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">100K+</div>
-              <div className="text-primary-100">İndirme</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">4</div>
-              <div className="text-primary-100">Dil Desteği</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Team Section */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Ekibimiz</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            İslami ilimlerde uzman, teknoloji alanında deneyimli gönüllülerden oluşan ekibimiz, 
-            bu projeyi hayata geçirmek için özenle çalışmaktadır.
-          </p>
-          
-          <div className="bg-primary-50 rounded-xl p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Katkıda Bulunmak İster misiniz?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Projeye katkıda bulunmak, kitap önerisi yapmak veya geri bildirim vermek için 
-              bizimle iletişime geçebilirsiniz.
-            </p>
-            <button className="btn-primary">
-              İletişime Geçin
-            </button>
           </div>
         </div>
       </div>

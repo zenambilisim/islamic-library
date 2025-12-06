@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { X, Download, Eye, Star, Calendar, FileText, User, Hash, Globe } from 'lucide-react';
+import { X, Download, Eye, FileText, User } from 'lucide-react';
 import type { Book } from '../../types';
 
 interface BookDetailModalProps {
@@ -18,20 +18,6 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
 
   const getLocalizedText = (translations: any, fallback: string) => {
     return translations[currentLang] || translations.tr || fallback;
-  };
-
-  const formatRating = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        size={16}
-        className={`${
-          i < Math.floor(rating) 
-            ? 'text-yellow-400 fill-current' 
-            : 'text-gray-300'
-        }`}
-      />
-    ));
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -103,18 +89,6 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
                       )
                     ))}
                   </div>
-
-                  {/* File Info */}
-                  <div className="bg-gray-50 rounded-lg p-4 text-sm">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-600">{t('book.fileSize')}:</span>
-                      <span className="font-medium">{book.fileSize}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">{t('book.downloads')}:</span>
-                      <span className="font-medium">{book.downloadCount.toLocaleString()}</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -131,46 +105,9 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
                   <User size={20} className="mr-2" />
                   <span>{getLocalizedText(book.authorTranslations, book.author)}</span>
                 </div>
-
-                {/* Rating */}
-                <div className="flex items-center space-x-2 mb-4">
-
-                  <span className="text-gray-500">({book.downloadCount.toLocaleString()} {t('book.downloads').toLowerCase()})</span>
-                </div>
-              </div>
-
-              {/* Book Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center">
-                  <FileText size={18} className="mr-3 text-gray-400" />
-                  <div>
-                    <span className="text-gray-600 text-sm">{t('book.category')}</span>
-                    <p className="font-medium">{getLocalizedText(book.categoryTranslations, book.category)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Calendar size={18} className="mr-3 text-gray-400" />
-                  <div>
-                    <span className="text-gray-600 text-sm">{t('book.publishYear')}</span>
-                    <p className="font-medium">{book.publishYear}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Hash size={18} className="mr-3 text-gray-400" />
-                  <div>
-                    <span className="text-gray-600 text-sm">{t('book.pages')}</span>
-                    <p className="font-medium">{book.pages}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Globe size={18} className="mr-3 text-gray-400" />
-                  <div>
-                    <span className="text-gray-600 text-sm">{t('common.language')}</span>
-                    <p className="font-medium capitalize">{book.language}</p>
-                  </div>
+                <div className="flex items-center text-lg text-gray-600 mb-4">
+                  <FileText size={20} className="mr-2" />
+                  <span>{t('book.category')}: {getLocalizedText(book.categoryTranslations, book.category)}</span>
                 </div>
               </div>
 
@@ -181,24 +118,6 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
                   {getLocalizedText(book.descriptionTranslations, book.description)}
                 </p>
               </div>
-
-              {/* Tags */}
-              {book.tags && book.tags.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('book.tags')}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {book.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Publication Info */}
               <div className="border-t border-gray-200 pt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Yayın Bilgileri</h3>

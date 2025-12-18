@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Download, Eye, FileText, User } from 'lucide-react';
+import { X, Download, Eye, FileText, User, Loader2 } from 'lucide-react';
 import type { Book } from '../../types';
+import { getSignedBookFileUrl } from '../../lib/supabase';
 
 interface BookDetailModalProps {
   book: Book | null;
@@ -11,7 +13,15 @@ interface BookDetailModalProps {
 
 const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModalProps) => {
   const { t, i18n } = useTranslation();
+  const [loadingUrls, setLoadingUrls] = useState<Record<string, boolean>>({});
   
+  // Reset URLs when modal opens with new book
+  useEffect(() => {
+    if (isOpen && book) {
+      setLoadingUrls({});
+    }
+  }, [isOpen, book?.id]);
+
   if (!isOpen || !book) return null;
 
   const currentLang = i18n.language as keyof typeof book.titleTranslations;
@@ -23,6 +33,32 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
+    }
+  };
+
+  // Handle secure download with signed URL
+  const handleDownload = async (format: string, url: string) => {
+    try {
+      setLoadingUrls(prev => ({ ...prev, [format]: true }));
+      
+      // Get signed URL for secure download
+      const signedUrl = await getSignedBookFileUrl(url, 3600); // 1 saat geçerli
+      
+      if (signedUrl) {
+        // Create temporary link and trigger download
+        const link = document.createElement('a');
+        link.href = signedUrl;
+        link.download = `${book.title}.${format}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      alert(t('errors.downloadFailed') || 'İndirme başarısız oldu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoadingUrls(prev => ({ ...prev, [format]: false }));
     }
   };
 
@@ -75,17 +111,24 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
                     <p className="text-sm font-medium text-gray-700">{t('book.formats')}:</p>
                     {Object.entries(book.formats).map(([format, url]) => (
                       url && (
-                        <a
+                        <button
                           key={format}
-                          href={url}
-                          download={`${book.title}.${format}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                          onClick={() => handleDownload(format, url)}
+                          disabled={loadingUrls[format]}
+                          className="w-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 disabled:text-gray-400 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
                         >
-                          <Download size={16} />
-                          <span>{t('common.download')} {format.toUpperCase()}</span>
-                        </a>
+                          {loadingUrls[format] ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              <span>Hazırlanıyor...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Download size={16} />
+                              <span>{t('common.download')} {format.toUpperCase()}</span>
+                            </>
+                          )}
+                        </button>
                       )
                     ))}
                   </div>

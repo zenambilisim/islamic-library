@@ -41,7 +41,8 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
       const fetchBooks = async () => {
         setLoadingBooks(true);
         try {
-          const { books, error } = await fetchBooksByAuthor(selectedAuthor);
+          // Seçili dilde kitapları çek
+          const { books, error } = await fetchBooksByAuthor(selectedAuthor, i18n.language);
           if (error) {
             console.error('Error fetching author books:', error);
             setAuthorBooks([]);
@@ -71,7 +72,7 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
       // Reset books when no author is selected
       setAuthorBooks([]);
     }
-  }, [selectedAuthor]);
+  }, [selectedAuthor, i18n.language]); // Yazar veya dil değiştiğinde kitapları yenile
 
   // Generate alphabet for navigation based on current language
   const alphabet = useMemo(() => {

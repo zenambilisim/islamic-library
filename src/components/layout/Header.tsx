@@ -40,8 +40,8 @@ const Header = () => {
   return (
     <header className="bg-white/80 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-white/20">
       <div className="container mx-auto px-4">
-        {/* Top bar with language selector */}
-        <div className="flex justify-end py-2 border-b border-gradient-to-r from-primary-100 to-purple-100">
+        {/* Top bar with language selector - Desktop Only */}
+        <div className="hidden md:flex justify-end py-2 border-b border-gradient-to-r from-primary-100 to-purple-100">
           <div className="relative group">
             <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 transform hover:scale-105 shadow-sm">
               <Globe size={16} className="text-primary-600" />
@@ -67,7 +67,7 @@ const Header = () => {
         </div>
 
         {/* Main header */}
-        <div className="py-6">
+        <div className="py-4 md:py-6">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3 hover:scale-105 transition-all duration-300">
@@ -126,13 +126,40 @@ const Header = () => {
               ))}
             </nav>
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-gray-100"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            {/* Mobile menu button & Language selector */}
+            <div className="lg:hidden flex items-center space-x-2">
+              {/* Language selector - Mobile */}
+              <div className="relative group">
+                <button className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm">
+                  <Globe size={18} className="text-primary-600" />
+                  <span className="text-xs font-medium text-gray-700">{languages.find(l => l.code === i18n.language)?.flag}</span>
+                </button>
+                
+                {/* Language dropdown - Mobile */}
+                <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={`w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg ${
+                        i18n.language === lang.code ? 'bg-primary-50 text-primary-700' : ''
+                      }`}
+                    >
+                      <span>{lang.flag}</span>
+                      <span className="text-sm">{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hamburger menu button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                {isMenuOpen ? <X size={24} className="text-gray-700" /> : <Menu size={24} className="text-gray-700" />}
+              </button>
+            </div>
           </div>
 
           {/* Mobile search bar */}

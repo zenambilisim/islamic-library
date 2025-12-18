@@ -178,13 +178,15 @@ export async function getAuthorById(id: string): Promise<Author | null> {
 }
 
 /**
- * Yazar adına göre kitapları getirir
+ * Yazar adına göre kitapları getirir (belirli bir dilde)
+ * @param authorName - Yazar adı
+ * @param language - Dil kodu (tr, en, ru, az)
  */
-export async function getBooksByAuthor(authorName: string) {
+export async function getBooksByAuthor(authorName: string, language?: string) {
   try {
-    console.log(`📚 Fetching books for author: ${authorName}`);
+    console.log(`📚 Fetching books for author: ${authorName}${language ? `, language: ${language}` : ''}`);
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('books')
       .select(`
         id,
@@ -213,15 +215,21 @@ export async function getBooksByAuthor(authorName: string) {
           file_size_text
         )
       `)
-      .eq('author', authorName)
-      .order('publish_year', { ascending: false });
+      .eq('author', authorName);
+
+    // Eğer dil belirtilmişse filtrele
+    if (language) {
+      query = query.eq('language', language);
+    }
+
+    const { data, error } = await query.order('publish_year', { ascending: false });
 
     if (error) {
       console.error('❌ Error fetching books by author:', error);
       return { books: [], error };
     }
 
-    console.log(`✅ Fetched ${data?.length || 0} books for author: ${authorName}`);
+    console.log(`✅ Fetched ${data?.length || 0} books for author: ${authorName}${language ? ` (${language})` : ''}`);
 
     return { books: data || [], error: null };
   } catch (err) {

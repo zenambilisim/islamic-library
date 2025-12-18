@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { convertSupabaseBookToBook } from '../lib/converters';
 import type { Book } from '../types';
@@ -14,8 +15,10 @@ interface UseSupabaseBooksReturn {
 /**
  * Supabase'den kitapları çeken custom hook
  * Otomatik olarak book_files ile join yapar
+ * Seçili dile göre kitapları filtreler
  */
 export function useSupabaseBooks(): UseSupabaseBooksReturn {
+  const { i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,15 +28,17 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       setLoading(true);
       setError(null);
 
-      console.log('📚 Fetching books from Supabase...');
+      const currentLanguage = i18n.language;
+      console.log(`📚 Fetching books for language: ${currentLanguage}`);
 
-      // Supabase'den kitapları ve dosyalarını çek
+      // Supabase'den kitapları ve dosyalarını çek - dil filtrelemesi ile
       const { data, error: supabaseError } = await supabase
         .from('books')
         .select(`
           *,
           book_files (*)
         `)
+        .eq('language', currentLanguage)
         .order('created_at', { ascending: false });
 
       if (supabaseError) {
@@ -47,7 +52,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         return;
       }
 
-      console.log(`✅ Fetched ${data.length} books from Supabase`);
+      console.log(`✅ Fetched ${data.length} books for language: ${currentLanguage}`);
 
       // Supabase formatından frontend formatına dönüştür
       const convertedBooks = data.map((supabaseBook: SupabaseBook) => 
@@ -58,6 +63,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       if (convertedBooks.length > 0) {
         console.log('🔍 Sample book URLs:', {
           title: convertedBooks[0].title,
+          language: data[0].language,
           coverImage: convertedBooks[0].coverImage,
           formats: convertedBooks[0].formats,
           originalCoverUrl: data[0].cover_image_url,
@@ -76,10 +82,10 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
     }
   };
 
-  // Component mount olduğunda kitapları çek
+  // Component mount olduğunda ve dil değiştiğinde kitapları çek
   useEffect(() => {
     fetchBooks();
-  }, []);
+  }, [i18n.language]); // Dil değiştiğinde yeniden fetch et
 
   return {
     books,
@@ -90,9 +96,10 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
 }
 
 /**
- * Belirli bir kategoriye göre kitapları filtreler
+ * Belirli bir kategoriye göre kitapları filtreler (dil ile birlikte)
  */
 export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksReturn {
+  const { i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +109,8 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
       setLoading(true);
       setError(null);
 
-      console.log(`📚 Fetching books for category: ${category}`);
+      const currentLanguage = i18n.language;
+      console.log(`📚 Fetching books for category: ${category}, language: ${currentLanguage}`);
 
       const { data, error: supabaseError } = await supabase
         .from('books')
@@ -111,6 +119,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
           book_files (*)
         `)
         .eq('category', category)
+        .eq('language', currentLanguage)
         .order('created_at', { ascending: false });
 
       if (supabaseError) {
@@ -123,7 +132,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
         return;
       }
 
-      console.log(`✅ Fetched ${data.length} books for category: ${category}`);
+      console.log(`✅ Fetched ${data.length} books for category: ${category}, language: ${currentLanguage}`);
 
       const convertedBooks = data.map((supabaseBook: SupabaseBook) => 
         convertSupabaseBookToBook(supabaseBook)
@@ -144,7 +153,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
     if (category) {
       fetchBooksByCategory();
     }
-  }, [category]);
+  }, [category, i18n.language]); // Kategori veya dil değiştiğinde yeniden fetch et
 
   return {
     books,

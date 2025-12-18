@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2 } from 'lucide-react';
 import type { Book } from '../../types';
+import { getSignedBookFileUrl } from '../../lib/supabase';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -23,6 +24,27 @@ const BookReaderModal = ({ book, isOpen, onClose }: BookReaderModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [pdfUrl, setPdfUrl] = useState<string>('');
+
+  // Load signed URL when modal opens
+  useEffect(() => {
+    if (isOpen && book?.formats.pdf) {
+      setIsLoading(true);
+      setError('');
+      
+      getSignedBookFileUrl(book.formats.pdf, 3600) // 1 saat geçerli
+        .then(url => {
+          setPdfUrl(url);
+        })
+        .catch(err => {
+          console.error('Error loading signed URL:', err);
+          setError(t('common.error'));
+          setIsLoading(false);
+        });
+    } else {
+      setPdfUrl('');
+    }
+  }, [isOpen, book?.formats.pdf, t]);
 
   if (!isOpen || !book) return null;
 
@@ -30,8 +52,6 @@ const BookReaderModal = ({ book, isOpen, onClose }: BookReaderModalProps) => {
   const getLocalizedText = (translations: any, fallback: string) => {
     return translations[currentLang] || translations.tr || fallback;
   };
-
-  const pdfUrl = book.formats.pdf;
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);

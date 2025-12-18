@@ -87,6 +87,48 @@ export function getBookFileUrl(bookFilePath: string | undefined | null): string 
   return getStoragePublicUrl('book-assets', storagePath);
 }
 
+/**
+ * Kitap dosyası için güvenli signed URL oluşturur (1 saat geçerli)
+ * @param bookFilePath - Kitap dosya yolu (örn: 'agir-itki-said-ellamin/agir-itki-said-ellamin.pdf')
+ * @param expiresIn - URL'nin geçerli olacağı süre (saniye cinsinden, default: 3600 = 1 saat)
+ * @returns Promise<string> - Signed URL veya hata durumunda boş string
+ */
+export async function getSignedBookFileUrl(
+  bookFilePath: string | undefined | null,
+  expiresIn: number = 3600
+): Promise<string> {
+  if (!bookFilePath) return '';
+  
+  // Eğer tam URL ise direkt dön
+  if (bookFilePath.startsWith('http')) return bookFilePath;
+  
+  // Storage path'i düzenle
+  let storagePath = bookFilePath;
+  
+  // 'books/' prefix'i yoksa ekle
+  if (!storagePath.startsWith('books/') && !storagePath.includes('/')) {
+    storagePath = `books/${storagePath}`;
+  }
+  
+  try {
+    const { data, error } = await supabase.storage
+      .from('book-assets')
+      .createSignedUrl(storagePath, expiresIn);
+    
+    if (error) {
+      console.error('❌ Error creating signed URL:', error);
+      // Fallback: public URL'i döndür
+      return getStoragePublicUrl('book-assets', storagePath);
+    }
+    
+    return data.signedUrl;
+  } catch (error) {
+    console.error('❌ Exception creating signed URL:', error);
+    // Fallback: public URL'i döndür
+    return getStoragePublicUrl('book-assets', storagePath);
+  }
+}
+
 // Database types - Supabase tablolarına uygun
 export interface SupabaseBook {
   id: string

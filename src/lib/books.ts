@@ -1,4 +1,4 @@
-import { supabase, type SupabaseBook, type BookFile, type Category } from './supabase'
+import { supabase } from './supabase'
 
 // ***** BOOK OPERATIONS *****
 

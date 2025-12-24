@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getBooks, searchBooks, getBooksByCategory, getCategories } from '../lib/books';
-import { getAuthors } from '../lib/authors';
+import { getBooks, getBooksByCategory, getCategories } from '../lib/books';
 import { convertSupabaseBookToBook } from '../lib/converters';
 import type { Book, Category, Author, SearchFilters } from '../types';
 
@@ -25,9 +24,7 @@ export const useBooks = (filters?: SearchFilters) => {
         console.log('Fetching books with filters:', filters);
         
         let result;
-        if (filters?.searchTerm) {
-          result = await searchBooks(filters.searchTerm);
-        } else if (filters?.category) {
+        if (filters?.category) {
           result = await getBooksByCategory(filters.category);
         } else {
           result = await getBooks();
@@ -53,7 +50,7 @@ export const useBooks = (filters?: SearchFilters) => {
     };
 
     fetchBooks();
-  }, [filters?.searchTerm, filters?.category]);
+  }, [filters?.category]);
 
   return { books, loading, error };
 };
@@ -80,23 +77,16 @@ export const useBooksData = () => {
 
         console.log('Fetching categories and authors...');
         
-        const [categoriesResult, authorsResult] = await Promise.all([
-          getCategories(),
-          getAuthors()
-        ]);
+        const categoriesResult = await getCategories();
         
         console.log('Categories result:', categoriesResult);
-        console.log('Authors result:', authorsResult);
         
         if (categoriesResult.error) {
           throw new Error(categoriesResult.error.message);
         }
-        if (authorsResult.error) {
-          throw new Error(authorsResult.error.message);
-        }
         
         setCategories(categoriesResult.categories || []);
-        setAuthors(authorsResult.authors || []);
+        setAuthors([]);
         
       } catch (err) {
         console.error('Error fetching data:', err);

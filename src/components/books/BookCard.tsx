@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Eye, FileText, Calendar, User } from 'lucide-react';
+import { Download, Eye, FileText, User } from 'lucide-react';
 import type { Book } from '../../types';
 
 interface BookCardProps {

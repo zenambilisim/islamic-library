@@ -16,12 +16,9 @@ export const useBooks = (filters?: SearchFilters) => {
         
         // Check if Supabase is configured
         if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-          console.warn('Supabase not configured, returning empty data');
           setBooks([]);
           return;
         }
-
-        console.log('Fetching books with filters:', filters);
         
         let result;
         if (filters?.category) {
@@ -30,14 +27,11 @@ export const useBooks = (filters?: SearchFilters) => {
           result = await getBooks();
         }
         
-        console.log('Supabase result:', result);
-        
         if (result.error) {
           throw new Error(result.error.message);
         }
         
         const convertedBooks = result.books.map(convertSupabaseBookToBook);
-        console.log('Converted books:', convertedBooks.length);
         setBooks(convertedBooks);
         
       } catch (err) {
@@ -69,17 +63,12 @@ export const useBooksData = () => {
         
         // Check if Supabase is configured
         if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-          console.warn('Supabase not configured, returning empty data');
           setCategories([]);
           setAuthors([]);
           return;
         }
-
-        console.log('Fetching categories and authors...');
         
         const categoriesResult = await getCategories();
-        
-        console.log('Categories result:', categoriesResult);
         
         if (categoriesResult.error) {
           throw new Error(categoriesResult.error.message);

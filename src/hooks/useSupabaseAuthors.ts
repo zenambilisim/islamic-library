@@ -25,8 +25,6 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
       setLoading(true);
       setError(null);
 
-      console.log('👤 Fetching authors from Supabase...');
-
       // Önce authors_view'ı dene
       let { data, error: supabaseError } = await supabase
         .from('authors_view')
@@ -35,8 +33,6 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
 
       // Eğer view yoksa, books tablosundan yazarları çıkar
       if (supabaseError && supabaseError.message.includes('does not exist')) {
-        console.warn('⚠️ authors_view bulunamadı, books tablosundan yazarlar çıkarılıyor...');
-        
         // Books'tan tüm yazarları çek
         const { data: booksData, error: booksError } = await supabase
           .from('books')
@@ -47,7 +43,6 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
         }
 
         if (!booksData || booksData.length === 0) {
-          console.warn('⚠️ No books found in database');
           setAuthors([]);
           return;
         }
@@ -102,26 +97,14 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ No authors found');
         setAuthors([]);
         return;
       }
-
-      console.log(`✅ Fetched ${data.length} authors from Supabase`);
 
       // Supabase formatından frontend formatına dönüştür
       const convertedAuthors = data.map((supabaseAuthor: SupabaseAuthor) => 
         convertSupabaseAuthorToAuthor(supabaseAuthor)
       );
-
-      // Debug: İlk yazarın bilgilerini göster
-      if (convertedAuthors.length > 0) {
-        console.log('🔍 Sample author:', {
-          name: convertedAuthors[0].name,
-          bookCount: convertedAuthors[0].bookCount,
-          biography: convertedAuthors[0].biography?.substring(0, 50) + '...'
-        });
-      }
 
       setAuthors(convertedAuthors);
     } catch (err) {
@@ -166,7 +149,6 @@ export async function getAuthorById(id: string): Promise<Author | null> {
     }
 
     if (!data) {
-      console.warn('⚠️ Author not found');
       return null;
     }
 
@@ -184,8 +166,6 @@ export async function getAuthorById(id: string): Promise<Author | null> {
  */
 export async function getBooksByAuthor(authorName: string, language?: string) {
   try {
-    console.log(`📚 Fetching books for author: ${authorName}${language ? `, language: ${language}` : ''}`);
-
     let query = supabase
       .from('books')
       .select(`
@@ -229,8 +209,6 @@ export async function getBooksByAuthor(authorName: string, language?: string) {
       return { books: [], error };
     }
 
-    console.log(`✅ Fetched ${data?.length || 0} books for author: ${authorName}${language ? ` (${language})` : ''}`);
-
     return { books: data || [], error: null };
   } catch (err) {
     console.error('❌ Error fetching books by author:', err);
@@ -243,8 +221,6 @@ export async function getBooksByAuthor(authorName: string, language?: string) {
  */
 export async function getPopularAuthors(limit: number = 10): Promise<Author[]> {
   try {
-    console.log(`👤 Fetching top ${limit} popular authors...`);
-
     const { data, error } = await supabase
       .from('popular_authors')
       .select('*')
@@ -271,8 +247,6 @@ export async function getPopularAuthors(limit: number = 10): Promise<Author[]> {
  */
 export async function getRecentAuthors(limit: number = 10): Promise<Author[]> {
   try {
-    console.log(`👤 Fetching ${limit} recent authors...`);
-
     const { data, error } = await supabase
       .from('recent_authors')
       .select('*')
@@ -299,8 +273,6 @@ export async function getRecentAuthors(limit: number = 10): Promise<Author[]> {
  */
 export async function getAuthorsByLetter(letter: string): Promise<Author[]> {
   try {
-    console.log(`👤 Fetching authors starting with: ${letter}`);
-
     const { data, error } = await supabase
       .from('authors_view')
       .select('*')

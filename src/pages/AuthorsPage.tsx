@@ -44,7 +44,6 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
           // Seçili dilde kitapları çek
           const { books, error } = await fetchBooksByAuthor(selectedAuthor, i18n.language);
           if (error) {
-            console.error('Error fetching author books:', error);
             setAuthorBooks([]);
           } else if (books && books.length > 0) {
             // Convert books - books zaten doğru formatta geldiği için direkt cast edelim
@@ -61,7 +60,6 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
             setAuthorBooks([]);
           }
         } catch (err) {
-          console.error('Error in fetchBooks:', err);
           setAuthorBooks([]);
         } finally {
           setLoadingBooks(false);

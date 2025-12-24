@@ -4,12 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dummy-url.supabase.co'
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'dummy-key'
 
-console.log('🔧 Supabase Config:', { 
-  url: supabaseUrl, 
-  hasKey: !!supabaseKey,
-  isReal: supabaseUrl !== 'https://dummy-url.supabase.co'
-});
-
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Storage bucket names

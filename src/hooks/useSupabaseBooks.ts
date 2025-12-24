@@ -29,7 +29,6 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       setError(null);
 
       const currentLanguage = i18n.language;
-      console.log(`📚 Fetching books for language: ${currentLanguage}`);
 
       // Supabase'den kitapları ve dosyalarını çek - dil filtrelemesi ile
       const { data, error: supabaseError } = await supabase
@@ -47,29 +46,14 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       }
 
       if (!data) {
-        console.warn('⚠️ No data returned from Supabase');
         setBooks([]);
         return;
       }
-
-      console.log(`✅ Fetched ${data.length} books for language: ${currentLanguage}`);
 
       // Supabase formatından frontend formatına dönüştür
       const convertedBooks = data.map((supabaseBook: SupabaseBook) => 
         convertSupabaseBookToBook(supabaseBook)
       );
-
-      // Debug: İlk kitabın URL'lerini kontrol et
-      if (convertedBooks.length > 0) {
-        console.log('🔍 Sample book URLs:', {
-          title: convertedBooks[0].title,
-          language: data[0].language,
-          coverImage: convertedBooks[0].coverImage,
-          formats: convertedBooks[0].formats,
-          originalCoverUrl: data[0].cover_image_url,
-          originalBookFiles: data[0].book_files
-        });
-      }
 
       setBooks(convertedBooks);
     } catch (err) {
@@ -132,8 +116,6 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
         return;
       }
 
-      console.log(`✅ Fetched ${data.length} books for category: ${category}, language: ${currentLanguage}`);
-
       const convertedBooks = data.map((supabaseBook: SupabaseBook) => 
         convertSupabaseBookToBook(supabaseBook)
       );
@@ -185,11 +167,9 @@ export async function getBookById(id: string): Promise<Book | null> {
     }
 
     if (!data) {
-      console.warn('⚠️ Book not found');
       return null;
     }
 
-    console.log('✅ Book fetched successfully');
     return convertSupabaseBookToBook(data);
   } catch (err) {
     console.error('❌ Error in getBookById:', err);

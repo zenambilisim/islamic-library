@@ -86,8 +86,26 @@
     "booksFound": "kitap bulundu"
   },
   "categories": {
+    "pageTitle": "Kategoriler",
+    "pageDescription": "İslami kitapları kategorilerine göre keşfedin",
     "noCategories": "Henüz kategori bulunmuyor",
-    "browseByCategory": "Kategoriye göre gözat"
+    "browseByCategory": "Kategoriye göre gözat",
+    "booksInCategory": "kitap",
+    "goToCategory": "Kategoriye Git →",
+    "backToCategories": "Kategorilere Dön",
+    "booksFound": "kitap bulundu",
+    "noBooksInCategory": "Bu kategoride henüz kitap bulunmuyor",
+    "noBooksInCategoryDesc": "Yakında bu kategoriye yeni kitaplar eklenecek.",
+    "categoryNotFound": "Kategori bulunamadı",
+    "categoryNotFoundDesc": "için herhangi bir kategori bulunamadı. Farklı anahtar kelimeler deneyebilirsiniz.",
+    "searchResultsFor": "kategori",
+    "searchResultsForSuffix": "için bulundu",
+    "loadingCategories": "Kategoriler yükleniyor...",
+    "errorOccurred": "Hata Oluştu",
+    "tryAgain": "Tekrar Dene",
+    "totalStatistics": "Toplam İstatistikler",
+    "totalCategories": "Kategori",
+    "totalBooks": "Toplam Kitap"
   },
   "hero": {
     "title": "Geniş Dijital İslami Kütüphane",
@@ -95,7 +113,9 @@
     "booksCount": "Kitab",
     "languagesCount": "Dil",
     "knowledgeCount": "Bilgi",
-    "exploreButton": "Kitapları Keşfet ↓"
+    "exploreButton": "Kitapları Keşfet ↓",
+    "bannerAlt": "İslami Kütüphane Banner",
+    "mockupAlt": "İslami Kitaplar"
   },
   "contact": {
     "pageTitle": "İletişim",
@@ -117,7 +137,10 @@
     "messageLabel": "Mesajınız *",
     "messagePlaceholder": "Mesajınızı detaylı bir şekilde yazın...",
     "sendButton": "Mesajı Gönder",
-    "successMessage": "Mesajınız gönderildi! En kısa sürede size dönüş yapacağız.",
+    "sendingButton": "Gönderiliyor...",
+    "successMessage": "Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.",
+    "errorMessage": "Mesaj gönderilemedi. Lütfen daha sonra tekrar deneyin.",
+    "errorNotConfigured": "E-posta servisi şu anda yapılandırılmamış. Lütfen site yöneticisi ile iletişime geçin.",
     "contactInfoTitle": "İletişim Bilgileri",
     "emailTitle": "E-posta",
     "phoneTitle": "Telefon",
@@ -224,6 +247,7 @@
   },
   "footer": {
     "description": "Dini kitapları ücretsiz indirin ve çevrimiçi okuyun",
+    "detailedDescription": "Binlerce İslami kitabı ücretsiz indirin, çevrimiçi okuyun ve bilginizi artırın. Modern teknoloji ile geleneksel bilginin buluştuğu platform.",
     "quickLinks": "Hızlı Bağlantılar",
     "contact": "İletişim",
     "copyright": "Tüm hakları saklıdır"

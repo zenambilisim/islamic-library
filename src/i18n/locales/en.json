@@ -85,8 +85,26 @@
     "booksFound": "books found"
   },
   "categories": {
+    "pageTitle": "Categories",
+    "pageDescription": "Discover Islamic books by categories",
     "noCategories": "No categories available yet",
-    "browseByCategory": "Browse by category"
+    "browseByCategory": "Browse by category",
+    "booksInCategory": "books",
+    "goToCategory": "Go to Category →",
+    "backToCategories": "Back to Categories",
+    "booksFound": "books found",
+    "noBooksInCategory": "No books in this category yet",
+    "noBooksInCategoryDesc": "New books will be added to this category soon.",
+    "categoryNotFound": "Category not found",
+    "categoryNotFoundDesc": "for. You can try different keywords.",
+    "searchResultsFor": "categories found for",
+    "searchResultsForSuffix": "",
+    "loadingCategories": "Loading categories...",
+    "errorOccurred": "Error Occurred",
+    "tryAgain": "Try Again",
+    "totalStatistics": "Total Statistics",
+    "totalCategories": "Categories",
+    "totalBooks": "Total Books"
   },
   "hero": {
     "title": "Extensive Digital Islamic Library",
@@ -94,7 +112,9 @@
     "booksCount": "Books",
     "languagesCount": "Languages",
     "knowledgeCount": "Knowledge",
-    "exploreButton": "Explore Books ↓"
+    "exploreButton": "Explore Books ↓",
+    "bannerAlt": "Islamic Library Banner",
+    "mockupAlt": "Islamic Books"
   },
   "contact": {
     "pageTitle": "Contact",
@@ -116,7 +136,10 @@
     "messageLabel": "Your Message *",
     "messagePlaceholder": "Write your message in detail...",
     "sendButton": "Send Message",
-    "successMessage": "Your message has been sent! We will get back to you as soon as possible.",
+    "sendingButton": "Sending...",
+    "successMessage": "Your message has been sent successfully! We will get back to you as soon as possible.",
+    "errorMessage": "Failed to send message. Please try again later.",
+    "errorNotConfigured": "Email service is not currently configured. Please contact the site administrator.",
     "contactInfoTitle": "Contact Information",
     "emailTitle": "Email",
     "phoneTitle": "Phone",
@@ -223,6 +246,7 @@
   },
   "footer": {
     "description": "Download and read religious books online for free",
+    "detailedDescription": "Download thousands of Islamic books for free, read online, and expand your knowledge. The platform where modern technology meets traditional wisdom.",
     "quickLinks": "Quick Links",
     "contact": "Contact",
     "copyright": "All rights reserved"

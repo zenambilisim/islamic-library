@@ -1,23 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { BookOpen, Mail} from 'lucide-react';
 
 const Footer = () => {
   const { t } = useTranslation();
 
   const quickLinks = [
-    { key: 'home', label: t('navigation.home'), href: '#home' },
-    { key: 'categories', label: t('navigation.categories'), href: '#categories' },
-    { key: 'authors', label: t('navigation.authors'), href: '#authors' },
-    { key: 'about', label: t('navigation.about'), href: '#about' },
+    { key: 'home', label: t('navigation.home'), href: '' },
+    { key: 'categories', label: t('navigation.categories'), href: 'categories' },
+    { key: 'authors', label: t('navigation.authors'), href: 'authors' },
+    { key: 'about', label: t('navigation.about'), href: 'about' },
   ];
-
-  const socialLinks = [
-    { icon: Facebook, href: '#facebook', label: 'Facebook' },
-    { icon: Twitter, href: '#twitter', label: 'Twitter' },
-    { icon: Instagram, href: '#instagram', label: 'Instagram' },
-    { icon: Youtube, href: '#youtube', label: 'Youtube' },
-  ];
-
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white relative overflow-hidden">
       {/* Background decoration */}
@@ -37,23 +29,8 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-gray-300 mb-8 max-w-lg text-lg leading-relaxed">
-              Binlerce İslami kitabı ücretsiz indirin, çevrimiçi okuyun ve bilginizi artırın. 
-              Modern teknoloji ile geleneksel bilginin buluştuğu platform.
+              {t('footer.detailedDescription')}
             </p>
-            
-            {/* Social Links */}
-            <div className="flex space-x-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  className="bg-gray-800/50 backdrop-blur-sm hover:bg-gradient-to-r hover:from-primary-600 hover:to-purple-600 p-3 rounded-xl transition-all duration-300 transform hover:scale-110 border border-gray-700 hover:border-primary-500"
-                  aria-label={social.label}
-                >
-                  <social.icon size={22} />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -79,15 +56,7 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-gray-300">
                 <Mail size={16} />
-                <span>info@islamiclibrary.org</span>
-              </div>
-              <div className="flex items-center space-x-3 text-gray-300">
-                <Phone size={16} />
-                <span>+90 212 xxx xx xx</span>
-              </div>
-              <div className="flex items-center space-x-3 text-gray-300">
-                <MapPin size={16} />
-                <span>İstanbul, Türkiye</span>
+                <span>shiaislamicapps@gmail.com</span>
               </div>
             </div>
           </div>
@@ -99,14 +68,6 @@ const Footer = () => {
             <p className="text-gray-400 text-sm">
               © 2025 Islamic Library. {t('footer.copyright')}
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
-                Gizlilik Politikası
-              </a>
-              <a href="#terms" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
-                Kullanım Şartları
-              </a>
-            </div>
           </div>
         </div>
       </div>

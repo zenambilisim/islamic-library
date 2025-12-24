@@ -12,13 +12,37 @@ interface HomePageProps {
 }
 
 const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [filters, setFilters] = useState<SearchFilters>({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Supabase'den kitapları çek
   const { books: supabaseBooks, loading, error } = useSupabaseBooks();
+
+  // Dil bazlı banner resmi seç
+  const getBannerImage = () => {
+    const language = i18n.language;
+    const bannerImages: Record<string, string> = {
+      'tr': '/images/HomePage/Banner turkish.png',
+      'en': '/images/HomePage/Banner english.png',
+      'ru': '/images/HomePage/Banner russian.png',
+      'az': '/images/HomePage/Banner azerbaijani.png'
+    };
+    return bannerImages[language] || bannerImages['en'];
+  };
+
+  // Dil bazlı mockup resmi seç
+  const getMockupImage = () => {
+    const language = i18n.language;
+    const mockupImages: Record<string, string> = {
+      'tr': '/images/HomePage/iPad Pro Mockup turkish.png',
+      'en': '/images/HomePage/iPad Pro Mockup english.png',
+      'ru': '/images/HomePage/iPad Pro Mockup russian.png',
+      'az': '/images/HomePage/İPad Pro Mockup azerbaijani.png'
+    };
+    return mockupImages[language] || mockupImages['en'];
+  };
 
   useEffect(() => {
     setSearchMode('books');
@@ -106,63 +130,80 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Hero Section - Always visible unless searching */}
       {!searchTerm && (
-        <div className="relative overflow-hidden min-h-[600px] flex items-center">
-          {/* Background Banner Image */}
-          <div className="absolute inset-0">
+        <div className="relative overflow-hidden">
+          {/* Background Banner Image - Desktop */}
+          <div className="absolute inset-0 hidden lg:block">
             <img
-              src="/images/HomePage/Banner_1920x1000.png"
-              alt="İslami Kütüphane Banner"
-              className="w-full h-full object-cover"
+              src={getBannerImage()}
+              alt={t('hero.bannerAlt') || 'Islamic Library Banner'}
+              className="w-full h-full object-cover object-center"
             />
             {/* Blur overlay */}
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary-600/30 via-purple-600/20 to-blue-600/30"></div>
           </div>
+
+          {/* Mobile Background - Banner Image with Better Styling */}
+          <div className="absolute inset-0 lg:hidden">
+            <img
+              src={getBannerImage()}
+              alt={t('hero.bannerAlt') || 'Islamic Library Banner'}
+              className="w-full h-full object-cover object-center"
+              style={{ 
+                filter: 'blur(1px) brightness(0.8)',
+                transform: 'scale(1.05)'
+              }}
+            />
+            {/* Enhanced gradient overlay for mobile */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-900/70 via-purple-900/60 to-blue-900/70"></div>
+          </div>
           
-          <div className="container mx-auto px-4 py-16 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               {/* Left Content */}
-              <div className="text-center lg:text-left">
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+              <div className="text-center lg:text-left order-1 lg:order-1">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-lg leading-tight">
                   <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
                     {t('hero.title')}
                   </span>
                 </h1>
-                <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed drop-shadow-md">
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-6 md:mb-8 leading-relaxed drop-shadow-md">
                   {t('hero.subtitle')}
                 </p>
-                <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
-                    <div className="text-2xl font-bold text-primary-600">{supabaseBooks.length}</div>
-                    <div className="text-sm text-gray-600">{t('hero.booksCount')}</div>
+                
+                {/* Stats Cards */}
+                <div className="flex flex-wrap justify-center lg:justify-start gap-3 md:gap-4 mb-6 md:mb-8">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
+                    <div className="text-xl md:text-2xl font-bold text-primary-600">{supabaseBooks.length}</div>
+                    <div className="text-xs md:text-sm text-gray-600">{t('hero.booksCount')}</div>
                   </div>
-                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
-                    <div className="text-2xl font-bold text-purple-600">4</div>
-                    <div className="text-sm text-gray-600">{t('hero.languagesCount')}</div>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
+                    <div className="text-xl md:text-2xl font-bold text-purple-600">4</div>
+                    <div className="text-xs md:text-sm text-gray-600">{t('hero.languagesCount')}</div>
                   </div>
-                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
-                    <div className="text-2xl font-bold text-blue-600">∞</div>
-                    <div className="text-sm text-gray-600">{t('hero.knowledgeCount')}</div>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
+                    <div className="text-xl md:text-2xl font-bold text-blue-600">∞</div>
+                    <div className="text-xs md:text-sm text-gray-600">{t('hero.knowledgeCount')}</div>
                   </div>
                 </div>
                 
                 {/* CTA Button */}
                 <button 
                   onClick={scrollToBooks}
-                  className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 animate-pulse-slow"
+                  className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 w-full sm:w-auto"
                 >
                   {t('hero.exploreButton')}
                 </button>
               </div>
               
-              {/* Right Image */}
-              <div className="flex justify-center lg:justify-end">
-                <div className="relative">
+              {/* Right Image - Mockup */}
+              <div className="flex justify-center lg:justify-end order-2 lg:order-2">
+                <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
                   <img
-                    src="/images/HomePage/IMG_1228.png"
-                    alt="İslami Eserler"
-                    className="max-w-full h-auto max-h-96 object-contain drop-shadow-2xl rounded-2xl"
+                    src={getMockupImage()}
+                    alt={t('hero.mockupAlt') || 'Islamic Books'}
+                    className="w-full h-auto object-contain drop-shadow-2xl rounded-xl md:rounded-2xl"
                   />
                   {/* Decorative glow */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl -z-10 scale-110"></div>

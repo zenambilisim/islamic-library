@@ -1,0 +1,73 @@
+1. Adım: Script Hazırlığı
+Bilgisayarında bu kitapların olduğu klasörün içinde bir terminal aç ve gerekli paketleri yükle:
+
+Bash
+
+npm init -y
+npm install @supabase/supabase-js dotenv fs path
+2. Adım: Klasör İçindeki Bilgileri Okuma Mantığı
+Klasör isimlerin (Biography, Ethics vb.) zaten categories tablonla eşleşiyor. Script'in şu mantıkla çalışmalı:
+
+Kategori Eşleme: Klasör ismine bak (örn: "Biography"), Supabase'deki categories tablosundan bu kategorinin id'sini al.
+
+Dosya Tarama: Klasörün içindeki her alt klasörü (kitabı) tara.
+
+Storage Yükleme: Kitap içindeki .pdf, .epub, .doc dosyalarını book-assets/books klasörüne, görseli covers klasörüne yükle.
+
+Database Kayıt: Yükleme sonrası Supabase'den dönen URL'leri al, books ve book_files tablolarına insert yap.
+
+3. Adım: Örnek Taslak Kod (Node.js)
+Senin şemandaki jsonb alanlarını ve book_files ilişkisini de hesaba katan bir taslak:
+
+JavaScript
+
+const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
+
+// Supabase bağlantısı (Service Role Key kullanmalısın - RLS'i aşmak için)
+const supabase = createClient('PROJE_URL', 'SERVICE_ROLE_KEY');
+
+async function uploadBooks() {
+  const baseDir = './Books_en'; // Kitapların olduğu ana klasör
+  const categories = fs.readdirSync(baseDir);
+
+  for (const categoryName of categories) {
+    const categoryPath = path.join(baseDir, categoryName);
+    if (!fs.statSync(categoryPath).isDirectory()) continue;
+
+    // 1. Kategoriyi bul veya oluştur (Şemana göre ID alıyoruz)
+    const { data: catData } = await supabase.from('categories').select('id').eq('name', categoryName).single();
+    
+    const bookFolders = fs.readdirSync(categoryPath);
+    for (const bookFolderName of bookFolders) {
+      const bookPath = path.join(categoryPath, bookFolderName);
+      const files = fs.readdirSync(bookPath);
+
+      // 2. Dosyaları ayır (Kapak ve Kitap dosyaları)
+      const coverFile = files.find(f => f.endsWith('.png') || f.endsWith('.jpg'));
+      const bookFiles = files.filter(f => f.endsWith('.pdf') || f.endsWith('.epub') || f.endsWith('.docx'));
+
+      // 3. Dosyaları Storage'a yükle ve linklerini al
+      // (Burada supabase.storage.from('book-assets').upload(...) fonksiyonu kullanılacak)
+
+      // 4. Veritabanına kayıt
+      const { data: newBook } = await supabase.from('books').insert({
+        title: bookFolderName, // Klasör adını kitap adı varsayıyoruz
+        category: catData.id,
+        // Diğer alanlar...
+      }).select().single();
+
+      // 5. book_files tablosunu doldur
+      // newBook.id'yi kullanarak book_files'a her dosya formatını ekle
+    }
+  }
+}
+Neden Bu Yöntemi Seçmelisin?
+Hata Payı Sıfır: Dosya yolu yanlış yazıldı, ID eşleşmedi gibi dertlerin olmaz.
+
+Format Desteği: Şemandaki book_files tablosunda gördüğüm format (pdf, doc, epub) ayrımını script ile tek döngüde yapabilirsin.
+
+JSONB Kolaylığı: Çeviri alanlarını (title_translations) script içinde bir objeyle kolayca jsonb olarak gönderebilirsin.
+
+Önemli İpucu: Kitapların hakkında detaylı bilgi (sayfa sayısı, yazar, açıklama vb.) klasörlerin içinde bir .txt veya .json olarak varsa, script bunu da okuyup veritabanındaki ilgili kolonlara otomatik yazabilir.

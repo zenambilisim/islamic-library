@@ -1,0 +1,30 @@
+{
+  "name": "islamic-library-book-uploader",
+  "version": "1.0.0",
+  "description": "Bulk book uploader for Islamic Library project - uploads books from local folders to Supabase",
+  "main": "upload-books.js",
+  "scripts": {
+    "upload": "node upload-books.js",
+    "upload:dry-run": "node upload-books.js --dry-run",
+    "test": "DRY_RUN=true node upload-books.js"
+  },
+  "keywords": [
+    "supabase",
+    "upload",
+    "books",
+    "bulk",
+    "islamic-library"
+  ],
+  "author": "Islamic Library Project Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

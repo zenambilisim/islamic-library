@@ -9,6 +9,7 @@ A modern React + TypeScript electronic book library application for Islamic reli
 - **Live Search**: Real-time search functionality across books, authors, and categories
 - **Multiple Formats**: EPUB, PDF, DOC download support
 - **Online Reading**: In-browser book reader (coming soon)
+- **Contact Form**: Email integration via EmailJS
 - **Modern UI**: Clean, professional interface built with Tailwind CSS
 
 ## 🛠 Tech Stack
@@ -101,12 +102,21 @@ cd İslamicLibrary
 npm install
 ```
 
-3. Start the development server:
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your configuration:
+- Supabase credentials (for book data)
+- EmailJS credentials (for contact form email) - See [EmailJS Setup Guide](docs/EMAILJS-SETUP.md)
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:5173`
 
 ## 📦 Available Scripts
 
@@ -157,6 +167,15 @@ Built with Tailwind CSS featuring:
 - Support for Arabic text (Noto Sans Arabic)
 
 ## 🔧 Development
+
+### Contact Form Setup
+
+The contact form uses EmailJS for email handling:
+
+1. Follow the detailed guide in [docs/EMAILJS-SETUP.md](docs/EMAILJS-SETUP.md)
+2. Get your credentials from [EmailJS Dashboard](https://dashboard.emailjs.com/)
+3. Add them to your `.env` file
+4. Test the contact form locally
 
 ### Adding New Books
 

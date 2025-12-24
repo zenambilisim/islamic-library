@@ -85,8 +85,26 @@
     "booksFound": "kitab tapıldı"
   },
   "categories": {
+    "pageTitle": "Kateqoriyalar",
+    "pageDescription": "İslam kitablarını kateqoriyalara görə kəşf edin",
     "noCategories": "Hələ kateqoriya yoxdur",
-    "browseByCategory": "Kateqoriyaya görə gəzin"
+    "browseByCategory": "Kateqoriyaya görə gəzin",
+    "booksInCategory": "kitab",
+    "goToCategory": "Kateqoriyaya get →",
+    "backToCategories": "Kateqoriyalara qayıt",
+    "booksFound": "kitab tapıldı",
+    "noBooksInCategory": "Bu kateqoriyada hələ kitab yoxdur",
+    "noBooksInCategoryDesc": "Tezliklə bu kateqoriyaya yeni kitablar əlavə ediləcək.",
+    "categoryNotFound": "Kateqoriya tapılmadı",
+    "categoryNotFoundDesc": "üçün. Fərqli açar sözlər sınaya bilərsiniz.",
+    "searchResultsFor": "kateqoriya tapıldı",
+    "searchResultsForSuffix": "üçün",
+    "loadingCategories": "Kateqoriyalar yüklənir...",
+    "errorOccurred": "Xəta baş verdi",
+    "tryAgain": "Yenidən cəhd et",
+    "totalStatistics": "Ümumi Statistika",
+    "totalCategories": "Kateqoriya",
+    "totalBooks": "Ümumi Kitab"
   },
   "hero": {
     "title": "Geniş Rəqəmsal İslam Kitabxanası",
@@ -94,7 +112,9 @@
     "booksCount": "Kitab",
     "languagesCount": "Dil",
     "knowledgeCount": "Bilik",
-    "exploreButton": "Kitabları Kəşf Et ↓"
+    "exploreButton": "Kitabları Kəşf Et ↓",
+    "bannerAlt": "İslam Kitabxanası Banner",
+    "mockupAlt": "İslam Kitabları"
   },
   "contact": {
     "pageTitle": "Əlaqə",
@@ -116,7 +136,10 @@
     "messageLabel": "Mesajınız *",
     "messagePlaceholder": "Mesajınızı ətraflı yazın...",
     "sendButton": "Mesajı Göndər",
-    "successMessage": "Mesajınız göndərildi! Ən qısa zamanda sizə cavab verəcəyik.",
+    "sendingButton": "Göndərilir...",
+    "successMessage": "Mesajınız uğurla göndərildi! Ən qısa zamanda sizə cavab verəcəyik.",
+    "errorMessage": "Mesaj göndərilə bilmədi. Zəhmət olmasa daha sonra yenidən cəhd edin.",
+    "errorNotConfigured": "E-poçt xidməti hazırda konfiqurasiya edilməyib. Zəhmət olmasa sayt administratoru ilə əlaqə saxlayın.",
     "contactInfoTitle": "Əlaqə Məlumatları",
     "emailTitle": "E-poçt",
     "phoneTitle": "Telefon",
@@ -223,6 +246,7 @@
   },
   "footer": {
     "description": "Dini kitabları pulsuz yüklə və onlayn oxu",
+    "detailedDescription": "Min­lər­lə İslam ki­ta­bı­nı pul­suz yük­lə­yin, on­layn oxu­yun və bi­lik­lə­ri­ni­zi ar­tı­rın. Mü­asir tex­no­lo­gi­ya ilə ənə­nə­vi hik­mə­tin qov­şaq nöq­tə­si olan plat­for­ma.",
     "quickLinks": "Sürətli Keçidlər",
     "contact": "Əlaqə",
     "copyright": "Bütün hüquqlar qorunur"

@@ -77,7 +77,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-primary-600 mx-auto mb-6"></div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('common.loading')}</h2>
-          <p className="text-gray-600">Kategoriler yükleniyor...</p>
+          <p className="text-gray-600">{t('categories.loadingCategories')}</p>
         </div>
       </div>
     );
@@ -89,13 +89,13 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center bg-white rounded-2xl p-8 shadow-xl max-w-md">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-600 mb-3">Hata Oluştu</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-3">{t('categories.errorOccurred')}</h2>
           <p className="text-gray-700 mb-6">{categoriesError}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
           >
-            Tekrar Dene
+            {t('categories.tryAgain')}
           </button>
         </div>
       </div>
@@ -119,7 +119,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
               className="text-primary-600 hover:text-primary-700 font-medium mb-4 flex items-center space-x-2"
             >
               <span>←</span>
-              <span>Kategorilere Dön</span>
+              <span>{t('categories.backToCategories')}</span>
             </button>
             
             <div className="flex items-center space-x-4 mb-4">
@@ -136,7 +136,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
 
             <div className="flex items-center justify-between">
               <p className="text-gray-600">
-                {categoryBooks.length} kitap bulundu
+                {categoryBooks.length} {t('categories.booksFound')}
               </p>
               
               {/* View Mode Toggle */}
@@ -176,10 +176,10 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
             <div className="text-center py-16">
               <BookOpen size={64} className="mx-auto text-gray-300 mb-4" />
               <h3 className="text-xl font-medium text-gray-900 mb-2">
-                Bu kategoride henüz kitap bulunmuyor
+                {t('categories.noBooksInCategory')}
               </h3>
               <p className="text-gray-600">
-                Yakında bu kategoriye yeni kitaplar eklenecek.
+                {t('categories.noBooksInCategoryDesc')}
               </p>
             </div>
           )}
@@ -195,10 +195,10 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('navigation.categories')}
+            {t('categories.pageTitle')}
           </h1>
           <p className="text-gray-600">
-            İslami kitapları kategorilerine göre keşfedin
+            {t('categories.pageDescription')}
           </p>
         </div>
 
@@ -206,7 +206,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         {searchTerm && (
           <div className="mb-6">
             <p className="text-gray-600">
-              {filteredCategories.length} kategori "{searchTerm}" için bulundu
+              {filteredCategories.length} {t('categories.searchResultsFor')} "{searchTerm}" {t('categories.searchResultsForSuffix')}
             </p>
           </div>
         )}
@@ -231,7 +231,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
                         {getLocalizedText(category.nameTranslations, category.name)}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
-                        {categoryBooks.length} kitap
+                        {categoryBooks.length} {t('categories.booksInCategory')}
                       </p>
                     </div>
                   </div>
@@ -244,7 +244,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
                   {/* Action Button */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="text-primary-600 font-medium text-sm group-hover:text-primary-700 transition-colors">
-                      Kategoriye Git →
+                      {t('categories.goToCategory')}
                     </div>
                   </div>
                 </div>
@@ -258,10 +258,10 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
           <div className="text-center py-16">
             <Grid3X3 size={48} className="mx-auto mb-4 text-gray-300" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
-              Kategori bulunamadı
+              {t('categories.categoryNotFound')}
             </h3>
             <p className="text-gray-600">
-              "{searchTerm}" için herhangi bir kategori bulunamadı. Farklı anahtar kelimeler deneyebilirsiniz.
+              "{searchTerm}" {t('categories.categoryNotFoundDesc')}
             </p>
           </div>
         )}
@@ -270,20 +270,20 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-8">
           <div className="text-center">
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Toplam İstatistikler
+              {t('categories.totalStatistics')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-600">
                   {totalStats.categories}
                 </div>
-                <div className="text-gray-600">Kategori</div>
+                <div className="text-gray-600">{t('categories.totalCategories')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-600">
                   {totalStats.books}
                 </div>
-                <div className="text-gray-600">Toplam Kitap</div>
+                <div className="text-gray-600">{t('categories.totalBooks')}</div>
               </div>
             </div>
           </div>

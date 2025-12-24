@@ -15,9 +15,12 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
     supabaseBook.book_files.forEach((file: BookFile) => {
       const fileUrl = getBookFileUrl(file.file_url);
       
-      if (file.format === 'epub') formats.epub = fileUrl;
-      if (file.format === 'pdf') formats.pdf = fileUrl;
-      if (file.format === 'docx') formats.doc = fileUrl;
+      // Format kontrolü case-insensitive (büyük/küçük harf duyarsız)
+      const formatLower = file.format.toLowerCase();
+      
+      if (formatLower === 'epub') formats.epub = fileUrl;
+      if (formatLower === 'pdf') formats.pdf = fileUrl;
+      if (formatLower === 'docx' || formatLower === 'doc') formats.doc = fileUrl;
     });
   }
 

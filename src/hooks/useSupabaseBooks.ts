@@ -10,38 +10,51 @@ interface UseSupabaseBooksReturn {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  loadMore: () => Promise<void>;
+  hasMore: boolean;
+  loadingMore: boolean;
 }
 
 /**
  * Supabase'den kitapları çeken custom hook
  * Otomatik olarak book_files ile join yapar
  * Seçili dile göre kitapları filtreler
- * LIMIT ekleyerek ilk yüklemede sadece 20 kitap çeker (performans için)
+ * Progressive loading: İlk 20 kitap hızlı, sonra daha fazla yüklenebilir
  */
 export function useSupabaseBooks(): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [offset, setOffset] = useState<number>(0);
+  const ITEMS_PER_PAGE = 20;
 
-  const fetchBooks = async () => {
+  const fetchBooks = async (isLoadMore: boolean = false) => {
     try {
-      setLoading(true);
+      if (isLoadMore) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setOffset(0);
+      }
       setError(null);
 
       const currentLanguage = i18n.language;
+      const currentOffset = isLoadMore ? offset : 0;
 
       // Supabase'den kitapları ve dosyalarını çek - dil filtrelemesi ile
-      // İlk yüklemede performans için sadece 20 kitap (hızlı yükleme)
-      const { data, error: supabaseError } = await supabase
+      // Progressive loading: İlk 20 kitap hızlı, sonra pagination
+      const { data, error: supabaseError, count } = await supabase
         .from('books')
         .select(`
           *,
           book_files (*)
-        `)
+        `, { count: 'exact' })
         .eq('language', currentLanguage)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .range(currentOffset, currentOffset + ITEMS_PER_PAGE - 1);
 
       if (supabaseError) {
         console.error('❌ Supabase error:', supabaseError);
@@ -49,7 +62,11 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       }
 
       if (!data) {
-        setBooks([]);
+        if (isLoadMore) {
+          setHasMore(false);
+        } else {
+          setBooks([]);
+        }
         return;
       }
 
@@ -58,27 +75,67 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         convertSupabaseBookToBook(supabaseBook)
       );
 
-      setBooks(convertedBooks);
+      // LoadMore ise mevcut kitaplara ekle, değilse yeni liste
+      if (isLoadMore) {
+        setBooks(prev => [...prev, ...convertedBooks]);
+        setOffset(prev => prev + ITEMS_PER_PAGE);
+      } else {
+        setBooks(convertedBooks);
+        setOffset(ITEMS_PER_PAGE);
+      }
+
+      // Daha fazla kitap var mı kontrolü
+      const totalBooks = count || 0;
+      const currentTotal = isLoadMore ? books.length + convertedBooks.length : convertedBooks.length;
+      setHasMore(currentTotal < totalBooks);
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu';
       console.error('❌ Error fetching books:', err);
       setError(errorMessage);
-      setBooks([]);
+      if (!isLoadMore) {
+        setBooks([]);
+      }
     } finally {
-      setLoading(false);
+      if (isLoadMore) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadMore = async () => {
+    if (!loadingMore && hasMore) {
+      await fetchBooks(true);
     }
   };
 
   // Component mount olduğunda ve dil değiştiğinde kitapları çek
   useEffect(() => {
-    fetchBooks();
+    fetchBooks(false);
   }, [i18n.language]); // Dil değiştiğinde yeniden fetch et
+
+  // Arka planda otomatik olarak kalan kitapları yükle (kullanıcı fark etmez)
+  useEffect(() => {
+    if (!loading && hasMore && !loadingMore) {
+      // İlk yükleme bittikten 2 saniye sonra, arka planda kalan kitapları çekmeye başla
+      const timer = setTimeout(() => {
+        loadMore();
+      }, 2000); // 2 saniye bekle
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading, hasMore, loadingMore, books.length])
 
   return {
     books,
     loading,
     error,
-    refetch: fetchBooks
+    refetch: () => fetchBooks(false),
+    loadMore,
+    hasMore,
+    loadingMore
   };
 }
 
@@ -144,7 +201,10 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
     books,
     loading,
     error,
-    refetch: fetchBooksByCategory
+    refetch: fetchBooksByCategory,
+    loadMore: async () => {}, // Category view doesn't need pagination
+    hasMore: false,
+    loadingMore: false
   };
 }
 

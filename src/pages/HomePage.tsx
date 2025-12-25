@@ -137,6 +137,8 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
               src={getBannerImage()}
               alt={t('hero.bannerAlt') || 'Islamic Library Banner'}
               className="w-full h-full object-cover object-center"
+              loading="eager"
+              fetchPriority="high"
             />
             {/* Blur overlay */}
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
@@ -150,6 +152,8 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
               src={getBannerImage()}
               alt={t('hero.bannerAlt') || 'Islamic Library Banner'}
               className="w-full h-full object-cover object-center"
+              loading="eager"
+              fetchPriority="high"
               style={{ 
                 filter: 'blur(1px) brightness(0.8)',
                 transform: 'scale(1.05)'
@@ -204,6 +208,7 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
                     src={getMockupImage()}
                     alt={t('hero.mockupAlt') || 'Islamic Books'}
                     className="w-full h-auto object-contain drop-shadow-2xl rounded-xl md:rounded-2xl"
+                    loading="lazy"
                   />
                   {/* Decorative glow */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl -z-10 scale-110"></div>

@@ -16,6 +16,7 @@ interface UseSupabaseBooksReturn {
  * Supabase'den kitapları çeken custom hook
  * Otomatik olarak book_files ile join yapar
  * Seçili dile göre kitapları filtreler
+ * LIMIT ekleyerek ilk yüklemede sadece 20 kitap çeker (performans için)
  */
 export function useSupabaseBooks(): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
@@ -31,6 +32,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       const currentLanguage = i18n.language;
 
       // Supabase'den kitapları ve dosyalarını çek - dil filtrelemesi ile
+      // İlk yüklemede performans için sadece 20 kitap (hızlı yükleme)
       const { data, error: supabaseError } = await supabase
         .from('books')
         .select(`
@@ -38,7 +40,8 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
           book_files (*)
         `)
         .eq('language', currentLanguage)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(20);
 
       if (supabaseError) {
         console.error('❌ Supabase error:', supabaseError);

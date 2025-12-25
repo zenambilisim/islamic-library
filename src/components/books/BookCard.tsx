@@ -25,6 +25,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
           src={book.coverImage || '/placeholder-book.svg'}
           alt={getLocalizedText(book.titleTranslations, book.title)}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-book.svg';

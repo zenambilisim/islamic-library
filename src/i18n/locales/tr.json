@@ -192,7 +192,6 @@
   },
   "login": {
     "pageTitle": "Giriş Yap",
-    "pageDescription": "Hesabınıza giriş yaparak kütüphanemizden yararlanın.",
     "formTitle": "Hesabınıza giriş yapın",
     "emailLabel": "E-posta",
     "emailPlaceholder": "ornek@email.com",

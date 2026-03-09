@@ -1,11 +1,12 @@
+import PublicClientShell from './PublicClientShell';
+
 /**
- * (public) route grubu – sadece children geçirir.
- * Kök shell app/layout.tsx içinde.
+ * (public) route grubu – Header, Footer ve provider'lar burada.
  */
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <PublicClientShell>{children}</PublicClientShell>;
 }

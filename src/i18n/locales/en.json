@@ -191,7 +191,6 @@
   },
   "login": {
     "pageTitle": "Sign In",
-    "pageDescription": "Sign in to your account to use our library.",
     "formTitle": "Sign in to your account",
     "emailLabel": "Email",
     "emailPlaceholder": "example@email.com",

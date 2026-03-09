@@ -68,12 +68,9 @@ const LoginPage = () => {
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
         {/* Başlık */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-gray-900">
             {t('login.pageTitle')}
           </h1>
-          <p className="text-xl text-gray-600 max-w-md mx-auto">
-            {t('login.pageDescription')}
-          </p>
         </div>
 
         {/* Form kartı */}
@@ -178,15 +175,6 @@ const LoginPage = () => {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-gray-500">
-              {t('login.noAccount')}{' '}
-              <Link
-                href="/"
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
-                {t('login.backToHome')}
-              </Link>
-            </p>
           </div>
 
           <Link

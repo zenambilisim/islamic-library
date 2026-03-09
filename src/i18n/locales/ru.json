@@ -191,7 +191,6 @@
   },
   "login": {
     "pageTitle": "Вход",
-    "pageDescription": "Войдите в свой аккаунт, чтобы пользоваться библиотекой.",
     "formTitle": "Войдите в аккаунт",
     "emailLabel": "Эл. почта",
     "emailPlaceholder": "example@email.com",

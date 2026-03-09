@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import PublicClientShell from './(public)/PublicClientShell';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -17,9 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr">
-      <body>
-        <PublicClientShell>{children}</PublicClientShell>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

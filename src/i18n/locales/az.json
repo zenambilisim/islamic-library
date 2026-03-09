@@ -191,7 +191,6 @@
   },
   "login": {
     "pageTitle": "Daxil ol",
-    "pageDescription": "Kitabxanadan istifadə etmək üçün hesabınıza daxil olun.",
     "formTitle": "Hesabınıza daxil olun",
     "emailLabel": "E-poçt",
     "emailPlaceholder": "example@email.com",

@@ -1,15 +1,15 @@
 {
   "pages": {
-    "/layout": [
+    "/(public)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
+      "static/css/app/(public)/layout.css",
+      "static/chunks/app/(public)/layout.js"
     ],
-    "/page": [
+    "/(public)/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/(public)/page.js"
     ],
     "/api/books/route": [
       "static/chunks/webpack.js",
@@ -20,11 +20,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/categories/route.js"
-    ],
-    "/api/books/signed-url/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/books/signed-url/route.js"
     ]
   }
 }

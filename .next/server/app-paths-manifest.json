@@ -1,6 +1,3 @@
 {
-  "/api/books/route": "app/api/books/route.js",
-  "/api/categories/route": "app/api/categories/route.js",
-  "/api/books/signed-url/route": "app/api/books/signed-url/route.js",
-  "/page": "app/page.js"
+  "/(public)/page": "app/(public)/page.js"
 }

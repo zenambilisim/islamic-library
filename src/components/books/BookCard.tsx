@@ -1,15 +1,17 @@
+'use client';
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Eye, FileText, User } from 'lucide-react';
-import type { Book } from '../../types';
+import type { Book } from '@/types';
+import { useBookModal } from '@/contexts/BookModalContext';
 
 interface BookCardProps {
   book: Book;
-  onViewDetails: (book: Book) => void;
-  onReadOnline: (book: Book) => void;
 }
 
-const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }) => {
+const BookCard: React.FC<BookCardProps> = ({ book }) => {
+  const { openDetails, openReader } = useBookModal();
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language as keyof typeof book.titleTranslations;
 
@@ -18,7 +20,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100" onClick={() => onViewDetails(book)}>
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100" onClick={() => openDetails(book)}>
       {/* Book Cover */}
       <div className="relative overflow-hidden">
         <img
@@ -39,7 +41,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails, onReadOnline }
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onReadOnline(book);
+                openReader(book);
               }}
               className="bg-gradient-to-r from-primary-600 to-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:from-primary-700 hover:to-purple-700 transition-all duration-300 flex items-center space-x-2 shadow-lg transform hover:scale-105"
             >

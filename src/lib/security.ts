@@ -37,8 +37,8 @@ export const rateLimiter = new RateLimiter()
 
 // API anahtarı doğrulama
 export function validateSupabaseConnection(): boolean {
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!url || !key || url.includes('YOUR_') || key.includes('YOUR_')) {
     console.error('❌ Supabase credentials not configured properly')
@@ -106,8 +106,8 @@ export function validateSearchQuery(query: string): boolean {
 
 // Environment check
 export function checkEnvironment() {
-  const isDevelopment = import.meta.env.DEV
-  const isProduction = import.meta.env.PROD
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const isProduction = process.env.NODE_ENV === 'production'
   
   if (isProduction && !validateSupabaseConnection()) {
     console.error('❌ Production environment with invalid Supabase config!')

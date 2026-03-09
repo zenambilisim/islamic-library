@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"app/ClientLayout.tsx -> @/components/books/BookReaderModal\":{\"id\":\"app/ClientLayout.tsx -> @/components/books/BookReaderModal\",\"files\":[\"static/chunks/_app-pages-browser_src_components_books_BookReaderModal_tsx.js\"]}}"

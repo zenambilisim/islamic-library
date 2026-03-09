@@ -15,7 +15,7 @@ export const useBooks = (filters?: SearchFilters) => {
         setError(null);
         
         // Check if Supabase is configured
-        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
           setBooks([]);
           return;
         }
@@ -62,7 +62,7 @@ export const useBooksData = () => {
         setError(null);
         
         // Check if Supabase is configured
-        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
           setCategories([]);
           setAuthors([]);
           return;

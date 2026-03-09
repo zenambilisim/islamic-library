@@ -36,7 +36,7 @@ const SupabaseTest = () => {
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
               <li>.env dosyasında VITE_SUPABASE_URL var mı?</li>
               <li>.env dosyasında VITE_SUPABASE_ANON_KEY var mı?</li>
-              <li>Supabase'de RLS politikaları aktif mi?</li>
+              <li>Supabase&apos;de RLS politikaları aktif mi?</li>
               <li>Books tablosunda veri var mı?</li>
               <li>Uygulama yeniden başlatıldı mı?</li>
             </ul>

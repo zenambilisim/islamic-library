@@ -1,10 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase credentials - bunları kendi proje bilgilerinle değiştir
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dummy-url.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'dummy-key'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? ''
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? ''
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+/** Supabase yapılandırılmış mı? (.env'de NEXT_PUBLIC_SUPABASE_* tanımlı mı) */
+export const isSupabaseConfigured =
+  supabaseUrl.length > 0 &&
+  supabaseKey.length > 0 &&
+  !supabaseUrl.includes('dummy')
+
+const url = isSupabaseConfigured ? supabaseUrl : 'https://placeholder.invalid'
+const key = isSupabaseConfigured ? supabaseKey : 'placeholder'
+
+export const supabase = createClient(url, key)
 
 // Storage bucket names
 export const STORAGE_BUCKETS = {
@@ -21,6 +29,7 @@ export const STORAGE_BUCKETS = {
  */
 export function getStoragePublicUrl(bucketName: string, filePath: string): string {
   if (!filePath) return '/placeholder-book.svg';
+  if (!isSupabaseConfigured) return '/placeholder-book.svg';
   
   try {
     const { data } = supabase.storage
@@ -92,6 +101,7 @@ export async function getSignedBookFileUrl(
   expiresIn: number = 3600
 ): Promise<string> {
   if (!bookFilePath) return '';
+  if (!isSupabaseConfigured) return '';
   
   // Eğer tam URL ise direkt dön
   if (bookFilePath.startsWith('http')) return bookFilePath;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { convertSupabaseCategoryToCategory } from '../lib/converters';
 import type { Category } from '../types';
 import type { Category as SupabaseCategory } from '../lib/supabase';
@@ -20,6 +20,12 @@ export function useSupabaseCategories(): UseSupabaseCategoriesReturn {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCategories = async () => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      setCategories([]);
+      setError('Supabase yapılandırılmamış. .env dosyasında NEXT_PUBLIC_SUPABASE_* tanımlayın.');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);

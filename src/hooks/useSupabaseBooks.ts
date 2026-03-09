@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { convertSupabaseBookToBook } from '../lib/converters';
 import type { Book } from '../types';
 import type { SupabaseBook } from '../lib/supabase';
@@ -32,6 +32,13 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
   const ITEMS_PER_PAGE = 20;
 
   const fetchBooks = async (isLoadMore: boolean = false) => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      setLoadingMore(false);
+      setBooks([]);
+      setError('Supabase yapılandırılmamış. .env dosyasında NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlayın.');
+      return;
+    }
     try {
       if (isLoadMore) {
         setLoadingMore(true);

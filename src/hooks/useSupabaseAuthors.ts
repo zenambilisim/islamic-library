@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { convertSupabaseAuthorToAuthor } from '../lib/converters';
 import type { Author } from '../types';
 import type { SupabaseAuthor } from '../lib/supabase';
@@ -21,6 +21,12 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAuthors = async () => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      setAuthors([]);
+      setError('Supabase yapılandırılmamış. .env dosyasında NEXT_PUBLIC_SUPABASE_* tanımlayın.');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);

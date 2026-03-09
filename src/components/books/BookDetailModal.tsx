@@ -1,17 +1,17 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Download, Eye, FileText, User, Loader2 } from 'lucide-react';
-import type { Book } from '../../types';
-import { getSignedBookFileUrl } from '../../lib/supabase';
+import type { Book } from '@/types';
+import { getSignedBookFileUrl } from '@/lib/supabase';
+import { useBookModal } from '@/contexts/BookModalContext';
 
-interface BookDetailModalProps {
-  book: Book | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onReadOnline: (book: Book) => void;
-}
-
-const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModalProps) => {
+const BookDetailModal = () => {
+  const { selectedBook: book, closeDetails, openReader } = useBookModal();
+  const isOpen = !!book;
+  const onClose = closeDetails;
+  const onReadOnline = openReader;
   const { t, i18n } = useTranslation();
   const [loadingUrls, setLoadingUrls] = useState<Record<string, boolean>>({});
   

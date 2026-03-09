@@ -1,5 +1,8 @@
+'use client';
+
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Search, Globe, Menu, X, BookOpen } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
@@ -17,7 +20,7 @@ const Header = () => {
     { code: 'az', name: 'Azərbaycan', flag: '🇦🇿' },
   ];
 
-  const location = useLocation();
+  const pathname = usePathname();
   
   const navigationItems = [
     { key: 'home', label: t('navigation.home'), href: '/' },
@@ -70,7 +73,7 @@ const Header = () => {
         <div className="py-4 md:py-6">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 hover:scale-105 transition-all duration-300">
+            <Link href="/" className="flex items-center space-x-3 hover:scale-105 transition-all duration-300">
               <div className="flex items-center">
                 <img 
                   src="/images/logo/ISLAMIC.png" 
@@ -114,9 +117,9 @@ const Header = () => {
               {navigationItems.map((item) => (
                 <Link
                   key={item.key}
-                  to={item.href}
+                  href={item.href}
                   className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    location.pathname === item.href 
+                    pathname === item.href 
                       ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg transform scale-105' 
                       : 'text-gray-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-purple-50 hover:text-primary-700'
                   }`}
@@ -183,9 +186,9 @@ const Header = () => {
             {navigationItems.map((item) => (
               <Link
                 key={item.key}
-                to={item.href}
+                href={item.href}
                 className={`block py-2 px-4 rounded-md transition-colors ${
-                  location.pathname === item.href
+                  pathname === item.href
                     ? 'text-primary-600 bg-primary-50 font-medium'
                     : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                 }`}

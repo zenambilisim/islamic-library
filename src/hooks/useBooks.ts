@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getBooks, getBooksByCategory, getCategories } from '../lib/books';
-import { convertSupabaseBookToBook } from '../lib/converters';
 import type { Book, Category, Author, SearchFilters } from '../types';
 
 export const useBooks = (filters?: SearchFilters) => {
@@ -13,36 +11,22 @@ export const useBooks = (filters?: SearchFilters) => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Check if Supabase is configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          setBooks([]);
-          return;
+        const params = new URLSearchParams();
+        if (filters?.category) params.set('category', filters.category);
+        const res = await fetch(`/api/books?${params}`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || res.statusText);
         }
-        
-        let result;
-        if (filters?.category) {
-          result = await getBooksByCategory(filters.category);
-        } else {
-          result = await getBooks();
-        }
-        
-        if (result.error) {
-          throw new Error(result.error.message);
-        }
-        
-        const convertedBooks = result.books.map(convertSupabaseBookToBook);
-        setBooks(convertedBooks);
-        
+        const data = await res.json();
+        setBooks(Array.isArray(data.books) ? data.books : []);
       } catch (err) {
-        console.error('Error fetching books:', err);
         setError(err instanceof Error ? err.message : 'Bilinmeyen hata');
         setBooks([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchBooks();
   }, [filters?.category]);
 
@@ -60,25 +44,15 @@ export const useBooksData = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Check if Supabase is configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          setCategories([]);
-          setAuthors([]);
-          return;
+        const res = await fetch('/api/categories');
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || res.statusText);
         }
-        
-        const categoriesResult = await getCategories();
-        
-        if (categoriesResult.error) {
-          throw new Error(categoriesResult.error.message);
-        }
-        
-        setCategories(categoriesResult.categories || []);
+        const data = await res.json();
+        setCategories(Array.isArray(data.categories) ? data.categories : []);
         setAuthors([]);
-        
       } catch (err) {
-        console.error('Error fetching data:', err);
         setError(err instanceof Error ? err.message : 'Veri yüklenirken hata oluştu');
         setCategories([]);
         setAuthors([]);
@@ -86,12 +60,11 @@ export const useBooksData = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
   return {
     categories: { categories, loading, error },
-    authors: { authors, loading, error }
+    authors: { authors, loading, error },
   };
 };

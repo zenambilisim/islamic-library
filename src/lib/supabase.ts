@@ -1,135 +1,58 @@
-import { createClient } from '@supabase/supabase-js'
+/**
+ * Client tarafında Supabase URL/key kullanılmıyor – tüm veri /api üzerinden gelir.
+ * Sadece tipler ve sabitler. Sunucu: lib/supabase-server.ts
+ * Client'ta URL oluşturulmaz; signed URL için GET /api/books/signed-url kullanın.
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? ''
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? ''
-
-/** Supabase yapılandırılmış mı? (.env'de NEXT_PUBLIC_SUPABASE_* tanımlı mı) */
-export const isSupabaseConfigured =
-  supabaseUrl.length > 0 &&
-  supabaseKey.length > 0 &&
-  !supabaseUrl.includes('dummy')
-
-const url = isSupabaseConfigured ? supabaseUrl : 'https://placeholder.invalid'
-const key = isSupabaseConfigured ? supabaseKey : 'placeholder'
-
-export const supabase = createClient(url, key)
-
-// Storage bucket names
+// Storage bucket names (sabitler, env yok)
 export const STORAGE_BUCKETS = {
   BOOK_ASSETS: 'book-assets',
   COVERS: 'book-assets/covers',
-  BOOKS: 'book-assets/books'
+  BOOKS: 'book-assets/books',
 } as const;
 
-/**
- * Supabase Storage'dan public URL oluşturur
- * @param bucketName - Bucket ismi (örn: 'book-assets')
- * @param filePath - Dosya yolu (örn: 'covers/Agir-Itki.png')
- * @returns Public URL
- */
-export function getStoragePublicUrl(bucketName: string, filePath: string): string {
-  if (!filePath) return '/placeholder-book.svg';
-  if (!isSupabaseConfigured) return '/placeholder-book.svg';
-  
-  try {
-    const { data } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
-    
-    return data.publicUrl;
-  } catch (error) {
-    console.error('❌ Error getting storage URL:', error);
-    return '/placeholder-book.svg';
-  }
+/** Client'ta kullanılmaz; API zaten tam URL döner. Eski import uyumluluğu için stub. */
+export function getBookCoverUrl(_path: string | undefined | null): string {
+  return '/placeholder-book.svg';
 }
-
-/**
- * Kitap kapak resminin public URL'ini döndürür
- * @param coverPath - Kapak resmi yolu (örn: 'Agir-Itki.png' veya 'covers/Agir-Itki.png')
- * @returns Cover image public URL
- */
-export function getBookCoverUrl(coverPath: string | undefined | null): string {
-  if (!coverPath) return '/placeholder-book.svg';
-  
-  // Eğer tam URL ise direkt dön
-  if (coverPath.startsWith('http')) return coverPath;
-  
-  // Eğer local path ise dön
-  if (coverPath.startsWith('/')) return coverPath;
-  
-  // Storage path'i düzenle
-  let storagePath = coverPath;
-  
-  // 'covers/' prefix'i yoksa ekle
-  if (!storagePath.startsWith('covers/')) {
-    storagePath = `covers/${storagePath}`;
-  }
-  
-  return getStoragePublicUrl('book-assets', storagePath);
+/** Client'ta kullanılmaz; API zaten tam URL döner. Eski import uyumluluğu için stub. */
+export function getBookFileUrl(_path: string | undefined | null): string {
+  return '';
 }
-
 /**
- * Kitap dosyasının public URL'ini döndürür
- * @param bookFilePath - Kitap dosya yolu (örn: 'agir-itki-said-ellamin/agir-itki-said-ellamin.pdf')
- * @returns Book file public URL
- */
-export function getBookFileUrl(bookFilePath: string | undefined | null): string {
-  if (!bookFilePath) return '';
-  
-  // Eğer tam URL ise direkt dön
-  if (bookFilePath.startsWith('http')) return bookFilePath;
-  
-  // Storage path'i düzenle
-  let storagePath = bookFilePath;
-  
-  // 'books/' prefix'i yoksa ekle
-  if (!storagePath.startsWith('books/') && !storagePath.includes('/')) {
-    storagePath = `books/${storagePath}`;
-  }
-  
-  return getStoragePublicUrl('book-assets', storagePath);
-}
-
-/**
- * Kitap dosyası için güvenli signed URL oluşturur (1 saat geçerli)
- * @param bookFilePath - Kitap dosya yolu (örn: 'agir-itki-said-ellamin/agir-itki-said-ellamin.pdf')
- * @param expiresIn - URL'nin geçerli olacağı süre (saniye cinsinden, default: 3600 = 1 saat)
- * @returns Promise<string> - Signed URL veya hata durumunda boş string
+ * Signed URL alır – sunucu API'sini kullanır (client'ta Supabase key yok).
+ * Eski getSignedBookFileUrl yerine bunu kullanın.
  */
 export async function getSignedBookFileUrl(
-  bookFilePath: string | undefined | null,
-  expiresIn: number = 3600
+  pathOrUrl: string | undefined | null,
+  _expiresIn?: number
 ): Promise<string> {
-  if (!bookFilePath) return '';
-  if (!isSupabaseConfigured) return '';
-  
-  // Eğer tam URL ise direkt dön
-  if (bookFilePath.startsWith('http')) return bookFilePath;
-  
-  // Storage path'i düzenle
-  let storagePath = bookFilePath;
-  
-  // 'books/' prefix'i yoksa ekle
-  if (!storagePath.startsWith('books/') && !storagePath.includes('/')) {
-    storagePath = `books/${storagePath}`;
-  }
-  
-  try {
-    const { data, error } = await supabase.storage
-      .from('book-assets')
-      .createSignedUrl(storagePath, expiresIn);
-    
-    if (error) {
-      console.error('❌ Error creating signed URL:', error);
-      // Fallback: public URL'i döndür
-      return getStoragePublicUrl('book-assets', storagePath);
+  if (!pathOrUrl) return '';
+  if (pathOrUrl.startsWith('http')) {
+    try {
+      const res = await fetch('/api/books/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pathOrUrl }),
+      });
+      if (!res.ok) return pathOrUrl;
+      const data = await res.json();
+      return data.url || pathOrUrl;
+    } catch {
+      return pathOrUrl;
     }
-    
-    return data.signedUrl;
-  } catch (error) {
-    console.error('❌ Exception creating signed URL:', error);
-    // Fallback: public URL'i döndür
-    return getStoragePublicUrl('book-assets', storagePath);
+  }
+  try {
+    const res = await fetch('/api/books/signed-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pathOrUrl }),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    return data.url || '';
+  } catch {
+    return '';
   }
 }
 

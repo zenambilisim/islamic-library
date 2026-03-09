@@ -189,6 +189,21 @@
     "feature6Title": "Davamlı Yeniləmə",
     "feature6Desc": "Müntəzəm olaraq yeni kitablar əlavə edir, mövcud məzmunu aktual saxlayırıq."
   },
+  "login": {
+    "pageTitle": "Daxil ol",
+    "pageDescription": "Kitabxanadan istifadə etmək üçün hesabınıza daxil olun.",
+    "formTitle": "Hesabınıza daxil olun",
+    "emailLabel": "E-poçt",
+    "emailPlaceholder": "example@email.com",
+    "passwordLabel": "Şifrə",
+    "passwordPlaceholder": "Şifrənizi daxil edin",
+    "submitButton": "Daxil ol",
+    "submittingButton": "Daxil olunur...",
+    "successMessage": "Uğurla daxil oldunuz. Yönləndirilirsiniz...",
+    "errorDefault": "Daxil olma uğursuz. E-poçt və şifrənizi yoxlayın.",
+    "noAccount": "Hesabınız yoxdur?",
+    "backToHome": "Ana səhifəyə qayıt"
+  },
   "usefulInfo": {
     "pageTitle": "Faydalı Məlumatlar",
     "pageDescription": "Islamic Library platformasından daha səmərəli istifadə etmək üçün hazırladığımız təlimatlar, məsləhətlər və tez-tez verilən sualların cavabları.",

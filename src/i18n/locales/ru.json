@@ -189,6 +189,21 @@
     "feature6Title": "Непрерывные обновления",
     "feature6Desc": "Мы регулярно добавляем новые книги и поддерживаем существующий контент в актуальном состоянии."
   },
+  "login": {
+    "pageTitle": "Вход",
+    "pageDescription": "Войдите в свой аккаунт, чтобы пользоваться библиотекой.",
+    "formTitle": "Войдите в аккаунт",
+    "emailLabel": "Эл. почта",
+    "emailPlaceholder": "example@email.com",
+    "passwordLabel": "Пароль",
+    "passwordPlaceholder": "Введите пароль",
+    "submitButton": "Войти",
+    "submittingButton": "Вход...",
+    "successMessage": "Вход выполнен. Перенаправление...",
+    "errorDefault": "Вход не выполнен. Проверьте почту и пароль.",
+    "noAccount": "Нет аккаунта?",
+    "backToHome": "На главную"
+  },
   "usefulInfo": {
     "pageTitle": "Полезная информация",
     "pageDescription": "Руководства, советы и часто задаваемые вопросы, которые помогут вам более эффективно использовать платформу Islamic Library.",

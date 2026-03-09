@@ -190,6 +190,21 @@
     "feature6Title": "Sürekli Güncelleme",
     "feature6Desc": "Düzenli olarak yeni kitaplar ekliyoruz, mevcut içeriği güncel tutuyoruz."
   },
+  "login": {
+    "pageTitle": "Giriş Yap",
+    "pageDescription": "Hesabınıza giriş yaparak kütüphanemizden yararlanın.",
+    "formTitle": "Hesabınıza giriş yapın",
+    "emailLabel": "E-posta",
+    "emailPlaceholder": "ornek@email.com",
+    "passwordLabel": "Şifre",
+    "passwordPlaceholder": "Şifrenizi girin",
+    "submitButton": "Giriş Yap",
+    "submittingButton": "Giriş yapılıyor...",
+    "successMessage": "Giriş başarılı. Yönlendiriliyorsunuz...",
+    "errorDefault": "Giriş yapılamadı. E-posta ve şifrenizi kontrol edin.",
+    "noAccount": "Hesabınız yok mu?",
+    "backToHome": "Ana Sayfaya Dön"
+  },
   "usefulInfo": {
     "pageTitle": "Faydalı Bilgiler",
     "pageDescription": "Islamic Library platformunu daha verimli kullanmanız için hazırladığımız rehberler, ipuçları ve sık sorulan soruların cevapları.",

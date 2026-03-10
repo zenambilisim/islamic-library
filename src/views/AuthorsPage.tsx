@@ -1,18 +1,14 @@
+'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, BookOpen, Calendar, Grid3X3, List } from 'lucide-react';
-import { useSearch } from '../contexts/SearchContext';
-import { useSupabaseAuthors, getBooksByAuthor as fetchBooksByAuthor } from '../hooks/useSupabaseAuthors';
-import { convertSupabaseBookToBook } from '../lib/converters';
-import BookCard from '../components/books/BookCard';
-import type { Book } from '../types';
+import { useSearch } from '@/contexts/SearchContext';
+import { useSupabaseAuthors, getBooksByAuthor as fetchBooksByAuthor } from '@/hooks/useSupabaseAuthors';
+import BookCard from '@/components/books/BookCard';
+import type { Book } from '@/types';
 
-interface AuthorsPageProps {
-  onViewBookDetails: (book: Book) => void;
-  onReadOnline: (book: Book) => void;
-}
-
-const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
+const AuthorsPage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
@@ -35,31 +31,15 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
     return translations[currentLang] || translations.tr || fallback;
   };
 
-  // Fetch author books when author is selected
+  // Fetch author books when author is selected (API'den zaten Book[] formatında gelir)
   useEffect(() => {
     if (selectedAuthor) {
       const fetchBooks = async () => {
         setLoadingBooks(true);
         try {
-          // Seçili dilde kitapları çek
           const { books, error } = await fetchBooksByAuthor(selectedAuthor, i18n.language);
-          if (error) {
-            setAuthorBooks([]);
-          } else if (books && books.length > 0) {
-            // Convert books - books zaten doğru formatta geldiği için direkt cast edelim
-            const convertedBooks = books.map((book: any) => {
-              // Ensure book_files is properly formatted
-              const bookWithFiles = {
-                ...book,
-                book_files: book.book_files || []
-              };
-              return convertSupabaseBookToBook(bookWithFiles);
-            });
-            setAuthorBooks(convertedBooks);
-          } else {
-            setAuthorBooks([]);
-          }
-        } catch (err) {
+          setAuthorBooks(error || !books ? [] : books);
+        } catch {
           setAuthorBooks([]);
         } finally {
           setLoadingBooks(false);
@@ -67,10 +47,9 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
       };
       fetchBooks();
     } else {
-      // Reset books when no author is selected
       setAuthorBooks([]);
     }
-  }, [selectedAuthor, i18n.language]); // Yazar veya dil değiştiğinde kitapları yenile
+  }, [selectedAuthor, i18n.language]);
 
   // Generate alphabet for navigation based on current language
   const alphabet = useMemo(() => {
@@ -260,8 +239,6 @@ const AuthorsPage = ({ onViewBookDetails, onReadOnline }: AuthorsPageProps) => {
                 <BookCard
                   key={book.id}
                   book={book}
-                  onViewDetails={onViewBookDetails}
-                  onReadOnline={onReadOnline}
                 />
               ))}
             </div>

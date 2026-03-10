@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import { Book, Download, Eye, Search, Smartphone, HelpCircle} from 'lucide-react';
 

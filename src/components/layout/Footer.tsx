@@ -1,14 +1,17 @@
+'use client';
+
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Mail} from 'lucide-react';
+import { BookOpen, Mail } from 'lucide-react';
 
 const Footer = () => {
   const { t } = useTranslation();
 
   const quickLinks = [
-    { key: 'home', label: t('navigation.home'), href: '' },
-    { key: 'categories', label: t('navigation.categories'), href: 'categories' },
-    { key: 'authors', label: t('navigation.authors'), href: 'authors' },
-    { key: 'about', label: t('navigation.about'), href: 'about' },
+    { key: 'home', label: t('navigation.home'), href: '/' },
+    { key: 'categories', label: t('navigation.categories'), href: '/categories' },
+    { key: 'authors', label: t('navigation.authors'), href: '/authors' },
+    { key: 'about', label: t('navigation.about'), href: '/about' },
   ];
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white relative overflow-hidden">
@@ -39,12 +42,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.key}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-gray-300 hover:text-primary-400 transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

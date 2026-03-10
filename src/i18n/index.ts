@@ -26,7 +26,7 @@ i18n
     },
 
     // Debug modunu development'ta aç
-    debug: import.meta.env.DEV,
+    debug: typeof window !== 'undefined' && process.env.NODE_ENV === 'development',
   });
 
 export default i18n;

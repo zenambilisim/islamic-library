@@ -1,17 +1,14 @@
+'use client';
+
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import BookCard from '../components/books/BookCard';
-import FilterSidebar from '../components/books/FilterSidebar';
-import { useSearch } from '../contexts/SearchContext';
-import { useSupabaseBooks } from '../hooks/useSupabaseBooks';
-import type { Book, SearchFilters } from '../types';
+import BookCard from '@/components/books/BookCard';
+import FilterSidebar from '@/components/books/FilterSidebar';
+import { useSearch } from '@/contexts/SearchContext';
+import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
+import type { SearchFilters } from '@/types';
 
-interface HomePageProps {
-  onViewBookDetails: (book: Book) => void;
-  onReadOnline: (book: Book) => void;
-}
-
-const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
+const HomePage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [filters, setFilters] = useState<SearchFilters>({});
@@ -231,7 +228,7 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
                     {searchTerm ? (
                       <>
                         <span className="text-primary-600">{filteredBooks.length}</span> {t('search.resultsFor')} 
-                        <span className="text-purple-600">"{searchTerm}"</span>
+                        <span className="text-purple-600">&quot;{searchTerm}&quot;</span>
                       </>
                     ) : (
                       t('common.allBooks')
@@ -268,11 +265,7 @@ const HomePage = ({ onViewBookDetails, onReadOnline }: HomePageProps) => {
                       className="animate-fade-in"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      <BookCard
-                        book={book}
-                        onViewDetails={onViewBookDetails}
-                        onReadOnline={onReadOnline}
-                      />
+                      <BookCard book={book} />
                     </div>
                   ))}
                 </div>

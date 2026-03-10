@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { convertSupabaseCategoryToCategory } from '../lib/converters';
 import type { Category } from '../types';
-import type { Category as SupabaseCategory } from '../lib/supabase';
 
 interface UseSupabaseCategoriesReturn {
   categories: Category[];
@@ -12,51 +9,32 @@ interface UseSupabaseCategoriesReturn {
 }
 
 /**
- * Supabase'den kategorileri çeken custom hook
+ * Sunucu API'sinden kategorileri çeker – GET /api/categories
  */
 export function useSupabaseCategories(): UseSupabaseCategoriesReturn {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Supabase'den kategorileri çek
-      const { data, error: supabaseError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (supabaseError) {
-        console.error('❌ Supabase error:', supabaseError);
-        throw supabaseError;
+      const res = await fetch('/api/categories');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || res.statusText);
       }
-
-      if (!data) {
-        setCategories([]);
-        return;
-      }
-
-      // Supabase formatından frontend formatına dönüştür
-      const convertedCategories = data.map((supabaseCategory: SupabaseCategory) => 
-        convertSupabaseCategoryToCategory(supabaseCategory)
-      );
-
-      setCategories(convertedCategories);
+      const data = await res.json();
+      setCategories(Array.isArray(data.categories) ? data.categories : []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Kategoriler yüklenirken bir hata oluştu';
-      console.error('❌ Error fetching categories:', err);
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Kategoriler yüklenirken bir hata oluştu');
       setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Component mount olduğunda kategorileri çek
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -65,60 +43,16 @@ export function useSupabaseCategories(): UseSupabaseCategoriesReturn {
     categories,
     loading,
     error,
-    refetch: fetchCategories
+    refetch: fetchCategories,
   };
 }
 
-/**
- * Tek bir kategoriyi ID'ye göre getirir
- */
-export async function getCategoryById(id: string): Promise<Category | null> {
-  try {
-    console.log(`📂 Fetching category with ID: ${id}`);
-
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('❌ Error fetching category:', error);
-      throw error;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return convertSupabaseCategoryToCategory(data);
-  } catch (err) {
-    console.error('❌ Error in getCategoryById:', err);
-    return null;
-  }
+/** İleride GET /api/categories/[id] ile implement edilebilir */
+export async function getCategoryById(_id: string): Promise<Category | null> {
+  return null;
 }
 
-/**
- * Kategori adına göre kitap sayısını günceller
- */
-export async function updateCategoryBookCount(categoryName: string): Promise<void> {
-  try {
-    // Kategorideki kitap sayısını say
-    const { count, error: countError } = await supabase
-      .from('books')
-      .select('*', { count: 'exact', head: true })
-      .eq('category', categoryName);
-
-    if (countError) throw countError;
-
-    // Kategoriyi güncelle
-    const { error: updateError } = await supabase
-      .from('categories')
-      .update({ book_count: count || 0 })
-      .eq('name', categoryName);
-
-    if (updateError) throw updateError;
-  } catch (err) {
-    console.error('❌ Error updating category book count:', err);
-  }
+/** İleride API ile implement edilebilir */
+export async function updateCategoryBookCount(_categoryName: string): Promise<void> {
+  // no-op
 }

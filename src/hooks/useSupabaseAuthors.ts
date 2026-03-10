@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { convertSupabaseAuthorToAuthor } from '../lib/converters';
 import type { Author } from '../types';
-import type { SupabaseAuthor } from '../lib/supabase';
 
 interface UseSupabaseAuthorsReturn {
   authors: Author[];
@@ -12,112 +9,33 @@ interface UseSupabaseAuthorsReturn {
 }
 
 /**
- * Supabase'den yazarları çeken custom hook
- * authors_view'dan yazarları çeker (books tablosundan otomatik türetilmiş)
+ * Sunucu API'sinden yazarları çeken custom hook
+ * GET /api/authors – Supabase env sadece sunucuda (SUPABASE_URL, SUPABASE_ANON_KEY)
  */
 export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
   const [authors, setAuthors] = useState<Author[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAuthors = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Önce authors_view'ı dene
-      let { data, error: supabaseError } = await supabase
-        .from('authors_view')
-        .select('*')
-        .order('book_count', { ascending: false });
-
-      // Eğer view yoksa, books tablosundan yazarları çıkar
-      if (supabaseError && supabaseError.message.includes('does not exist')) {
-        // Books'tan tüm yazarları çek
-        const { data: booksData, error: booksError } = await supabase
-          .from('books')
-          .select('author, author_translations, description, description_translations');
-
-        if (booksError) {
-          throw booksError;
-        }
-
-        if (!booksData || booksData.length === 0) {
-          setAuthors([]);
-          return;
-        }
-
-        // Yazarları unique hale getir ve grupla
-        const authorsMap = new Map<string, {
-          name: string;
-          name_translations: any;
-          book_count: number;
-          biography?: string;
-          biography_translations?: any;
-        }>();
-
-        booksData.forEach((book: any) => {
-          if (!authorsMap.has(book.author)) {
-            authorsMap.set(book.author, {
-              name: book.author,
-              name_translations: book.author_translations || {},
-              book_count: 1,
-              biography: book.description,
-              biography_translations: book.description_translations || {}
-            });
-          } else {
-            const existing = authorsMap.get(book.author)!;
-            existing.book_count += 1;
-          }
-        });
-
-        // Map'i array'e çevir ve SupabaseAuthor formatına dönüştür
-        data = Array.from(authorsMap.values()).map((author, index) => ({
-          id: `author-${index}`,
-          name: author.name,
-          name_translations: author.name_translations,
-          biography: author.biography || '',
-          biography_translations: author.biography_translations || {},
-          book_count: author.book_count,
-          total_downloads: 0,
-          first_publish_year: undefined,
-          last_publish_year: undefined,
-          categories: [],
-          languages: [],
-          profile_image: undefined,
-          first_book_created_at: new Date().toISOString(),
-          last_updated_at: new Date().toISOString()
-        } as SupabaseAuthor));
-
-        // Kitap sayısına göre sırala
-        data.sort((a, b) => b.book_count - a.book_count);
-      } else if (supabaseError) {
-        console.error('❌ Supabase error:', supabaseError);
-        throw supabaseError;
+      const res = await fetch('/api/authors');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || res.statusText);
       }
-
-      if (!data || data.length === 0) {
-        setAuthors([]);
-        return;
-      }
-
-      // Supabase formatından frontend formatına dönüştür
-      const convertedAuthors = data.map((supabaseAuthor: SupabaseAuthor) => 
-        convertSupabaseAuthorToAuthor(supabaseAuthor)
-      );
-
-      setAuthors(convertedAuthors);
+      const data = await res.json();
+      setAuthors(Array.isArray(data.authors) ? data.authors : []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Yazarlar yüklenirken bir hata oluştu';
-      console.error('❌ Error fetching authors:', err);
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Yazarlar yüklenirken bir hata oluştu');
       setAuthors([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Component mount olduğunda yazarları çek
   useEffect(() => {
     fetchAuthors();
   }, []);
@@ -126,199 +44,57 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
     authors,
     loading,
     error,
-    refetch: fetchAuthors
+    refetch: fetchAuthors,
   };
 }
 
-/**
- * Tek bir yazarı ID'ye göre getirir
- */
+/** Sunucu API'sinden tek yazar getirir: GET /api/authors/by-id/[id] */
 export async function getAuthorById(id: string): Promise<Author | null> {
   try {
-    console.log(`👤 Fetching author with ID: ${id}`);
-
-    const { data, error } = await supabase
-      .from('authors_view')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('❌ Error fetching author:', error);
-      return null;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return convertSupabaseAuthorToAuthor(data);
-  } catch (err) {
-    console.error('❌ Error fetching author by ID:', err);
+    const res = await fetch(`/api/authors/by-id/${encodeURIComponent(id)}`);
+    if (res.status === 404) return null;
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
     return null;
   }
 }
 
-/**
- * Yazar adına göre kitapları getirir (belirli bir dilde)
- * @param authorName - Yazar adı
- * @param language - Dil kodu (tr, en, ru, az)
- */
+/** Yazar adına göre kitaplar: GET /api/authors/[name]/books?language=... */
 export async function getBooksByAuthor(authorName: string, language?: string) {
   try {
-    let query = supabase
-      .from('books')
-      .select(`
-        id,
-        title,
-        title_translations,
-        author,
-        author_translations,
-        category,
-        category_translations,
-        description,
-        description_translations,
-        cover_image_url,
-        publish_year,
-        pages,
-        language,
-        file_size,
-        download_count,
-        tags,
-        created_at,
-        updated_at,
-        book_files (
-          id,
-          format,
-          file_url,
-          file_size_mb,
-          file_size_text
-        )
-      `)
-      .eq('author', authorName);
-
-    // Eğer dil belirtilmişse filtrele
-    if (language) {
-      query = query.eq('language', language);
+    const params = new URLSearchParams();
+    if (language) params.set('language', language);
+    const qs = params.toString();
+    const url = `/api/authors/${encodeURIComponent(authorName)}/books${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return { books: [], error: new Error(data.error || res.statusText) };
     }
-
-    const { data, error } = await query.order('publish_year', { ascending: false });
-
-    if (error) {
-      console.error('❌ Error fetching books by author:', error);
-      return { books: [], error };
-    }
-
-    return { books: data || [], error: null };
+    const data = await res.json();
+    return { books: Array.isArray(data.books) ? data.books : [], error: null };
   } catch (err) {
-    console.error('❌ Error fetching books by author:', err);
-    return { books: [], error: err as Error };
+    return { books: [], error: err instanceof Error ? err : new Error(String(err)) };
   }
 }
 
-/**
- * Popüler yazarları getirir (en çok indirilen)
- */
-export async function getPopularAuthors(limit: number = 10): Promise<Author[]> {
-  try {
-    const { data, error } = await supabase
-      .from('popular_authors')
-      .select('*')
-      .limit(limit);
-
-    if (error) {
-      console.error('❌ Error fetching popular authors:', error);
-      return [];
-    }
-
-    if (!data) {
-      return [];
-    }
-
-    return data.map((author: SupabaseAuthor) => convertSupabaseAuthorToAuthor(author));
-  } catch (err) {
-    console.error('❌ Error fetching popular authors:', err);
-    return [];
-  }
+/** İleride API ile implement edilebilir */
+export async function getPopularAuthors(_limit: number = 10): Promise<Author[]> {
+  return [];
 }
 
-/**
- * Son kitap ekleyen yazarları getirir
- */
-export async function getRecentAuthors(limit: number = 10): Promise<Author[]> {
-  try {
-    const { data, error } = await supabase
-      .from('recent_authors')
-      .select('*')
-      .limit(limit);
-
-    if (error) {
-      console.error('❌ Error fetching recent authors:', error);
-      return [];
-    }
-
-    if (!data) {
-      return [];
-    }
-
-    return data.map((author: SupabaseAuthor) => convertSupabaseAuthorToAuthor(author));
-  } catch (err) {
-    console.error('❌ Error fetching recent authors:', err);
-    return [];
-  }
+/** İleride API ile implement edilebilir */
+export async function getRecentAuthors(_limit: number = 10): Promise<Author[]> {
+  return [];
 }
 
-/**
- * Harfe göre yazarları getirir (alfabetik)
- */
-export async function getAuthorsByLetter(letter: string): Promise<Author[]> {
-  try {
-    const { data, error } = await supabase
-      .from('authors_view')
-      .select('*')
-      .ilike('name', `${letter}%`)
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('❌ Error fetching authors by letter:', error);
-      return [];
-    }
-
-    if (!data) {
-      return [];
-    }
-
-    return data.map((author: SupabaseAuthor) => convertSupabaseAuthorToAuthor(author));
-  } catch (err) {
-    console.error('❌ Error fetching authors by letter:', err);
-    return [];
-  }
+/** İleride API ile implement edilebilir */
+export async function getAuthorsByLetter(_letter: string): Promise<Author[]> {
+  return [];
 }
 
-/**
- * Hangi harflerde yazar olduğunu getirir
- */
+/** İleride API ile implement edilebilir */
 export async function getAvailableLetters(): Promise<string[]> {
-  try {
-    console.log('🔤 Fetching available letters...');
-
-    const { data, error } = await supabase
-      .from('authors_by_letter')
-      .select('letter')
-      .order('letter', { ascending: true });
-
-    if (error) {
-      console.error('❌ Error fetching available letters:', error);
-      return [];
-    }
-
-    if (!data) {
-      return [];
-    }
-
-    return data.map((row: { letter: string }) => row.letter);
-  } catch (err) {
-    console.error('❌ Error fetching available letters:', err);
-    return [];
-  }
+  return [];
 }

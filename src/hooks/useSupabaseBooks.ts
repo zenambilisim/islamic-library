@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
-import { convertSupabaseBookToBook } from '../lib/converters';
 import type { Book } from '../types';
-import type { SupabaseBook } from '../lib/supabase';
 
 interface UseSupabaseBooksReturn {
   books: Book[];
@@ -15,11 +12,11 @@ interface UseSupabaseBooksReturn {
   loadingMore: boolean;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 /**
- * Supabase'den kitapları çeken custom hook
- * Otomatik olarak book_files ile join yapar
- * Seçili dile göre kitapları filtreler
- * Progressive loading: İlk 20 kitap hızlı, sonra daha fazla yüklenebilir
+ * Sunucu API'sinden kitapları çeken custom hook
+ * GET /api/books - dil ve sayfalama ile
  */
 export function useSupabaseBooks(): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
@@ -28,8 +25,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [offset, setOffset] = useState<number>(0);
-  const ITEMS_PER_PAGE = 20;
+  const [page, setPage] = useState<number>(0);
 
   const fetchBooks = async (isLoadMore: boolean = false) => {
     try {
@@ -37,65 +33,43 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         setLoadingMore(true);
       } else {
         setLoading(true);
-        setOffset(0);
+        setPage(0);
       }
       setError(null);
 
-      const currentLanguage = i18n.language;
-      const currentOffset = isLoadMore ? offset : 0;
+      const currentPage = isLoadMore ? page : 0;
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(ITEMS_PER_PAGE),
+        language: i18n.language,
+      });
+      const res = await fetch(`/api/books?${params}`);
 
-      // Supabase'den kitapları ve dosyalarını çek - dil filtrelemesi ile
-      // Progressive loading: İlk 20 kitap hızlı, sonra pagination
-      const { data, error: supabaseError, count } = await supabase
-        .from('books')
-        .select(`
-          *,
-          book_files (*)
-        `, { count: 'exact' })
-        .eq('language', currentLanguage)
-        .order('created_at', { ascending: false })
-        .range(currentOffset, currentOffset + ITEMS_PER_PAGE - 1);
-
-      if (supabaseError) {
-        console.error('❌ Supabase error:', supabaseError);
-        throw supabaseError;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || res.statusText);
       }
 
-      if (!data) {
-        if (isLoadMore) {
-          setHasMore(false);
-        } else {
-          setBooks([]);
-        }
+      const data = await res.json();
+      const { books: nextBooks, total, hasMore: nextHasMore } = data;
+
+      if (!Array.isArray(nextBooks)) {
+        if (!isLoadMore) setBooks([]);
         return;
       }
 
-      // Supabase formatından frontend formatına dönüştür
-      const convertedBooks = data.map((supabaseBook: SupabaseBook) => 
-        convertSupabaseBookToBook(supabaseBook)
-      );
-
-      // LoadMore ise mevcut kitaplara ekle, değilse yeni liste
       if (isLoadMore) {
-        setBooks(prev => [...prev, ...convertedBooks]);
-        setOffset(prev => prev + ITEMS_PER_PAGE);
+        setBooks(prev => [...prev, ...nextBooks]);
+        setPage(currentPage + 1);
       } else {
-        setBooks(convertedBooks);
-        setOffset(ITEMS_PER_PAGE);
+        setBooks(nextBooks);
+        setPage(1);
       }
-
-      // Daha fazla kitap var mı kontrolü
-      const totalBooks = count || 0;
-      const currentTotal = isLoadMore ? books.length + convertedBooks.length : convertedBooks.length;
-      setHasMore(currentTotal < totalBooks);
-
+      setHasMore(nextHasMore ?? nextBooks.length < total);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu';
-      console.error('❌ Error fetching books:', err);
       setError(errorMessage);
-      if (!isLoadMore) {
-        setBooks([]);
-      }
+      if (!isLoadMore) setBooks([]);
     } finally {
       if (isLoadMore) {
         setLoadingMore(false);
@@ -106,9 +80,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
   };
 
   const loadMore = async () => {
-    if (!loadingMore && hasMore) {
-      await fetchBooks(true);
-    }
+    if (!loadingMore && hasMore) await fetchBooks(true);
   };
 
   // Component mount olduğunda ve dil değiştiğinde kitapları çek
@@ -140,7 +112,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
 }
 
 /**
- * Belirli bir kategoriye göre kitapları filtreler (dil ile birlikte)
+ * Belirli bir kategoriye göre kitapları API'den çeker (dil ile birlikte)
  */
 export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
@@ -149,42 +121,20 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
   const [error, setError] = useState<string | null>(null);
 
   const fetchBooksByCategory = async () => {
+    if (!category) return;
     try {
       setLoading(true);
       setError(null);
-
-      const currentLanguage = i18n.language;
-      console.log(`📚 Fetching books for category: ${category}, language: ${currentLanguage}`);
-
-      const { data, error: supabaseError } = await supabase
-        .from('books')
-        .select(`
-          *,
-          book_files (*)
-        `)
-        .eq('category', category)
-        .eq('language', currentLanguage)
-        .order('created_at', { ascending: false });
-
-      if (supabaseError) {
-        console.error('❌ Supabase error:', supabaseError);
-        throw supabaseError;
+      const params = new URLSearchParams({ category, language: i18n.language });
+      const res = await fetch(`/api/books?${params}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || res.statusText);
       }
-
-      if (!data) {
-        setBooks([]);
-        return;
-      }
-
-      const convertedBooks = data.map((supabaseBook: SupabaseBook) => 
-        convertSupabaseBookToBook(supabaseBook)
-      );
-
-      setBooks(convertedBooks);
+      const data = await res.json();
+      setBooks(Array.isArray(data.books) ? data.books : []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu';
-      console.error('❌ Error fetching books by category:', err);
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu');
       setBooks([]);
     } finally {
       setLoading(false);
@@ -192,50 +142,33 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
   };
 
   useEffect(() => {
-    if (category) {
-      fetchBooksByCategory();
-    }
-  }, [category, i18n.language]); // Kategori veya dil değiştiğinde yeniden fetch et
+    if (category) fetchBooksByCategory();
+  }, [category, i18n.language]);
 
   return {
     books,
     loading,
     error,
     refetch: fetchBooksByCategory,
-    loadMore: async () => {}, // Category view doesn't need pagination
+    loadMore: async () => {},
     hasMore: false,
-    loadingMore: false
+    loadingMore: false,
   };
 }
 
 /**
- * Tek bir kitabı ID'ye göre getirir
+ * Tek bir kitabı ID'ye göre sunucu API'sinden getirir
  */
 export async function getBookById(id: string): Promise<Book | null> {
   try {
-    console.log(`📖 Fetching book with ID: ${id}`);
-
-    const { data, error } = await supabase
-      .from('books')
-      .select(`
-        *,
-        book_files (*)
-      `)
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('❌ Error fetching book:', error);
-      throw error;
+    const res = await fetch(`/api/books/${encodeURIComponent(id)}`);
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || res.statusText);
     }
-
-    if (!data) {
-      return null;
-    }
-
-    return convertSupabaseBookToBook(data);
-  } catch (err) {
-    console.error('❌ Error in getBookById:', err);
+    return res.json();
+  } catch {
     return null;
   }
 }

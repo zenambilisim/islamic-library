@@ -1,18 +1,15 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useMemo } from 'react';
 import { Grid3X3, List, BookOpen } from 'lucide-react';
-import { useSearch } from '../contexts/SearchContext';
-import { useSupabaseCategories } from '../hooks/useSupabaseCategories';
-import { useSupabaseBooks } from '../hooks/useSupabaseBooks';
-import BookCard from '../components/books/BookCard';
-import type { Book } from '../types';
+import { useSearch } from '@/contexts/SearchContext';
+import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
+import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
+import BookCard from '@/components/books/BookCard';
+import type { Book } from '@/types';
 
-interface CategoriesPageProps {
-  onViewBookDetails: (book: Book) => void;
-  onReadOnline: (book: Book) => void;
-}
-
-const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps) => {
+const CategoriesPage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -167,8 +164,6 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
                 <BookCard
                   key={book.id}
                   book={book}
-                  onViewDetails={onViewBookDetails}
-                  onReadOnline={onReadOnline}
                 />
               ))}
             </div>
@@ -206,7 +201,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
         {searchTerm && (
           <div className="mb-6">
             <p className="text-gray-600">
-              {filteredCategories.length} {t('categories.searchResultsFor')} "{searchTerm}" {t('categories.searchResultsForSuffix')}
+              {filteredCategories.length} {t('categories.searchResultsFor')} &quot;{searchTerm}&quot; {t('categories.searchResultsForSuffix')}
             </p>
           </div>
         )}
@@ -261,7 +256,7 @@ const CategoriesPage = ({ onViewBookDetails, onReadOnline }: CategoriesPageProps
               {t('categories.categoryNotFound')}
             </h3>
             <p className="text-gray-600">
-              "{searchTerm}" {t('categories.categoryNotFoundDesc')}
+              &quot;{searchTerm}&quot; {t('categories.categoryNotFoundDesc')}
             </p>
           </div>
         )}

@@ -1,26 +1,37 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Download, Eye, FileText, User, Loader2 } from 'lucide-react';
-import type { Book } from '../../types';
-import { getSignedBookFileUrl } from '../../lib/supabase';
+import type { Book } from '@/types';
+import { getSignedBookFileUrl } from '@/lib/supabase';
+import { useBookModal } from '@/contexts/BookModalContext';
 
-interface BookDetailModalProps {
-  book: Book | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onReadOnline: (book: Book) => void;
-}
-
-const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModalProps) => {
+const BookDetailModal = () => {
+  const { selectedBook: book, closeDetails, openReader } = useBookModal();
+  const isOpen = !!book;
+  const onClose = closeDetails;
   const { t, i18n } = useTranslation();
   const [loadingUrls, setLoadingUrls] = useState<Record<string, boolean>>({});
-  
+  const [readOnlineLoading, setReadOnlineLoading] = useState(false);
+
   // Reset URLs when modal opens with new book
   useEffect(() => {
     if (isOpen && book) {
       setLoadingUrls({});
+      setReadOnlineLoading(false);
     }
   }, [isOpen, book?.id]);
+
+  const handleReadOnline = async () => {
+    if (!book) return;
+    setReadOnlineLoading(true);
+    try {
+      await openReader(book);
+    } finally {
+      setReadOnlineLoading(false);
+    }
+  };
 
   if (!isOpen || !book) return null;
 
@@ -99,11 +110,21 @@ const BookDetailModal = ({ book, isOpen, onClose, onReadOnline }: BookDetailModa
                 {/* Action Buttons */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => onReadOnline(book)}
-                    className="w-full btn-primary flex items-center justify-center space-x-2"
+                    onClick={handleReadOnline}
+                    disabled={readOnlineLoading}
+                    className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <Eye size={20} />
-                    <span>{t('common.readOnline')}</span>
+                    {readOnlineLoading ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Açılıyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={20} />
+                        <span>{t('common.readOnline')}</span>
+                      </>
+                    )}
                   </button>
 
                   {/* Download Buttons */}

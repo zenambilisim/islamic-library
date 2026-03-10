@@ -1,12 +1,10 @@
-import { supabase } from './supabase'
+import { supabase } from './supabase-server'
 
 // ***** BOOK OPERATIONS *****
 
-// Tüm kitapları getir (sayfalama ile)
-export async function getBooks(page = 0, limit = 20) {
-  console.log('🚀 Fetching books from Supabase...')
-  
-  const { data, error, count } = await supabase
+// Tüm kitapları getir (sayfalama ile, isteğe bağlı dil filtresi)
+export async function getBooks(page = 0, limit = 20, language?: string) {
+  let query = supabase
     .from('books')
     .select(`
       *,
@@ -18,9 +16,15 @@ export async function getBooks(page = 0, limit = 20) {
       )
     `, { count: 'exact' })
     .range(page * limit, (page + 1) * limit - 1)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false });
 
-  console.log('📊 Raw Supabase response:', { data, error, count })
+  if (language) query = query.eq('language', language);
+
+  const { data, error, count } = await query;
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📊 Raw Supabase response:', { data, error, count });
+  }
 
   if (error) {
     console.error('❌ Error fetching books:', error)
@@ -75,23 +79,27 @@ export async function searchBooks(query: string) {
   return { books: data || [], error: null }
 }
 
-// Kategoriye göre kitaplar
-export async function getBooksByCategory(categoryName: string) {
-  const { data, error } = await supabase
+// Kategoriye göre kitaplar (isteğe bağlı dil filtresi)
+export async function getBooksByCategory(categoryName: string, language?: string) {
+  let query = supabase
     .from('books')
     .select(`
       *,
       book_files (*)
     `)
     .eq('category', categoryName)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (language) query = query.eq('language', language);
+
+  const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching books by category:', error)
-    return { books: [], error }
+    console.error('Error fetching books by category:', error);
+    return { books: [], error };
   }
 
-  return { books: data || [], error: null }
+  return { books: data || [], error: null };
 }
 
 // ***** CATEGORY OPERATIONS *****

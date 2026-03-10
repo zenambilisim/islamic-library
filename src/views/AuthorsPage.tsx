@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, BookOpen, Calendar, Grid3X3, List } from 'lucide-react';

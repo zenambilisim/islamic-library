@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Send, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';

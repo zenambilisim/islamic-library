@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Heart, Users, Globe, Shield, Award } from 'lucide-react';
 

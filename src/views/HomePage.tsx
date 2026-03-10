@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import BookCard from '@/components/books/BookCard';

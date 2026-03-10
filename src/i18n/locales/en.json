@@ -189,6 +189,25 @@
     "feature6Title": "Continuous Updates",
     "feature6Desc": "We regularly add new books and keep existing content up to date."
   },
+  "user": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "myBooks": "My Books",
+      "backToSite": "Back to Site",
+      "logout": "Log out",
+      "userArea": "User"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "welcome": "Welcome",
+      "welcomeDesc": "Overview of your account.",
+      "myBooksCard": "My Books",
+      "myBooksDesc": "Books you saved or downloaded",
+      "goToBooks": "Go to Books",
+      "profileCard": "Profile",
+      "comingSoon": "Coming soon..."
+    }
+  },
   "login": {
     "pageTitle": "Sign In",
     "formTitle": "Sign in to your account",

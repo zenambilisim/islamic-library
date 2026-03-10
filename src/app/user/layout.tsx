@@ -1,9 +1,10 @@
 'use client';
 
 import '@/i18n';
+import UserNavbar from '@/components/layout/UserNavbar';
 
 /**
- * User sayfaları için layout – Header/Footer yok, sadece içerik.
+ * User sayfaları için layout – kendi navbar'ı, ana site Header/Footer yok.
  */
 export default function UserLayout({
   children,
@@ -12,6 +13,7 @@ export default function UserLayout({
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
+      <UserNavbar />
       <main>{children}</main>
     </div>
   );

@@ -189,6 +189,25 @@
     "feature6Title": "Davamlı Yeniləmə",
     "feature6Desc": "Müntəzəm olaraq yeni kitablar əlavə edir, mövcud məzmunu aktual saxlayırıq."
   },
+  "user": {
+    "nav": {
+      "dashboard": "Panel",
+      "myBooks": "Kitablarım",
+      "backToSite": "Sayta qayıt",
+      "logout": "Çıxış",
+      "userArea": "İstifadəçi"
+    },
+    "dashboard": {
+      "title": "Panel",
+      "welcome": "Xoş gəlmisiniz",
+      "welcomeDesc": "Hesabınıza ümumi baxış.",
+      "myBooksCard": "Kitablarım",
+      "myBooksDesc": "Saxladığınız və yüklədiyiniz kitablar",
+      "goToBooks": "Kitablara get",
+      "profileCard": "Profil",
+      "comingSoon": "Tezliklə..."
+    }
+  },
   "login": {
     "pageTitle": "Daxil ol",
     "formTitle": "Hesabınıza daxil olun",

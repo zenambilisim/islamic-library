@@ -1,9 +1,5 @@
-import React from 'react'
+import UserBooksPage from '@/views/User/UserBooksPage';
 
-const Page = () => {
-  return (
-    <div>page</div>
-  )
+export default function Page() {
+  return <UserBooksPage />;
 }
-
-export default Page

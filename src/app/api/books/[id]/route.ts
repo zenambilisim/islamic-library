@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBookById } from '@/lib/books';
+import { getBookById, deleteBook } from '@/lib/books';
 import { convertSupabaseBookToBook } from '@/lib/converters-server';
+
+/**
+ * DELETE /api/books/[id]
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'Missing book id' }, { status: 400 });
+    }
+    const { error } = await deleteBook(id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('API DELETE /api/books/[id] error:', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
 
 /**
  * GET /api/books/[id]

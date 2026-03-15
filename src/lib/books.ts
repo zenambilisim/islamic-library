@@ -191,6 +191,58 @@ export async function uploadBookFile(file: File, bookId: string, format: string)
 
 // ***** KİTAP EKLEME FONKSİYONLARI *****
 
+export interface CreateBookPayload {
+  title: string;
+  title_translations?: Record<string, string>;
+  author: string;
+  author_translations?: Record<string, string>;
+  category: string;
+  category_translations?: Record<string, string>;
+  description?: string;
+  description_translations?: Record<string, string>;
+  language: string;
+  pages?: number;
+  publish_year?: number;
+  tags?: string[];
+}
+
+/** Yeni kitap kaydı oluşturur (dosya/kapak yok). */
+export async function createBook(payload: CreateBookPayload) {
+  const row = {
+    title: payload.title,
+    title_translations: payload.title_translations ?? { tr: payload.title, en: payload.title, ru: payload.title, az: payload.title },
+    author: payload.author,
+    author_translations: payload.author_translations ?? { tr: payload.author, en: payload.author, ru: payload.author, az: payload.author },
+    category: payload.category,
+    category_translations: payload.category_translations ?? { tr: payload.category, en: payload.category, ru: payload.category, az: payload.category },
+    description: payload.description ?? '',
+    description_translations: payload.description_translations ?? {},
+    language: payload.language,
+    pages: payload.pages ?? 0,
+    publish_year: payload.publish_year ?? new Date().getFullYear(),
+    download_count: 0,
+    tags: payload.tags ?? [],
+  };
+
+  const { data, error } = await supabase
+    .from('books')
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) return { book: null, error };
+  return { book: data, error: null };
+}
+
+/** Kitabın kapak resmi URL'ini günceller. */
+export async function updateBookCover(bookId: string, coverUrl: string) {
+  const { error } = await supabase
+    .from('books')
+    .update({ cover_image_url: coverUrl })
+    .eq('id', bookId);
+  return { error };
+}
+
 // Hızlı kitap ekleme
 export async function addQuickBook() {
   console.log('📚 Adding quick book...')
@@ -252,6 +304,30 @@ export async function addQuickBook() {
 
   console.log('✅ Files inserted:', filesData)
   return { book: bookData, files: filesData }
+}
+
+/** Kitabı ve ilişkili book_files kayıtlarını siler. */
+export async function deleteBook(bookId: string) {
+  const { error: filesError } = await supabase
+    .from('book_files')
+    .delete()
+    .eq('book_id', bookId);
+
+  if (filesError) {
+    console.error('Error deleting book_files:', filesError);
+    return { error: filesError };
+  }
+
+  const { error: bookError } = await supabase
+    .from('books')
+    .delete()
+    .eq('id', bookId);
+
+  if (bookError) {
+    return { error: bookError };
+  }
+
+  return { error: null };
 }
 
 // Hızlı temizleme

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import type { Book } from '../types';
 
 interface UseSupabaseBooksReturn {
@@ -16,10 +15,9 @@ const ITEMS_PER_PAGE = 20;
 
 /**
  * Sunucu API'sinden kitapları çeken custom hook
- * GET /api/books - dil ve sayfalama ile
+ * GET /api/books - sayfalama ile (dil filtresi yok)
  */
 export function useSupabaseBooks(): UseSupabaseBooksReturn {
-  const { i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
@@ -41,7 +39,6 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       const params = new URLSearchParams({
         page: String(currentPage),
         limit: String(ITEMS_PER_PAGE),
-        language: i18n.language,
       });
       const res = await fetch(`/api/books?${params}`);
 
@@ -83,10 +80,10 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
     if (!loadingMore && hasMore) await fetchBooks(true);
   };
 
-  // Component mount olduğunda ve dil değiştiğinde kitapları çek
+  // Component mount olduğunda kitapları çek
   useEffect(() => {
     fetchBooks(false);
-  }, [i18n.language]); // Dil değiştiğinde yeniden fetch et
+  }, []);
 
   // Arka planda otomatik olarak kalan kitapları yükle (kullanıcı fark etmez)
   useEffect(() => {
@@ -112,10 +109,9 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
 }
 
 /**
- * Belirli bir kategoriye göre kitapları API'den çeker (dil ile birlikte)
+ * Belirli bir kategoriye göre kitapları API'den çeker (tüm diller)
  */
 export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksReturn {
-  const { i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +121,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
     try {
       setLoading(true);
       setError(null);
-      const params = new URLSearchParams({ category, language: i18n.language });
+      const params = new URLSearchParams({ category });
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -143,7 +139,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
 
   useEffect(() => {
     if (category) fetchBooksByCategory();
-  }, [category, i18n.language]);
+  }, [category]);
 
   return {
     books,

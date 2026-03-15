@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import type { Book } from '@/types';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -19,12 +18,11 @@ export interface UseUserBooksPaginatedReturn {
 
 /**
  * Sayfa tabanlı kitaplar listesi (user/books tablosu için).
- * API: GET /api/books?page=&limit=&language=
+ * API: GET /api/books?page=&limit= (dil filtresi yok)
  */
 export function useUserBooksPaginated(
   initialPageSize: number = DEFAULT_PAGE_SIZE
 ): UseUserBooksPaginatedReturn {
-  const { i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +37,6 @@ export function useUserBooksPaginated(
       const params = new URLSearchParams({
         page: String(page),
         limit: String(pageSize),
-        language: i18n.language,
       });
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {
@@ -57,7 +54,7 @@ export function useUserBooksPaginated(
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, i18n.language]);
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchPage();

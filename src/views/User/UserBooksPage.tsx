@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
-import { Trash2 } from 'lucide-react';
+import { BookPlus, FolderUp, Trash2 } from 'lucide-react';
 import type { Book } from '@/types';
 import type { Language } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
@@ -67,7 +68,25 @@ const UserBooksPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('user.books.title')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{t('user.books.title')}</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/user/books/new"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
+          >
+            <BookPlus size={18} />
+            {t('user.books.addNew')}
+          </Link>
+          <Link
+            href="/user/books/bulk"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
+          >
+            <FolderUp size={18} />
+            {t('user.nav.bulkUpload')}
+          </Link>
+        </div>
+      </div>
 
       {deleteError && (
         <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">

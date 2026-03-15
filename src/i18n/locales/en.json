@@ -195,7 +195,8 @@
       "myBooks": "My Books",
       "backToSite": "Back to Site",
       "logout": "Log out",
-      "userArea": "User"
+      "userArea": "User",
+      "bulkUpload": "Bulk upload"
     },
     "dashboard": {
       "title": "Dashboard",

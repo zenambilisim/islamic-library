@@ -195,7 +195,8 @@
       "myBooks": "Мои книги",
       "backToSite": "На сайт",
       "logout": "Выйти",
-      "userArea": "Пользователь"
+      "userArea": "Пользователь",
+      "bulkUpload": "Массовая загрузка"
     },
     "dashboard": {
       "title": "Панель",

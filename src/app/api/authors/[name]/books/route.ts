@@ -3,7 +3,7 @@ import { getBooksByAuthor } from '@/lib/authors';
 
 /**
  * GET /api/authors/[name]/books
- * Query: language (optional)
+ * Dil filtresi yok – yazarın tüm kitapları döner.
  */
 export async function GET(
   request: NextRequest,
@@ -16,10 +16,7 @@ export async function GET(
       return NextResponse.json({ error: 'Missing author name' }, { status: 400 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const language = searchParams.get('language') || undefined;
-
-    const { books, error } = await getBooksByAuthor(decodedName, language);
+    const { books, error } = await getBooksByAuthor(decodedName);
 
     if (error) {
       return NextResponse.json(

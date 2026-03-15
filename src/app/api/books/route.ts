@@ -46,14 +46,13 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/books
- * Query: page, limit, language, category (category varsa sayfalama yok, tüm liste döner)
+ * Query: page, limit, category (category varsa sayfalama yok, tüm liste döner). Dil filtresi yok – tüm kitaplar döner.
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
-    const language = searchParams.get('language') || undefined;
     const category = searchParams.get('category') || undefined;
 
     let rawBooks: any[];
@@ -61,14 +60,14 @@ export async function GET(request: NextRequest) {
     let hasMore = false;
 
     if (category) {
-      const result = await getBooksByCategory(category, language);
+      const result = await getBooksByCategory(category);
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }
       rawBooks = result.books;
       total = rawBooks.length;
     } else {
-      const result = await getBooks(page, limit, language);
+      const result = await getBooks(page, limit);
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }

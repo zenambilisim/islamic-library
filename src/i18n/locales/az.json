@@ -195,7 +195,8 @@
       "myBooks": "Kitablarım",
       "backToSite": "Sayta qayıt",
       "logout": "Çıxış",
-      "userArea": "İstifadəçi"
+      "userArea": "İstifadəçi",
+      "bulkUpload": "Toplu yüklə"
     },
     "dashboard": {
       "title": "Panel",

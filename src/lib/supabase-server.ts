@@ -18,6 +18,13 @@ const key = isSupabaseConfigured ? supabaseKey : 'placeholder';
 
 export const supabase = createClient(url, key);
 
+/** Service role ile client – RLS bypass. Sadece sunucuda, yazma işlemleri için kullanın. */
+const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
+export const supabaseAdmin =
+  isSupabaseConfigured && serviceRoleKey.length > 0
+    ? createClient(url, serviceRoleKey)
+    : null;
+
 export const STORAGE_BUCKETS = {
   BOOK_ASSETS: 'book-assets',
   COVERS: 'book-assets/covers',

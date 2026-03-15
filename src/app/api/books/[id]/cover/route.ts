@@ -16,28 +16,34 @@ export async function POST(
     }
     const formData = await request.formData();
     const file = formData.get('file');
-    if (!file || !(file instanceof File)) {
+    const blob = file && typeof (file as Blob).arrayBuffer === 'function' ? (file as Blob) : null;
+    if (!blob) {
       return NextResponse.json({ error: 'Dosya (file) gerekli' }, { status: 400 });
     }
-    const { url, error: uploadError } = await uploadBookCover(file, id);
+    const filename =
+      (formData.get('filename') as string) ||
+      (file instanceof File ? file.name : null) ||
+      'cover.jpg';
+    const { url, error: uploadError } = await uploadBookCover(blob, id, filename);
     if (uploadError || !url) {
-      return NextResponse.json(
-        { error: uploadError?.message ?? 'Kapak yüklenemedi' },
-        { status: 500 }
-      );
+      const msg = uploadError?.message ?? 'Kapak yüklenemedi';
+      console.error('Cover upload failed:', msg, uploadError);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
     const { error: updateError } = await updateBookCover(id, url);
     if (updateError) {
+      console.error('Cover DB update failed:', updateError);
       return NextResponse.json(
-        { error: updateError.message },
+        { error: `Veritabanı güncellenemedi: ${updateError.message}` },
         { status: 500 }
       );
     }
     return NextResponse.json({ url });
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('API POST /api/books/[id]/cover error:', err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Unknown error' },
+      { error: message },
       { status: 500 }
     );
   }

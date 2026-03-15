@@ -37,7 +37,7 @@ const AuthorsPage = () => {
       const fetchBooks = async () => {
         setLoadingBooks(true);
         try {
-          const { books, error } = await fetchBooksByAuthor(selectedAuthor, i18n.language);
+          const { books, error } = await fetchBooksByAuthor(selectedAuthor);
           setAuthorBooks(error || !books ? [] : books);
         } catch {
           setAuthorBooks([]);
@@ -49,7 +49,7 @@ const AuthorsPage = () => {
     } else {
       setAuthorBooks([]);
     }
-  }, [selectedAuthor, i18n.language]);
+  }, [selectedAuthor]);
 
   // Generate alphabet for navigation based on current language
   const alphabet = useMemo(() => {

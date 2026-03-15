@@ -1,4 +1,7 @@
-import { supabase } from './supabase-server'
+import { supabase, supabaseAdmin } from './supabase-server'
+
+/** Yazma işlemleri için: service role varsa RLS bypass, yoksa anon (RLS gerekir). */
+const db = () => supabaseAdmin ?? supabase
 
 // ***** BOOK OPERATIONS *****
 
@@ -121,15 +124,23 @@ export async function getCategories() {
 
 // ***** FILE OPERATIONS *****
 
-// Dosya upload (kapak resmi için)
-export async function uploadBookCover(file: File, bookId: string) {
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${bookId}-cover.${fileExt}`
-  const filePath = `covers/${fileName}`
+// Dosya upload (kapak resmi için). body: Blob/File/Buffer, filename: uzantı için.
+export async function uploadBookCover(
+  body: Blob | File | Buffer,
+  bookId: string,
+  filename: string = 'cover.jpg'
+) {
+  const name = typeof body === 'object' && body && 'name' in body ? (body as File).name : filename;
+  const fileExt = name.split('.').pop() || 'jpg';
+  const fileName = `${bookId}-cover.${fileExt}`;
+  const filePath = `covers/${fileName}`;
 
-  const { data, error } = await supabase.storage
+  const payload =
+    body instanceof Buffer ? body : Buffer.from(await (body as Blob).arrayBuffer());
+
+  const { data, error } = await db().storage
     .from('book-assets')
-    .upload(filePath, file, {
+    .upload(filePath, payload, {
       cacheControl: '3600',
       upsert: true
     })
@@ -140,24 +151,41 @@ export async function uploadBookCover(file: File, bookId: string) {
   }
 
   // Public URL al
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = db().storage
     .from('book-assets')
     .getPublicUrl(data.path)
 
   return { url: publicUrl, error: null }
 }
 
-// Kitap dosyası upload
-export async function uploadBookFile(file: File, bookId: string, format: string) {
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${bookId}.${fileExt}`
-  const filePath = `books/${bookId}/${fileName}`
+// Kitap dosyası upload. body: Blob/File/Buffer, filename: uzantı için.
+export async function uploadBookFile(
+  body: Blob | File | Buffer,
+  bookId: string,
+  format: string,
+  filename: string = `file.${format}`
+) {
+  const name = typeof body === 'object' && body && 'name' in body ? (body as File).name : filename;
+  const fileExt = name.split('.').pop() || format;
+  const fileName = `${bookId}.${fileExt}`;
+  const filePath = `books/${bookId}/${fileName}`;
 
-  const { data, error } = await supabase.storage
+  const payload =
+    body instanceof Buffer ? body : Buffer.from(await (body as Blob).arrayBuffer());
+  const size = payload.length;
+
+  const contentType =
+    format === 'pdf' ? 'application/pdf' :
+    format === 'epub' ? 'application/epub+zip' :
+    format === 'docx' || format === 'doc' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+    undefined;
+
+  const { data, error } = await db().storage
     .from('book-assets')
-    .upload(filePath, file, {
+    .upload(filePath, payload, {
       cacheControl: '3600',
-      upsert: true
+      upsert: true,
+      ...(contentType && { contentType }),
     })
 
   if (error) {
@@ -166,24 +194,25 @@ export async function uploadBookFile(file: File, bookId: string, format: string)
   }
 
   // Public URL al
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = db().storage
     .from('book-assets')
     .getPublicUrl(data.path)
 
-  // Database'e file record ekle
-  const fileSizeMB = file.size / (1024 * 1024)
-  const { error: dbError } = await supabase
+  // Database'e file record ekle – başarısız olursa PDF listede görünmez
+  const fileSizeMB = size / (1024 * 1024)
+  const { error: dbError } = await db()
     .from('book_files')
     .insert({
       book_id: bookId,
       format,
       file_url: publicUrl,
       file_size_mb: fileSizeMB,
-      file_size_text: formatFileSize(file.size)
+      file_size_text: formatFileSize(size)
     })
 
   if (dbError) {
-    console.error('Error saving file record:', dbError)
+    console.error('Error saving file record (book_files):', dbError)
+    return { url: null, error: dbError }
   }
 
   return { url: publicUrl, error: null }
@@ -224,7 +253,7 @@ export async function createBook(payload: CreateBookPayload) {
     tags: payload.tags ?? [],
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('books')
     .insert(row)
     .select()
@@ -236,7 +265,7 @@ export async function createBook(payload: CreateBookPayload) {
 
 /** Kitabın kapak resmi URL'ini günceller. */
 export async function updateBookCover(bookId: string, coverUrl: string) {
-  const { error } = await supabase
+  const { error } = await db()
     .from('books')
     .update({ cover_image_url: coverUrl })
     .eq('id', bookId);
@@ -306,9 +335,39 @@ export async function addQuickBook() {
   return { book: bookData, files: filesData }
 }
 
-/** Kitabı ve ilişkili book_files kayıtlarını siler. */
+/** Storage'dan kitap dosyalarını ve kapağını siler (book_files + books tablosu silinmeden önce çağrılabilir). */
+async function deleteBookStorageFiles(bookId: string) {
+  const storage = db().storage.from('book-assets');
+  const pathsToRemove: string[] = [];
+
+  // books/{bookId}/ altındaki tüm dosyalar (PDF, EPUB, DOCX)
+  const { data: bookFiles } = await storage.list(`books/${bookId}`);
+  if (bookFiles?.length) {
+    for (const f of bookFiles) {
+      if (f.name) pathsToRemove.push(`books/${bookId}/${f.name}`);
+    }
+  }
+
+  // covers/ altında bookId ile başlayan kapak (örn. {bookId}-cover.jpg)
+  const { data: coverFiles } = await storage.list('covers');
+  if (coverFiles?.length) {
+    const prefix = `${bookId}-cover`;
+    for (const f of coverFiles) {
+      if (f.name?.startsWith(prefix)) pathsToRemove.push(`covers/${f.name}`);
+    }
+  }
+
+  if (pathsToRemove.length > 0) {
+    const { error } = await storage.remove(pathsToRemove);
+    if (error) console.error('Error deleting book files from storage:', error);
+  }
+}
+
+/** Kitabı, ilişkili book_files kayıtlarını ve Storage'daki dosyaları siler. */
 export async function deleteBook(bookId: string) {
-  const { error: filesError } = await supabase
+  const client = db();
+
+  const { error: filesError } = await client
     .from('book_files')
     .delete()
     .eq('book_id', bookId);
@@ -318,7 +377,7 @@ export async function deleteBook(bookId: string) {
     return { error: filesError };
   }
 
-  const { error: bookError } = await supabase
+  const { error: bookError } = await client
     .from('books')
     .delete()
     .eq('id', bookId);
@@ -326,6 +385,8 @@ export async function deleteBook(bookId: string) {
   if (bookError) {
     return { error: bookError };
   }
+
+  await deleteBookStorageFiles(bookId);
 
   return { error: null };
 }

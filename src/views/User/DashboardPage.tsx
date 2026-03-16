@@ -41,7 +41,7 @@ const DashboardPage = () => {
               </div>
               <h2 className="font-semibold text-gray-500">{t('user.dashboard.profileCard')}</h2>
             </div>
-            <p className="text-sm text-gray-400">{t('user.dashboard.comingSoon')}</p>
+            {/* <p className="text-sm text-gray-400">{t('user.dashboard.comingSoon')}</p> */}
           </div>
         </div>
       </div>

@@ -2,14 +2,25 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, BookOpen, Home, LogOut, Menu, X } from 'lucide-react';
 
 const UserNavbar = () => {
   const { t } = useTranslation();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    setIsMenuOpen(false);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.push('/');
+      router.refresh();
+    }
+  };
 
   const navItems = [
     { key: 'dashboard', label: t('user.nav.dashboard'), href: '/user/dashboard', icon: LayoutDashboard },
@@ -55,6 +66,7 @@ const UserNavbar = () => {
             </Link>
             <button
               type="button"
+              onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
               aria-label={t('user.nav.logout')}
             >
@@ -103,7 +115,7 @@ const UserNavbar = () => {
               <button
                 type="button"
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 text-left"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={handleLogout}
               >
                 <LogOut size={18} />
                 {t('user.nav.logout')}

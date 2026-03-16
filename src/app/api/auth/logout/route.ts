@@ -11,9 +11,10 @@ export async function POST() {
   }
   try {
     await supabase.auth.signOut();
-    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Logout API error:', err);
-    return NextResponse.json({ ok: true });
   }
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set('sb-auth-token', '', { maxAge: 0, path: '/' });
+  return res;
 }

@@ -38,10 +38,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: message }, { status: 401 });
     }
 
-    return NextResponse.json({
+    const token = data.session?.access_token;
+    const res = NextResponse.json({
       user: data.user,
       session: data.session,
     });
+    if (token) {
+      res.cookies.set('sb-auth-token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 gün
+        path: '/',
+      });
+    }
+    return res;
   } catch (err) {
     console.error('Login API error:', err);
     return NextResponse.json(

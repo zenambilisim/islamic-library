@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, type InputHTMLAttributes } from 'react';
 import Link from 'next/link';
 import { Upload, FolderOpen, CheckCircle, XCircle } from 'lucide-react';
 import { parseFolderFiles, type BookEntry } from '@/lib/bulkUploadUtils';
@@ -121,8 +121,10 @@ const BulkUploadPage = () => {
       <input
         ref={inputRef}
         type="file"
-        webkitdirectory=""
-        directory=""
+        {...({
+          webkitdirectory: "",
+          directory: "",
+        } as InputHTMLAttributes<HTMLInputElement>)}
         multiple
         accept=".pdf,.epub,.docx,.doc,.rtf,.png,.jpg,.jpeg"
         onChange={handleFolderChange}

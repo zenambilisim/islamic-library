@@ -15,7 +15,7 @@ function getLocalized(
   translations: { tr: string; en: string; ru: string; az: string } | undefined,
   lang: string
 ): string {
-  const key = (lang in translations ? lang : 'en') as Language;
+  const key = (translations && lang in translations ? lang : 'en') as Language;
   return (translations && translations[key]) || value;
 }
 

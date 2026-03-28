@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Eye, FileText, User } from 'lucide-react';
+import { Download, Eye, FileText, User, Loader2 } from 'lucide-react';
 import type { Book } from '@/types';
 import { useBookModal } from '@/contexts/BookModalContext';
+import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
 
 interface BookCardProps {
   book: Book;
@@ -14,9 +15,26 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
   const { openDetails, openReader } = useBookModal();
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language as keyof typeof book.titleTranslations;
+  const [downloadLoading, setDownloadLoading] = useState<Record<string, boolean>>({});
 
   const getLocalizedText = (translations: any, fallback: string) => {
     return translations[currentLang] || translations.tr || fallback;
+  };
+
+  const handleFormatDownload = async (e: React.MouseEvent, format: string, url: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const base = safeDownloadBasename(getLocalizedText(book.titleTranslations, book.title));
+    const fileName = `${base}.${format.toLowerCase()}`;
+    setDownloadLoading((s) => ({ ...s, [format]: true }));
+    try {
+      await downloadBookAsset(url, fileName);
+    } catch (err) {
+      console.error(err);
+      alert(t('errors.downloadFailed') || 'İndirme başarısız oldu. Lütfen tekrar deneyin.');
+    } finally {
+      setDownloadLoading((s) => ({ ...s, [format]: false }));
+    }
   };
 
   return (
@@ -80,18 +98,20 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
         <div className="mt-auto flex flex-wrap gap-2 pt-4">
           {Object.entries(book.formats).map(([format, url]) => (
             url && (
-              <a
+              <button
                 key={format}
-                href={url}
-                onClick={(e) => e.stopPropagation()}
-                download={`${book.title}.${format}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gradient-to-r from-primary-100 to-purple-100 hover:from-primary-200 hover:to-purple-200 text-primary-700 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center space-x-1 transform hover:scale-105 shadow-sm"
+                type="button"
+                disabled={!!downloadLoading[format]}
+                onClick={(e) => void handleFormatDownload(e, format, url)}
+                className="bg-gradient-to-r from-primary-100 to-purple-100 hover:from-primary-200 hover:to-purple-200 disabled:opacity-60 disabled:cursor-wait text-primary-700 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center space-x-1 transform hover:scale-105 shadow-sm"
               >
-                <Download size={12} />
+                {downloadLoading[format] ? (
+                  <Loader2 size={12} className="animate-spin shrink-0" />
+                ) : (
+                  <Download size={12} />
+                )}
                 <span>{format.toUpperCase()}</span>
-              </a>
+              </button>
             )
           ))}
         </div>

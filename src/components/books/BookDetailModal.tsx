@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Download, Eye, FileText, User, Loader2 } from 'lucide-react';
 import type { Book } from '@/types';
-import { getSignedBookFileUrl } from '@/lib/supabase';
+import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
 import { useBookModal } from '@/contexts/BookModalContext';
 
 const BookDetailModal = () => {
@@ -47,29 +47,16 @@ const BookDetailModal = () => {
     }
   };
 
-  // Handle secure download with signed URL
   const handleDownload = async (format: string, url: string) => {
     try {
-      setLoadingUrls(prev => ({ ...prev, [format]: true }));
-      
-      // Get signed URL for secure download
-      const signedUrl = await getSignedBookFileUrl(url, 3600); // 1 saat geçerli
-      
-      if (signedUrl) {
-        // Create temporary link and trigger download
-        const link = document.createElement('a');
-        link.href = signedUrl;
-        link.download = `${book.title}.${format}`;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      setLoadingUrls((prev) => ({ ...prev, [format]: true }));
+      const base = safeDownloadBasename(getLocalizedText(book.titleTranslations, book.title));
+      await downloadBookAsset(url, `${base}.${format.toLowerCase()}`);
     } catch (error) {
       console.error('Download error:', error);
       alert(t('errors.downloadFailed') || 'İndirme başarısız oldu. Lütfen tekrar deneyin.');
     } finally {
-      setLoadingUrls(prev => ({ ...prev, [format]: false }));
+      setLoadingUrls((prev) => ({ ...prev, [format]: false }));
     }
   };
 

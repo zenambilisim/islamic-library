@@ -6,7 +6,9 @@ import { Grid3X3, List, BookOpen } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
+import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
 import BookCard from '@/components/books/BookCard';
+import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import type { Book } from '@/types';
 
 const CategoriesPage = () => {
@@ -17,7 +19,13 @@ const CategoriesPage = () => {
   
   // Supabase'den kategorileri ve kitapları çek
   const { categories: supabaseCategories, loading: categoriesLoading, error: categoriesError } = useSupabaseCategories();
-  const { books: supabaseBooks, loading: booksLoading } = useSupabaseBooks();
+  const { books: supabaseBooks, loading: booksLoading, loadMore, hasMore, loadingMore } = useSupabaseBooks();
+  const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
+    hasMore,
+    loading: booksLoading,
+    loadingMore,
+    watchKey: selectedCategory ?? 'overview',
+  });
   
   const currentLang = i18n.language as 'tr' | 'en' | 'ru' | 'az';
 
@@ -67,8 +75,9 @@ const CategoriesPage = () => {
     };
   }, [supabaseCategories, supabaseBooks]);
 
-  // Loading state
-  if (categoriesLoading || booksLoading) {
+  const booksListLoading = booksLoading && supabaseBooks.length === 0;
+
+  if (categoriesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -133,7 +142,13 @@ const CategoriesPage = () => {
 
             <div className="flex items-center justify-between">
               <p className="text-gray-600">
-                {categoryBooks.length} {t('categories.booksFound')}
+                {booksListLoading ? (
+                  <span className="inline-block h-5 w-28 animate-pulse rounded bg-gray-200" />
+                ) : (
+                  <>
+                    {categoryBooks.length} {t('categories.booksFound')}
+                  </>
+                )}
               </p>
               
               {/* View Mode Toggle */}
@@ -155,7 +170,12 @@ const CategoriesPage = () => {
           </div>
 
           {/* Category Books */}
-          {categoryBooks.length > 0 ? (
+          {booksListLoading && categoryBooks.length === 0 ? (
+            <BookGridSkeleton
+              count={8}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
+            />
+          ) : categoryBooks.length > 0 ? (
             <div className={viewMode === 'grid' 
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
               : "space-y-4"
@@ -175,6 +195,18 @@ const CategoriesPage = () => {
               <p className="text-gray-600">
                 {t('categories.noBooksInCategoryDesc')}
               </p>
+            </div>
+          )}
+
+          {hasMore && (
+            <div ref={booksLoadMoreRef} className="h-10 w-full" aria-hidden />
+          )}
+          {loadingMore && (
+            <div className="mt-6 flex justify-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+                {t('common.loading')}…
+              </div>
             </div>
           )}
         </div>
@@ -225,7 +257,13 @@ const CategoriesPage = () => {
                         {getLocalizedText(category.nameTranslations, category.name)}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
-                        {categoryBooks.length} {t('categories.booksInCategory')}
+                        {booksListLoading ? (
+                          <span className="inline-block h-4 w-10 animate-pulse rounded bg-gray-200 align-middle" />
+                        ) : (
+                          <>
+                            {categoryBooks.length} {t('categories.booksInCategory')}
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -274,14 +312,30 @@ const CategoriesPage = () => {
                 <div className="text-gray-600">{t('categories.totalCategories')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary-600">
-                  {totalStats.books}
-                </div>
+                {booksListLoading ? (
+                  <div className="mx-auto mb-1 h-8 w-20 animate-pulse rounded-lg bg-gray-200" />
+                ) : (
+                  <div className="text-2xl font-bold text-primary-600">
+                    {totalStats.books}
+                  </div>
+                )}
                 <div className="text-gray-600">{t('categories.totalBooks')}</div>
               </div>
             </div>
           </div>
         </div>
+
+        {hasMore && (
+          <div ref={booksLoadMoreRef} className="h-10 w-full" aria-hidden />
+        )}
+        {loadingMore && (
+          <div className="mt-6 flex justify-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+              {t('common.loading')}…
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

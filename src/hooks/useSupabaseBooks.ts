@@ -18,7 +18,7 @@ interface UseSupabaseBooksReturn {
   loadingMore: boolean;
 }
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 
 /**
  * Sunucu API'sinden kitapları çeken custom hook
@@ -36,10 +36,13 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
   const [page, setPage] = useState<number>(0);
   const pageRef = useRef(page);
   pageRef.current = page;
+  const loadMoreInFlightRef = useRef(false);
 
   const fetchBooks = useCallback(async (isLoadMore: boolean = false) => {
     try {
       if (isLoadMore) {
+        if (loadMoreInFlightRef.current) return;
+        loadMoreInFlightRef.current = true;
         setLoadingMore(true);
       } else {
         setLoading(true);
@@ -75,13 +78,18 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         setBooks(nextBooks);
         setPage(1);
       }
-      setHasMore(nextHasMore ?? nextBooks.length < total);
+      setHasMore(
+        typeof nextHasMore === 'boolean'
+          ? nextHasMore
+          : nextBooks.length >= ITEMS_PER_PAGE
+      );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu';
       setError(errorMessage);
       if (!isLoadMore) setBooks([]);
     } finally {
       if (isLoadMore) {
+        loadMoreInFlightRef.current = false;
         setLoadingMore(false);
       } else {
         setLoading(false);
@@ -90,24 +98,14 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
   }, [language]);
 
   const loadMore = useCallback(async () => {
-    if (!loadingMore && hasMore) await fetchBooks(true);
-  }, [loadingMore, hasMore, fetchBooks]);
+    if (loading || loadingMore || !hasMore) return;
+    await fetchBooks(true);
+  }, [loading, loadingMore, hasMore, fetchBooks]);
 
   // Dil veya mount: listeyi baştan çek
   useEffect(() => {
     fetchBooks(false);
   }, [fetchBooks]);
-
-  // Arka planda otomatik olarak kalan kitapları yükle (kullanıcı fark etmez)
-  useEffect(() => {
-    if (!loading && hasMore && !loadingMore) {
-      const timer = setTimeout(() => {
-        loadMore();
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [loading, hasMore, loadingMore, books.length, loadMore]);
 
   return {
     books,

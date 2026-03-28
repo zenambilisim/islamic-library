@@ -5,41 +5,87 @@ const db = () => supabaseAdmin ?? supabase
 
 // ***** BOOK OPERATIONS *****
 
-// Tüm kitapları getir (sayfalama ile, isteğe bağlı dil filtresi)
-export async function getBooks(page = 0, limit = 20, language?: string) {
+const BOOK_LIST_SELECT = `
+  *,
+  book_files (
+    id,
+    format,
+    file_url,
+    file_size_text
+  )
+`;
+
+export type GetBooksOptions = {
+  /** true: tam total için COUNT (yavaş); admin sayfalama için /api/books?withTotal=1 */
+  includeTotal?: boolean;
+};
+
+// Tüm kitapları getir (sayfalama; varsayılan: COUNT yok, limit+1 ile hasMore — daha hızlı)
+export async function getBooks(
+  page = 0,
+  limit = 20,
+  language?: string,
+  options?: GetBooksOptions
+) {
+  if (options?.includeTotal) {
+    let query = supabase
+      .from('books')
+      .select(BOOK_LIST_SELECT, { count: 'exact' })
+      .range(page * limit, (page + 1) * limit - 1)
+      .order('created_at', { ascending: false });
+
+    if (language) query = query.eq('language', language);
+
+    const { data, error, count } = await query;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 Raw Supabase response (with count):', { error, count });
+    }
+
+    if (error) {
+      console.error('❌ Error fetching books:', error);
+      return { books: [], error, total: 0, hasMore: false };
+    }
+
+    const books = data || [];
+    const total = count ?? 0;
+    return {
+      books,
+      error: null,
+      total,
+      hasMore: total > (page + 1) * limit,
+    };
+  }
+
   let query = supabase
     .from('books')
-    .select(`
-      *,
-      book_files (
-        id,
-        format,
-        file_url,
-        file_size_text
-      )
-    `, { count: 'exact' })
-    .range(page * limit, (page + 1) * limit - 1)
+    .select(BOOK_LIST_SELECT)
+    .range(page * limit, page * limit + limit)
     .order('created_at', { ascending: false });
 
   if (language) query = query.eq('language', language);
 
-  const { data, error, count } = await query;
+  const { data, error } = await query;
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('📊 Raw Supabase response:', { data, error, count });
+    console.log('📊 Raw Supabase response (fast list):', { error, rowCount: data?.length });
   }
 
   if (error) {
-    console.error('❌ Error fetching books:', error)
-    return { books: [], error, total: 0 }
+    console.error('❌ Error fetching books:', error);
+    return { books: [], error, total: 0, hasMore: false };
   }
 
-  return { 
-    books: data || [], 
-    error: null, 
-    total: count || 0,
-    hasMore: (count || 0) > (page + 1) * limit
-  }
+  const rows = data || [];
+  const hasMore = rows.length > limit;
+  const books = hasMore ? rows.slice(0, limit) : rows;
+
+  return {
+    books,
+    error: null,
+    total: 0,
+    hasMore,
+  };
 }
 
 // Tek kitap getir

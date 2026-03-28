@@ -3,9 +3,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import BookCard from '@/components/books/BookCard';
+import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import FilterSidebar from '@/components/books/FilterSidebar';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
+import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
 import type { SearchFilters } from '@/types';
 
 const HomePage = () => {
@@ -14,8 +16,13 @@ const HomePage = () => {
   const [filters, setFilters] = useState<SearchFilters>({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  // Supabase'den kitapları çek
-  const { books: supabaseBooks, loading, error, loadingMore } = useSupabaseBooks();
+  const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } = useSupabaseBooks();
+  const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
+    hasMore,
+    loading,
+    loadingMore,
+    prefetchPx: 1200,
+  });
 
   // Dil bazlı banner resmi seç
   const getBannerImage = () => {
@@ -91,37 +98,7 @@ const HomePage = () => {
     return books;
   }, [supabaseBooks, searchTerm, filters]);
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-primary-600 mx-auto mb-6"></div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('common.loading')}</h2>
-          <p className="text-gray-600">Kitaplar yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center bg-white rounded-2xl p-8 shadow-xl max-w-md">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-600 mb-3">Hata Oluştu</h2>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
-          >
-            Tekrar Dene
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const awaitingFirstBooks = loading && supabaseBooks.length === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -255,34 +232,36 @@ const HomePage = () => {
               </div>
             </div>
 
+            {error && supabaseBooks.length === 0 && !loading && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+                <p className="mb-3 font-medium">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Tekrar dene
+                </button>
+              </div>
+            )}
+
             {/* Books Grid */}
             {filteredBooks.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
-                  {filteredBooks.map((book, index) => (
-                    <div
-                      key={book.id}
-                      className="animate-fade-in h-full min-h-0"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <BookCard book={book} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Arka planda daha fazla kitap yükleniyor göstergesi */}
-                {!searchTerm && loadingMore && (
-                  <div className="mt-8 text-center">
-                    <div className="inline-flex items-center space-x-2 text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span className="text-sm">{t('common.loading')}...</span>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
+                {filteredBooks.map((book, index) => (
+                  <div
+                    key={book.id}
+                    className="animate-fade-in h-full min-h-0"
+                    style={{
+                      animationDelay: `${Math.min(index, 6) * 45}ms`,
+                    }}
+                  >
+                    <BookCard book={book} />
                   </div>
-                )}
-              </>
+                ))}
+              </div>
+            ) : awaitingFirstBooks ? (
+              <BookGridSkeleton count={10} />
             ) : (searchTerm || Object.keys(filters).length > 0) && (
               <div className="text-center py-20">
                 <div className="bg-gradient-to-br from-primary-100 to-purple-100 rounded-full w-32 h-32 mx-auto mb-6 flex items-center justify-center">
@@ -300,6 +279,21 @@ const HomePage = () => {
                 >
                   Tüm Kitapları Görüntüle
                 </button>
+              </div>
+            )}
+
+            {hasMore && (
+              <div ref={booksLoadMoreRef} className="h-10 w-full shrink-0" aria-hidden />
+            )}
+            {loadingMore && (
+              <div className="mt-8 text-center">
+                <div className="inline-flex items-center space-x-2 text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-sm">{t('common.loading')}...</span>
+                </div>
               </div>
             )}
           </div>

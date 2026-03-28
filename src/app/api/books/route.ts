@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const category = searchParams.get('category') || undefined;
     const language = parseLanguageParam(searchParams.get('language'));
+    const withTotal = searchParams.get('withTotal') === '1';
 
     let rawBooks: any[];
     let total = 0;
@@ -76,12 +77,12 @@ export async function GET(request: NextRequest) {
       rawBooks = result.books;
       total = rawBooks.length;
     } else {
-      const result = await getBooks(page, limit, language);
+      const result = await getBooks(page, limit, language, { includeTotal: withTotal });
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }
       rawBooks = result.books;
-      total = result.total;
+      total = withTotal ? result.total : 0;
       hasMore = result.hasMore ?? false;
     }
 

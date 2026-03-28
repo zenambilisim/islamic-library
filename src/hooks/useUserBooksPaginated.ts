@@ -37,6 +37,7 @@ export function useUserBooksPaginated(
       const params = new URLSearchParams({
         page: String(page),
         limit: String(pageSize),
+        withTotal: '1',
       });
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {

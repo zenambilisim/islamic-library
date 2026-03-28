@@ -44,9 +44,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
+const APP_LANGS = new Set(['tr', 'en', 'ru', 'az']);
+
+function parseLanguageParam(raw: string | null): string | undefined {
+  if (!raw?.trim()) return undefined;
+  const code = raw.trim().toLowerCase().split('-')[0];
+  return APP_LANGS.has(code) ? code : undefined;
+}
+
 /**
  * GET /api/books
- * Query: page, limit, category (category varsa sayfalama yok, tüm liste döner). Dil filtresi yok – tüm kitaplar döner.
+ * Query: page, limit, category (category varsa sayfalama yok, tüm liste döner), language (tr|en|ru|az – yoksa tüm diller).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -54,20 +62,21 @@ export async function GET(request: NextRequest) {
     const page = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const category = searchParams.get('category') || undefined;
+    const language = parseLanguageParam(searchParams.get('language'));
 
     let rawBooks: any[];
     let total = 0;
     let hasMore = false;
 
     if (category) {
-      const result = await getBooksByCategory(category);
+      const result = await getBooksByCategory(category, language);
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }
       rawBooks = result.books;
       total = rawBooks.length;
     } else {
-      const result = await getBooks(page, limit);
+      const result = await getBooks(page, limit, language);
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }

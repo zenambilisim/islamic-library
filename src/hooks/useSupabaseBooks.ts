@@ -1,5 +1,12 @@
-import { useState, useEffect } from 'react';
-import type { Book } from '../types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { Book, Language } from '../types';
+
+function resolveAppLanguage(i18nLng: string | undefined): Language {
+  const base = (i18nLng || 'tr').split('-')[0].toLowerCase();
+  if (base === 'tr' || base === 'en' || base === 'ru' || base === 'az') return base;
+  return 'tr';
+}
 
 interface UseSupabaseBooksReturn {
   books: Book[];
@@ -15,17 +22,22 @@ const ITEMS_PER_PAGE = 20;
 
 /**
  * Sunucu API'sinden kitapları çeken custom hook
- * GET /api/books - sayfalama ile (dil filtresi yok)
+ * GET /api/books – sayfalama; seçili arayüz diline göre filtre (books.language)
  */
 export function useSupabaseBooks(): UseSupabaseBooksReturn {
+  const { i18n } = useTranslation();
+  const language = resolveAppLanguage(i18n.language);
+
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
+  const pageRef = useRef(page);
+  pageRef.current = page;
 
-  const fetchBooks = async (isLoadMore: boolean = false) => {
+  const fetchBooks = useCallback(async (isLoadMore: boolean = false) => {
     try {
       if (isLoadMore) {
         setLoadingMore(true);
@@ -35,10 +47,11 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
       }
       setError(null);
 
-      const currentPage = isLoadMore ? page : 0;
+      const currentPage = isLoadMore ? pageRef.current : 0;
       const params = new URLSearchParams({
         page: String(currentPage),
         limit: String(ITEMS_PER_PAGE),
+        language,
       });
       const res = await fetch(`/api/books?${params}`);
 
@@ -74,28 +87,27 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         setLoading(false);
       }
     }
-  };
+  }, [language]);
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (!loadingMore && hasMore) await fetchBooks(true);
-  };
+  }, [loadingMore, hasMore, fetchBooks]);
 
-  // Component mount olduğunda kitapları çek
+  // Dil veya mount: listeyi baştan çek
   useEffect(() => {
     fetchBooks(false);
-  }, []);
+  }, [fetchBooks]);
 
   // Arka planda otomatik olarak kalan kitapları yükle (kullanıcı fark etmez)
   useEffect(() => {
     if (!loading && hasMore && !loadingMore) {
-      // İlk yükleme bittikten 2 saniye sonra, arka planda kalan kitapları çekmeye başla
       const timer = setTimeout(() => {
         loadMore();
-      }, 2000); // 2 saniye bekle
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
-  }, [loading, hasMore, loadingMore, books.length])
+  }, [loading, hasMore, loadingMore, books.length, loadMore]);
 
   return {
     books,
@@ -109,9 +121,12 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
 }
 
 /**
- * Belirli bir kategoriye göre kitapları API'den çeker (tüm diller)
+ * Belirli bir kategoriye göre kitapları API'den çeker (seçili dil)
  */
 export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksReturn {
+  const { i18n } = useTranslation();
+  const language = resolveAppLanguage(i18n.language);
+
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +136,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
     try {
       setLoading(true);
       setError(null);
-      const params = new URLSearchParams({ category });
+      const params = new URLSearchParams({ category, language });
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -139,7 +154,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
 
   useEffect(() => {
     if (category) fetchBooksByCategory();
-  }, [category]);
+  }, [category, language]);
 
   return {
     books,

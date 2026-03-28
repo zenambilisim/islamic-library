@@ -258,11 +258,11 @@ const HomePage = () => {
             {/* Books Grid */}
             {filteredBooks.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
                   {filteredBooks.map((book, index) => (
                     <div
                       key={book.id}
-                      className="animate-fade-in"
+                      className="animate-fade-in h-full min-h-0"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <BookCard book={book} />

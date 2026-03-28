@@ -157,14 +157,13 @@ const CategoriesPage = () => {
           {/* Category Books */}
           {categoryBooks.length > 0 ? (
             <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
               : "space-y-4"
             }>
               {categoryBooks.map((book) => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                />
+                <div key={book.id} className="h-full min-h-0">
+                  <BookCard book={book} />
+                </div>
               ))}
             </div>
           ) : (

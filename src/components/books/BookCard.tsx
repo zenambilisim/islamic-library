@@ -20,21 +20,22 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100" onClick={() => openDetails(book)}>
-      {/* Book Cover */}
-      <div className="relative overflow-hidden">
+    <div
+      className="flex h-full flex-col bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100"
+      onClick={() => openDetails(book)}
+    >
+      <div className="relative aspect-[2/3] w-full shrink-0 overflow-hidden bg-gray-100">
         <img
           src={book.coverImage || '/placeholder-book.svg'}
           alt={getLocalizedText(book.titleTranslations, book.title)}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
           loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-book.svg';
           }}
         />
-        
-        
+
         {/* Overlay with actions */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-4">
           <div className="flex space-x-3">
@@ -53,31 +54,30 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
       </div>
 
       {/* Book Info */}
-      <div className="p-6">
+      <div className="flex flex-1 flex-col min-h-0 p-6">
         {/* Title */}
-        <h3 className="font-bold text-xl text-gray-900 mb-3 line-clamp-2 group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+        <h3 className="font-bold text-xl text-gray-900 mb-3 line-clamp-2 min-h-[3.25rem] group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
           {getLocalizedText(book.titleTranslations, book.title)}
         </h3>
 
         {/* Author & Category */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center text-gray-600">
-            <User size={16} className="mr-2 text-primary-500" />
-            <span className="text-sm font-medium">{getLocalizedText(book.authorTranslations, book.author)}</span>
+        <div className="flex min-h-[2.75rem] items-start justify-between gap-3 mb-3">
+          <div className="flex min-w-0 flex-1 items-center text-gray-600">
+            <User size={16} className="mr-2 shrink-0 text-primary-500" />
+            <span className="line-clamp-2 text-sm font-medium">{getLocalizedText(book.authorTranslations, book.author)}</span>
           </div>
-          <div className="flex items-center text-gray-600">
-            <FileText size={14} className="mr-2" />
-            <span className="text-xs">{getLocalizedText(book.categoryTranslations, book.category)}</span>
+          <div className="flex max-w-[42%] shrink-0 items-center text-gray-600">
+            <FileText size={14} className="mr-2 shrink-0" />
+            <span className="line-clamp-2 text-right text-xs">{getLocalizedText(book.categoryTranslations, book.category)}</span>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
+        <p className="text-gray-600 text-sm line-clamp-3 min-h-[4.5rem] leading-relaxed">
           {getLocalizedText(book.descriptionTranslations, book.description)}
         </p>
 
-        {/* Download formats */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mt-auto flex flex-wrap gap-2 pt-4">
           {Object.entries(book.formats).map(([format, url]) => (
             url && (
               <a

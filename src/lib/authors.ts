@@ -1,4 +1,4 @@
-import { supabase } from './supabase-server';
+import { supabase, supabaseAdmin } from './supabase-server';
 import { convertSupabaseAuthorToAuthor } from './converters-server';
 import { convertSupabaseBookToBook } from './converters-server';
 import type { Author } from '@/types';
@@ -88,11 +88,28 @@ export async function getBooksByAuthor(
       .from('books')
       .select(`
         *,
-        book_files (*)
+        book_files (*),
+        book_authors!inner (
+          author_order,
+          role,
+          authors!inner (
+            id,
+            name,
+            name_translations
+          )
+        ),
+        book_categories (
+          is_primary,
+          categories (
+            id,
+            name,
+            name_translations
+          )
+        )
       `)
-      .eq('author', authorName);
+      .eq('book_authors.authors.name', authorName);
 
-    if (language) query = query.eq('language', language);
+    if (language) query = query.eq('language_code', language);
 
     const { data, error } = await query.order('publish_year', { ascending: false });
 
@@ -121,4 +138,46 @@ export async function getAuthorById(id: string): Promise<{ author: Author | null
   } catch (err) {
     return { author: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
+}
+
+export interface CreateAuthorPayload {
+  name: string;
+  biography?: string;
+  name_translations?: Record<string, string>;
+  biography_translations?: Record<string, string>;
+  profile_image_url?: string;
+}
+
+/** Yazar kaydı oluşturur (authors tablosu varsa). */
+export async function createAuthor(payload: CreateAuthorPayload) {
+  const db = supabaseAdmin ?? supabase;
+  const name = payload.name.trim();
+  const biography = (payload.biography ?? '').trim();
+
+  const row = {
+    name,
+    biography,
+    name_translations: payload.name_translations ?? {
+      tr: name,
+      en: name,
+      ru: name,
+      az: name,
+    },
+    biography_translations: payload.biography_translations ?? {
+      tr: biography,
+      en: biography,
+      ru: biography,
+      az: biography,
+    },
+    profile_image_url: payload.profile_image_url ?? null,
+  };
+
+  const { data, error } = await db
+    .from('authors')
+    .insert(row)
+    .select('*')
+    .single();
+
+  if (error) return { author: null, error };
+  return { author: data, error: null };
 }

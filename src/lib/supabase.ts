@@ -61,15 +61,16 @@ export interface SupabaseBook {
   id: string
   title: string
   title_translations: Record<string, string>
-  author: string
-  author_translations: Record<string, string>
-  category: string
-  category_translations: Record<string, string>
+  author?: string
+  author_translations?: Record<string, string>
+  category?: string
+  category_translations?: Record<string, string>
   description?: string
   description_translations?: Record<string, string>
   publish_year?: number
   pages?: number
-  language: string
+  language_code?: string
+  language?: string
   cover_image_url?: string
   file_size?: string
   download_count: number
@@ -77,6 +78,23 @@ export interface SupabaseBook {
   created_at: string
   updated_at: string
   book_files?: BookFile[]
+  book_authors?: Array<{
+    author_order?: number
+    role?: string
+    authors?: {
+      id: string
+      name: string
+      name_translations?: Record<string, string>
+    } | null
+  }>
+  book_categories?: Array<{
+    is_primary?: boolean
+    categories?: {
+      id: string
+      name: string
+      name_translations?: Record<string, string>
+    } | null
+  }>
 }
 
 export interface BookFile {
@@ -114,6 +132,7 @@ export interface SupabaseAuthor {
   categories: string[]
   languages: string[]
   profile_image?: string
+  profile_image_url?: string
   first_book_created_at: string
   last_updated_at: string
 }

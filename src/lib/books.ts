@@ -12,6 +12,23 @@ const BOOK_LIST_SELECT = `
     format,
     file_url,
     file_size_text
+  ),
+  book_authors (
+    author_order,
+    role,
+    authors (
+      id,
+      name,
+      name_translations
+    )
+  ),
+  book_categories (
+    is_primary,
+    categories (
+      id,
+      name,
+      name_translations
+    )
   )
 `;
 
@@ -34,7 +51,7 @@ export async function getBooks(
       .range(page * limit, (page + 1) * limit - 1)
       .order('created_at', { ascending: false });
 
-    if (language) query = query.eq('language', language);
+    if (language) query = query.eq('language_code', language);
 
     const { data, error, count } = await query;
 
@@ -63,7 +80,7 @@ export async function getBooks(
     .range(page * limit, page * limit + limit)
     .order('created_at', { ascending: false });
 
-  if (language) query = query.eq('language', language);
+  if (language) query = query.eq('language_code', language);
 
   const { data, error } = await query;
 
@@ -94,7 +111,24 @@ export async function getBookById(id: string) {
     .from('books')
     .select(`
       *,
-      book_files (*)
+      book_files (*),
+      book_authors (
+        author_order,
+        role,
+        authors (
+          id,
+          name,
+          name_translations
+        )
+      ),
+      book_categories (
+        is_primary,
+        categories (
+          id,
+          name,
+          name_translations
+        )
+      )
     `)
     .eq('id', id)
     .single()
@@ -115,9 +149,26 @@ export async function searchBooks(query: string) {
     .from('books')
     .select(`
       *,
-      book_files (*)
+      book_files (*),
+      book_authors (
+        author_order,
+        role,
+        authors (
+          id,
+          name,
+          name_translations
+        )
+      ),
+      book_categories (
+        is_primary,
+        categories (
+          id,
+          name,
+          name_translations
+        )
+      )
     `)
-    .or(`title.ilike.%${query}%,author.ilike.%${query}%,tags.cs.{${query}}`)
+    .or(`title.ilike.%${query}%,tags.cs.{${query}}`)
     .limit(50)
 
   if (error) {
@@ -134,12 +185,29 @@ export async function getBooksByCategory(categoryName: string, language?: string
     .from('books')
     .select(`
       *,
-      book_files (*)
+      book_files (*),
+      book_authors (
+        author_order,
+        role,
+        authors (
+          id,
+          name,
+          name_translations
+        )
+      ),
+      book_categories!inner (
+        is_primary,
+        categories!inner (
+          id,
+          name,
+          name_translations
+        )
+      )
     `)
-    .eq('category', categoryName)
+    .eq('book_categories.categories.name', categoryName)
     .order('created_at', { ascending: false });
 
-  if (language) query = query.eq('language', language);
+  if (language) query = query.eq('language_code', language);
 
   const { data, error } = await query;
 
@@ -275,7 +343,7 @@ export interface CreateBookPayload {
   category_translations?: Record<string, string>;
   description?: string;
   description_translations?: Record<string, string>;
-  language: string;
+  language_code: string;
   pages?: number;
   publish_year?: number;
   tags?: string[];
@@ -286,13 +354,9 @@ export async function createBook(payload: CreateBookPayload) {
   const row = {
     title: payload.title,
     title_translations: payload.title_translations ?? { tr: payload.title, en: payload.title, ru: payload.title, az: payload.title },
-    author: payload.author,
-    author_translations: payload.author_translations ?? { tr: payload.author, en: payload.author, ru: payload.author, az: payload.author },
-    category: payload.category,
-    category_translations: payload.category_translations ?? { tr: payload.category, en: payload.category, ru: payload.category, az: payload.category },
     description: payload.description ?? '',
     description_translations: payload.description_translations ?? {},
-    language: payload.language,
+    language_code: payload.language_code,
     pages: payload.pages ?? 0,
     publish_year: payload.publish_year ?? new Date().getFullYear(),
     download_count: 0,
@@ -306,6 +370,62 @@ export async function createBook(payload: CreateBookPayload) {
     .single();
 
   if (error) return { book: null, error };
+  const bookId = data.id as string;
+
+  const { data: existingAuthor, error: existingAuthorError } = await db()
+    .from('authors')
+    .select('id')
+    .eq('name', payload.author)
+    .limit(1)
+    .maybeSingle();
+  if (existingAuthorError) return { book: null, error: existingAuthorError };
+
+  const { data: createdAuthor, error: createdAuthorError } = existingAuthor ? { data: null, error: null } : await db()
+    .from('authors')
+    .insert({
+      name: payload.author,
+      name_translations: payload.author_translations ?? { tr: payload.author, en: payload.author, ru: payload.author, az: payload.author },
+      biography: '',
+      biography_translations: {},
+    })
+    .select('id')
+    .single();
+  if (createdAuthorError) return { book: null, error: createdAuthorError };
+  const authorId = existingAuthor?.id || createdAuthor?.id;
+  if (!authorId) return { book: null, error: new Error('Author relation could not be created') };
+
+  const { data: categoryData, error: categoryError } = await db()
+    .from('categories')
+    .upsert({
+      slug: payload.category.toLowerCase().replace(/\s+/g, '-'),
+      name: payload.category,
+      name_translations: payload.category_translations ?? { tr: payload.category, en: payload.category, ru: payload.category, az: payload.category },
+      description: '',
+      description_translations: {},
+    }, { onConflict: 'slug' })
+    .select('id')
+    .single();
+  if (categoryError) return { book: null, error: categoryError };
+
+  const { error: relAuthorError } = await db()
+    .from('book_authors')
+    .insert({
+      book_id: bookId,
+      author_id: authorId,
+      author_order: 1,
+      role: 'author',
+    });
+  if (relAuthorError) return { book: null, error: relAuthorError };
+
+  const { error: relCategoryError } = await db()
+    .from('book_categories')
+    .insert({
+      book_id: bookId,
+      category_id: categoryData.id,
+      is_primary: true,
+    });
+  if (relCategoryError) return { book: null, error: relCategoryError };
+
   return { book: data, error: null };
 }
 

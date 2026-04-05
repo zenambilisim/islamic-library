@@ -193,6 +193,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "myBooks": "My Books",
+      "authors": "Authors",
       "backToSite": "Back to Site",
       "logout": "Log out",
       "userArea": "User",

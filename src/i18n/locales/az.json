@@ -193,6 +193,7 @@
     "nav": {
       "dashboard": "Panel",
       "myBooks": "Kitablarım",
+      "authors": "Müəlliflər",
       "backToSite": "Sayta qayıt",
       "logout": "Çıxış",
       "userArea": "İstifadəçi",

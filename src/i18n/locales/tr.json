@@ -194,6 +194,7 @@
     "nav": {
       "dashboard": "Panel",
       "myBooks": "Kitaplarım",
+      "authors": "Yazarlar",
       "backToSite": "Siteye Dön",
       "logout": "Çıkış",
       "userArea": "Kullanıcı",

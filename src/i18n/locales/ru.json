@@ -193,6 +193,7 @@
     "nav": {
       "dashboard": "Панель",
       "myBooks": "Мои книги",
+      "authors": "Авторы",
       "backToSite": "На сайт",
       "logout": "Выйти",
       "userArea": "Пользователь",

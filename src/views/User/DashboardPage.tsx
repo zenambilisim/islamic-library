@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, LayoutDashboard } from 'lucide-react';
+import { BookOpen, Users } from 'lucide-react';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -34,15 +34,21 @@ const DashboardPage = () => {
             </span>
           </Link>
 
-          <div className="flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm border-dashed opacity-75">
+          <Link
+            href="/user/authors"
+            className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"
+          >
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-gray-100 text-gray-500">
-                <LayoutDashboard size={22} />
+              <div className="p-2 rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200">
+                <Users size={22} />
               </div>
-              <h2 className="font-semibold text-gray-500">{t('user.dashboard.profileCard')}</h2>
+              <h2 className="font-semibold text-gray-900">Yazarlar</h2>
             </div>
-            {/* <p className="text-sm text-gray-400">{t('user.dashboard.comingSoon')}</p> */}
-          </div>
+            <p className="text-sm text-gray-500">Yazar listesini yonetin ve yeni yazar ekleyin</p>
+            <span className="mt-3 text-sm font-medium text-primary-600 group-hover:underline">
+              Yazar sayfasina git →
+            </span>
+          </Link>
         </div>
       </div>
     </div>

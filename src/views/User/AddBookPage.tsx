@@ -4,18 +4,20 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
+import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 
 const LANGUAGES = ['tr', 'en', 'ru', 'az'] as const;
 
 const AddBookPage = () => {
   const router = useRouter();
   const { categories, loading: categoriesLoading } = useSupabaseCategories();
+  const { authors, loading: authorsLoading } = useSupabaseAuthors();
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [language, setLanguage] = useState<string>('tr');
+  const [language, setLanguage] = useState<string>('');
   const [pages, setPages] = useState('');
   const [publishYear, setPublishYear] = useState(String(new Date().getFullYear()));
   const [tags, setTags] = useState('');
@@ -56,6 +58,10 @@ const AddBookPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!language.trim()) {
+      setError('Lütfen önce dil seçin.');
+      return;
+    }
     if (!title.trim() || !author.trim() || !category.trim()) {
       setError('Başlık, yazar ve kategori zorunludur.');
       return;
@@ -131,6 +137,26 @@ const AddBookPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
+            <label htmlFor="language" className="block text-sm font-semibold text-gray-800 mb-2">Dil *</label>
+            <select
+              id="language"
+              value={language}
+              onChange={(e) => {
+                setLanguage(e.target.value);
+                if (error) setError(null);
+              }}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Önce dil seçin</option>
+              {LANGUAGES.map((lang) => (
+                <option key={lang} value={lang}>{lang.toUpperCase()}</option>
+              ))}
+            </select>
+          </div>
+
+          {language && (
+            <>
+          <div className="p-4 rounded-xl border border-gray-200 bg-white">
             <label className="block text-sm font-semibold text-gray-800 mb-2">Başlık *</label>
             <input
               type="text"
@@ -143,13 +169,26 @@ const AddBookPage = () => {
 
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
             <label className="block text-sm font-semibold text-gray-800 mb-2">Yazar *</label>
-            <input
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Yazar adı"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
+            {authors.length > 0 && !authorsLoading ? (
+              <select
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="">Yazar seçin</option>
+                {authors.map((a) => (
+                  <option key={a.id} value={a.name}>{a.name}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="Yazar adı"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+            )}
           </div>
 
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
@@ -199,19 +238,6 @@ const AddBookPage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-1">Dil *</label>
-              <select
-                id="language"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang} value={lang}>{lang.toUpperCase()}</option>
-                ))}
-              </select>
-            </div>
             <div>
               <label htmlFor="pages" className="block text-sm font-medium text-gray-700 mb-1">Sayfa sayısı</label>
               <input
@@ -299,6 +325,8 @@ const AddBookPage = () => {
               Kitaplara dön
             </Link>
           </div>
+            </>
+          )}
         </form>
       </div>
     </div>

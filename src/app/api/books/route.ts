@@ -4,7 +4,7 @@ import { convertSupabaseBookToBook } from '@/lib/converters-server';
 
 /**
  * POST /api/books – Yeni kitap oluşturur (metadata, kapak/dosya ayrı endpoint'lerden).
- * Body: CreateBookPayload (title, author, category, language, ...)
+ * Body: CreateBookPayload (title, author, category, language_code, ...)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       title: body.title ?? '',
       author: body.author ?? '',
       category: body.category ?? '',
-      language: body.language ?? 'tr',
+      language_code: body.language ?? body.language_code ?? 'tr',
       title_translations: body.title_translations,
       author_translations: body.author_translations,
       category_translations: body.category_translations,

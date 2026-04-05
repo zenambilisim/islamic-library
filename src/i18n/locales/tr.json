@@ -221,6 +221,7 @@
         "category": "Kategori",
         "pages": "Sayfa",
         "actions": "İşlem",
+        "edit": "Düzenle",
         "delete": "Sil"
       },
       "deleteConfirm": "Bu kitabı silmek istediğinize emin misiniz?",

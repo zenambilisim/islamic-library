@@ -35,9 +35,10 @@ const BulkUploadPage = () => {
 
   const uploadOne = async (entry: BookEntry): Promise<string | null> => {
     let description = '';
-    if (entry.files.rtf) {
+    const descFile = entry.files.rtf ?? entry.files.docx;
+    if (descFile) {
       const form = new FormData();
-      form.append('file', entry.files.rtf);
+      form.append('file', descFile);
       const res = await fetch('/api/rtf-to-text', { method: 'POST', body: form });
       if (res.ok) {
         const data = await res.json();
@@ -115,7 +116,7 @@ const BulkUploadPage = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Klasörden toplu kitap yükle</h1>
       <p className="text-gray-600 mb-6">
-        Script ile aynı yapı: Kategori klasörleri altında &quot;Kitap Adı - Yazar&quot; klasörleri; her birinde PDF, kapak resmi ve isteğe bağlı RTF, EPUB, DOCX.
+        Script ile aynı yapı: Kategori klasörleri altında &quot;Kitap Adı - Yazar&quot; klasörleri; her birinde PDF, kapak resmi; isteğe bağlı RTF veya Word (DOC/DOCX) ile açıklama, EPUB, DOC/DOCX.
       </p>
 
       <input
@@ -222,7 +223,7 @@ const BulkUploadPage = () => {
                     <td className="py-2 px-3 text-gray-500">
                       PDF ✓ Kapak ✓
                       {entry.files.epub && ' EPUB ✓'}
-                      {entry.files.docx && ' DOCX ✓'}
+                      {entry.files.docx && ' Word ✓'}
                       {entry.files.rtf && ' RTF ✓'}
                     </td>
                   </tr>

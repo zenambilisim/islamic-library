@@ -33,6 +33,8 @@ const AddBookPage = () => {
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
+  /** Dropdown: gerçek categories.id; metin kutusu yedek yolunda boş kalır */
+  const [categoryId, setCategoryId] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [language, setLanguage] = useState<string>('');
@@ -46,7 +48,7 @@ const AddBookPage = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rtfLoading, setRtfLoading] = useState(false);
+  const [descFileLoading, setDescFileLoading] = useState(false);
 
   const authorsSorted = [...authors].sort((a, b) =>
     a.name.localeCompare(b.name, 'tr', { sensitivity: 'base' })
@@ -61,10 +63,10 @@ const AddBookPage = () => {
     );
   }, [categories, language]);
 
-  const handleRtfFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDescriptionFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setRtfLoading(true);
+    setDescFileLoading(true);
     setError(null);
     try {
       const formData = new FormData();
@@ -72,15 +74,15 @@ const AddBookPage = () => {
       const res = await fetch('/api/rtf-to-text', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'RTF işlenemedi');
+        throw new Error(data.error || 'Dosya işlenemedi');
       }
       if (data.text != null) {
         setDescription((prev) => (prev.trim() ? prev.trim() + '\n\n' + data.text : data.text));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'RTF dosyası okunamadı.');
+      setError(err instanceof Error ? err.message : 'Açıklama dosyası okunamadı.');
     } finally {
-      setRtfLoading(false);
+      setDescFileLoading(false);
     }
     e.target.value = '';
   };
@@ -92,8 +94,17 @@ const AddBookPage = () => {
       setError('Lütfen önce dil seçin.');
       return;
     }
-    if (!title.trim() || !author.trim() || !category.trim()) {
-      setError('Başlık, yazar ve kategori zorunludur.');
+    if (!title.trim() || !author.trim()) {
+      setError('Başlık ve yazar zorunludur.');
+      return;
+    }
+    const useCategoryList = categories.length > 0 && !categoriesLoading;
+    if (useCategoryList && !categoryId.trim()) {
+      setError('Lütfen kategori seçin.');
+      return;
+    }
+    if (!useCategoryList && !category.trim()) {
+      setError('Kategori zorunludur.');
       return;
     }
     if (!authorsLoading && authorsSorted.length === 0) {
@@ -101,15 +112,19 @@ const AddBookPage = () => {
       return;
     }
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       title: title.trim(),
       author: author.trim(),
-      category: category.trim(),
       description: description.trim() || undefined,
       language,
       pages: pages ? parseInt(pages, 10) : undefined,
       tags: tags.trim() ? tags.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
     };
+    if (useCategoryList) {
+      payload.category_id = categoryId.trim();
+    } else {
+      payload.category = category.trim();
+    }
 
     setSubmitting(true);
     try {
@@ -255,13 +270,13 @@ const AddBookPage = () => {
             <label className="block text-sm font-semibold text-gray-800 mb-2">Kategori *</label>
             {categories.length > 0 && !categoriesLoading ? (
               <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Kategori seçin</option>
                 {categoriesSorted.map((c) => (
-                  <option key={c.id} value={c.name}>
+                  <option key={c.id} value={c.id}>
                     {categoryDisplayName(c, language)}
                   </option>
                 ))}
@@ -287,15 +302,17 @@ const AddBookPage = () => {
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             <div className="mt-2">
-              <label className="block text-xs text-gray-500 mb-1">Veya açıklamayı RTF dosyasından yükle</label>
+              <label className="block text-xs text-gray-500 mb-1">
+                Veya açıklamayı Word (DOC, DOCX) veya RTF dosyasından yükle
+              </label>
               <input
                 type="file"
-                accept=".rtf,application/rtf"
-                onChange={handleRtfFile}
-                disabled={rtfLoading}
+                accept=".rtf,.doc,.docx,application/rtf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleDescriptionFile}
+                disabled={descFileLoading}
                 className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-50 disabled:opacity-50"
               />
-              {rtfLoading && <span className="text-xs text-gray-500">Yükleniyor...</span>}
+              {descFileLoading && <span className="text-xs text-gray-500">Yükleniyor...</span>}
             </div>
           </div>
 

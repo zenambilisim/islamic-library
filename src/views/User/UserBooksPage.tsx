@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
-import { BookPlus, FolderUp, Trash2 } from 'lucide-react';
+import { BookPlus, FolderUp, Pencil, Trash2 } from 'lucide-react';
 import type { Book } from '@/types';
 import type { Language } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
@@ -122,7 +122,7 @@ const UserBooksPage = () => {
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
                       {t('user.books.table.pages')}
                     </th>
-                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                       {t('user.books.table.actions')}
                     </th>
                   </tr>
@@ -171,19 +171,28 @@ const UserBooksPage = () => {
                         {book.pages || '—'}
                       </td>
                       <td className="py-2 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(book)}
-                          disabled={deletingId !== null}
-                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={t('user.books.table.delete')}
-                        >
-                          {deletingId === book.id ? (
-                            <span className="text-xs">{t('user.books.deleting')}</span>
-                          ) : (
-                            <Trash2 size={18} />
-                          )}
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/user/books/${book.id}/edit`}
+                            className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 inline-flex"
+                            title={t('user.books.table.edit')}
+                          >
+                            <Pencil size={18} />
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(book)}
+                            disabled={deletingId !== null}
+                            className="p-2 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t('user.books.table.delete')}
+                          >
+                            {deletingId === book.id ? (
+                              <span className="text-xs">{t('user.books.deleting')}</span>
+                            ) : (
+                              <Trash2 size={18} />
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

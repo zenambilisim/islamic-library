@@ -1,12 +1,47 @@
+import { Readable } from 'node:stream';
 import { NextRequest, NextResponse } from 'next/server';
 // @ts-expect-error CommonJS module
 import rtf2text from 'rtf2text';
-import iconv from 'iconv-lite';
+// @ts-expect-error CommonJS module, no bundled types
+import WordExtractor from 'word-extractor';
+
+type DescFormat = 'rtf' | 'word';
+
+function extensionLower(name: string): string {
+  const i = name.lastIndexOf('.');
+  return i >= 0 ? name.slice(i).toLowerCase() : '';
+}
+
+function detectFormat(filename: string, buffer: Buffer): DescFormat | null {
+  const ext = extensionLower(filename);
+  if (ext === '.rtf') return 'rtf';
+  if (ext === '.doc' || ext === '.docx') return 'word';
+
+  const head = buffer.subarray(0, Math.min(32, buffer.length));
+  const rtfProbeStart =
+    buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf ? 3 : 0;
+  const probe = buffer
+    .subarray(rtfProbeStart, Math.min(rtfProbeStart + 512, buffer.length))
+    .toString('latin1');
+  if (probe.trimStart().startsWith('{\\rtf')) return 'rtf';
+  if (head.length >= 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04) {
+    return 'word';
+  }
+  if (
+    head.length >= 4 &&
+    head[0] === 0xd0 &&
+    head[1] === 0xcf &&
+    head[2] === 0x11 &&
+    head[3] === 0xe0
+  ) {
+    return 'word';
+  }
+  return null;
+}
 
 /**
  * POST /api/rtf-to-text
- * FormData: "file" (RTF dosyası)
- * Döner: { text: string } veya { error: string }
+ * FormData: "file" — RTF, .doc veya .docx (açıklama metnine çevirmek için).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -14,27 +49,40 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file');
     const blob = file && typeof (file as Blob).arrayBuffer === 'function' ? (file as Blob) : null;
     if (!blob) {
-      return NextResponse.json({ error: 'RTF dosyası gerekli' }, { status: 400 });
+      return NextResponse.json({ error: 'Dosya gerekli' }, { status: 400 });
     }
 
+    const filename = typeof (file as File).name === 'string' ? (file as File).name : '';
     const buffer = Buffer.from(await blob.arrayBuffer());
-    let rtfString: string = buffer.toString('utf8');
-    if (rtfString.includes('\uFFFD')) {
-      rtfString = iconv.decode(buffer, 'win1254');
+    const kind = detectFormat(filename, buffer);
+
+    if (kind === null) {
+      return NextResponse.json(
+        { error: 'Desteklenen biçimler: RTF, DOC, DOCX' },
+        { status: 400 }
+      );
     }
 
-    const text = await new Promise<string>((resolve, reject) => {
-      rtf2text.string(rtfString, (err: Error | null, result?: string) => {
-        if (err) reject(err);
-        else resolve(result ?? '');
+    let text: string;
+    if (kind === 'rtf') {
+      text = await new Promise<string>((resolve, reject) => {
+        const stream = Readable.from(buffer);
+        rtf2text.stream(stream, (err: Error | null, result?: string) => {
+          if (err) reject(err);
+          else resolve(result ?? '');
+        });
       });
-    });
+    } else {
+      const extractor = new WordExtractor();
+      const doc = await extractor.extract(buffer);
+      text = doc.getBody() ?? '';
+    }
 
     return NextResponse.json({ text });
   } catch (err) {
-    console.error('RTF parse error:', err);
+    console.error('Description file parse error:', err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'RTF işlenemedi' },
+      { error: err instanceof Error ? err.message : 'Dosya işlenemedi' },
       { status: 500 }
     );
   }

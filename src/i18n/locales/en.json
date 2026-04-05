@@ -220,6 +220,7 @@
         "category": "Category",
         "pages": "Pages",
         "actions": "Actions",
+        "edit": "Edit",
         "delete": "Delete"
       },
       "deleteConfirm": "Are you sure you want to delete this book?",

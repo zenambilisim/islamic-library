@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
     const payload: CreateBookPayload = {
       title: body.title ?? '',
       author: body.author ?? '',
-      category: body.category ?? '',
+      category: typeof body.category === 'string' ? body.category : '',
+      category_id: typeof body.category_id === 'string' ? body.category_id : undefined,
       language_code: body.language ?? body.language_code ?? 'tr',
       title_translations: body.title_translations,
       author_translations: body.author_translations,
@@ -22,9 +23,10 @@ export async function POST(request: NextRequest) {
       pages: body.pages != null ? Number(body.pages) : undefined,
       tags: Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : undefined,
     };
-    if (!payload.title.trim() || !payload.author.trim() || !payload.category.trim()) {
+    const hasCat = Boolean(payload.category_id?.trim() || payload.category?.trim());
+    if (!payload.title.trim() || !payload.author.trim() || !hasCat) {
       return NextResponse.json(
-        { error: 'title, author ve category zorunludur' },
+        { error: 'title, author ve kategori (category_id veya category) zorunludur' },
         { status: 400 }
       );
     }

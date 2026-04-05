@@ -400,13 +400,21 @@ export async function uploadBookFile(
     body instanceof Buffer ? body : Buffer.from(await (body as Blob).arrayBuffer());
   const size = payload.length;
 
+  const client = db();
+  const formatNorm = format === 'doc' ? 'docx' : format;
+  if (formatNorm === 'docx') {
+    await client.from('book_files').delete().eq('book_id', bookId).in('format', ['docx', 'doc']);
+  } else {
+    await client.from('book_files').delete().eq('book_id', bookId).eq('format', formatNorm);
+  }
+
   const contentType =
     format === 'pdf' ? 'application/pdf' :
     format === 'epub' ? 'application/epub+zip' :
     format === 'docx' || format === 'doc' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
     undefined;
 
-  const { data, error } = await db().storage
+  const { data, error } = await client.storage
     .from('book-assets')
     .upload(filePath, payload, {
       cacheControl: '3600',
@@ -420,17 +428,18 @@ export async function uploadBookFile(
   }
 
   // Public URL al
-  const { data: { publicUrl } } = db().storage
+  const { data: { publicUrl } } = client.storage
     .from('book-assets')
     .getPublicUrl(data.path)
 
   // Database'e file record ekle – başarısız olursa PDF listede görünmez
   const fileSizeMB = size / (1024 * 1024)
-  const { error: dbError } = await db()
+  const insertFormat = formatNorm === 'docx' ? 'docx' : format;
+  const { error: dbError } = await client
     .from('book_files')
     .insert({
       book_id: bookId,
-      format,
+      format: insertFormat,
       file_url: publicUrl,
       file_size_mb: fileSizeMB,
       file_size_text: formatFileSize(size)
@@ -446,12 +455,52 @@ export async function uploadBookFile(
 
 // ***** KİTAP EKLEME FONKSİYONLARI *****
 
+/**
+ * Mevcut categories satırını bulur; yeni kategori oluşturmaz.
+ * Öncelik: category_id → slug (ham) → slugify(name) → tam isim eşleşmesi.
+ */
+async function resolveExistingCategoryId(
+  client: ReturnType<typeof db>,
+  opts: { category_id?: string | null; category: string }
+): Promise<{ id: string } | { error: Error }> {
+  const idIn = opts.category_id?.trim();
+  if (idIn) {
+    const { data, error } = await client.from('categories').select('id').eq('id', idIn).maybeSingle();
+    if (error) return { error: error as Error };
+    if (!data?.id) return { error: new Error('Kategori bulunamadı') };
+    return { id: data.id };
+  }
+
+  const raw = (opts.category ?? '').trim();
+  if (!raw) return { error: new Error('Kategori zorunludur') };
+
+  const slugLower = raw.toLowerCase();
+  let { data: row } = await client.from('categories').select('id').eq('slug', slugLower).maybeSingle();
+  if (row?.id) return { id: row.id };
+
+  const slugified = slugifyAuthorName(raw);
+  ({ data: row } = await client.from('categories').select('id').eq('slug', slugified).maybeSingle());
+  if (row?.id) return { id: row.id };
+
+  ({ data: row } = await client.from('categories').select('id').eq('name', raw).maybeSingle());
+  if (row?.id) return { id: row.id };
+
+  return {
+    error: new Error(
+      `Kategori bulunamadı: "${raw}". Lütfen listeden seçin veya geçerli bir kategori slug/isim kullanın.`
+    ),
+  };
+}
+
 export interface CreateBookPayload {
   title: string;
   title_translations?: Record<string, string>;
   author: string;
   author_translations?: Record<string, string>;
-  category: string;
+  /** Liste dışı / toplu yükleme için slug veya tam ad */
+  category?: string;
+  /** Arayüzden seçim: doğrudan bu id ile bağlanır, yeni kategori oluşturulmaz */
+  category_id?: string | null;
   category_translations?: Record<string, string>;
   description?: string;
   description_translations?: Record<string, string>;
@@ -504,18 +553,12 @@ export async function createBook(payload: CreateBookPayload) {
   const authorId = existingAuthor?.id || createdAuthor?.id;
   if (!authorId) return { book: null, error: new Error('Author relation could not be created') };
 
-  const { data: categoryData, error: categoryError } = await db()
-    .from('categories')
-    .upsert({
-      slug: payload.category.toLowerCase().replace(/\s+/g, '-'),
-      name: payload.category,
-      name_translations: payload.category_translations ?? { tr: payload.category, en: payload.category, ru: payload.category, az: payload.category },
-      description: '',
-      description_translations: {},
-    }, { onConflict: 'slug' })
-    .select('id')
-    .single();
-  if (categoryError) return { book: null, error: categoryError };
+  const catRes = await resolveExistingCategoryId(db(), {
+    category_id: payload.category_id,
+    category: payload.category ?? '',
+  });
+  if ('error' in catRes) return { book: null, error: catRes.error };
+  const categoryIdToLink = catRes.id;
 
   const { error: relAuthorError } = await db()
     .from('book_authors')
@@ -531,12 +574,119 @@ export async function createBook(payload: CreateBookPayload) {
     .from('book_categories')
     .insert({
       book_id: bookId,
-      category_id: categoryData.id,
+      category_id: categoryIdToLink,
       is_primary: true,
     });
   if (relCategoryError) return { book: null, error: relCategoryError };
 
   return { book: data, error: null };
+}
+
+export interface UpdateBookPayload {
+  title: string;
+  author: string;
+  category?: string;
+  category_id?: string | null;
+  description?: string;
+  language_code: string;
+  pages?: number;
+  tags?: string[];
+  title_translations?: Record<string, string>;
+  description_translations?: Record<string, string>;
+}
+
+/** Mevcut kitabın metadatasını ve yazar/kategori ilişkilerini günceller. */
+export async function updateBook(bookId: string, payload: UpdateBookPayload) {
+  const client = db();
+  const title = payload.title.trim();
+  const author = payload.author.trim();
+  if (!title || !author) {
+    return { book: null, error: new Error('Başlık ve yazar zorunludur') };
+  }
+  const hasCategory = Boolean(payload.category_id?.trim() || payload.category?.trim());
+  if (!hasCategory) {
+    return { book: null, error: new Error('Kategori zorunludur') };
+  }
+
+  const title_translations =
+    payload.title_translations ?? {
+      tr: title,
+      en: title,
+      ru: title,
+      az: title,
+    };
+  const description = (payload.description ?? '').trim();
+  const description_translations = payload.description_translations ?? {};
+
+  const { error: updateErr } = await client
+    .from('books')
+    .update({
+      title,
+      title_translations,
+      description,
+      description_translations,
+      language_code: payload.language_code,
+      pages: payload.pages ?? 0,
+      tags: payload.tags ?? [],
+    })
+    .eq('id', bookId);
+
+  if (updateErr) return { book: null, error: updateErr };
+
+  const { data: existingAuthor } = await client
+    .from('authors')
+    .select('id')
+    .eq('name', author)
+    .limit(1)
+    .maybeSingle();
+
+  let authorId = existingAuthor?.id as string | undefined;
+  if (!authorId) {
+    const { data: createdAuthor, error: createdAuthorError } = await client
+      .from('authors')
+      .insert({
+        name: author,
+        name_translations: { tr: author, en: author, ru: author, az: author },
+        biography: '',
+        biography_translations: {},
+      })
+      .select('id')
+      .single();
+    if (createdAuthorError) return { book: null, error: createdAuthorError };
+    authorId = createdAuthor?.id;
+  }
+  if (!authorId) return { book: null, error: new Error('Yazar ilişkisi kurulamadı') };
+
+  const { error: delAuthRel } = await client.from('book_authors').delete().eq('book_id', bookId);
+  if (delAuthRel) return { book: null, error: delAuthRel };
+
+  const { error: relAuthorError } = await client.from('book_authors').insert({
+    book_id: bookId,
+    author_id: authorId,
+    author_order: 1,
+    role: 'author',
+  });
+  if (relAuthorError) return { book: null, error: relAuthorError };
+
+  const catRes = await resolveExistingCategoryId(client, {
+    category_id: payload.category_id,
+    category: payload.category ?? '',
+  });
+  if ('error' in catRes) return { book: null, error: catRes.error };
+
+  const { error: delCatRel } = await client.from('book_categories').delete().eq('book_id', bookId);
+  if (delCatRel) return { book: null, error: delCatRel };
+
+  const { error: relCategoryError } = await client.from('book_categories').insert({
+    book_id: bookId,
+    category_id: catRes.id,
+    is_primary: true,
+  });
+  if (relCategoryError) return { book: null, error: relCategoryError };
+
+  const { data: book, error: fetchErr } = await client.from('books').select('*').eq('id', bookId).single();
+  if (fetchErr) return { book: null, error: fetchErr };
+  return { book, error: null };
 }
 
 /** Kitabın kapak resmi URL'ini günceller. */

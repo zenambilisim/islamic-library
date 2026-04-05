@@ -120,9 +120,6 @@ const UserBooksPage = () => {
                       {t('user.books.table.category')}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
-                      {t('user.books.table.year')}
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
                       {t('user.books.table.pages')}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
@@ -169,9 +166,6 @@ const UserBooksPage = () => {
                       </td>
                       <td className="py-2 px-4 text-gray-600 hidden sm:table-cell">
                         {getLocalized(book.category, book.categoryTranslations, lang)}
-                      </td>
-                      <td className="py-2 px-4 text-right text-gray-600 tabular-nums">
-                        {book.publishYear}
                       </td>
                       <td className="py-2 px-4 text-right text-gray-600 tabular-nums">
                         {book.pages || '—'}

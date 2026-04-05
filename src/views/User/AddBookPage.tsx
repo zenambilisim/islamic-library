@@ -1,17 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { Category } from '@/types';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 
 const LANGUAGES = ['tr', 'en', 'ru', 'az'] as const;
 
+function categoryDisplayName(cat: Category, bookLanguage: string): string {
+  const code = bookLanguage as keyof Category['nameTranslations'];
+  if (code && LANGUAGES.includes(code as (typeof LANGUAGES)[number])) {
+    const t = cat.nameTranslations[code]?.trim();
+    if (t) return t;
+  }
+  return cat.name;
+}
+
+function sortLocaleForLanguage(lang: string): string {
+  if (lang === 'tr') return 'tr';
+  if (lang === 'ru') return 'ru';
+  if (lang === 'az') return 'az';
+  return 'en';
+}
+
 const AddBookPage = () => {
   const router = useRouter();
   const { categories, loading: categoriesLoading } = useSupabaseCategories();
-  const { authors, loading: authorsLoading } = useSupabaseAuthors();
+  const { authors, loading: authorsLoading, error: authorsError, refetch: refetchAuthors } =
+    useSupabaseAuthors();
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
@@ -19,7 +37,6 @@ const AddBookPage = () => {
   const [description, setDescription] = useState('');
   const [language, setLanguage] = useState<string>('');
   const [pages, setPages] = useState('');
-  const [publishYear, setPublishYear] = useState(String(new Date().getFullYear()));
   const [tags, setTags] = useState('');
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -30,6 +47,19 @@ const AddBookPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rtfLoading, setRtfLoading] = useState(false);
+
+  const authorsSorted = [...authors].sort((a, b) =>
+    a.name.localeCompare(b.name, 'tr', { sensitivity: 'base' })
+  );
+
+  const categoriesSorted = useMemo(() => {
+    const loc = sortLocaleForLanguage(language);
+    return [...categories].sort((a, b) =>
+      categoryDisplayName(a, language).localeCompare(categoryDisplayName(b, language), loc, {
+        sensitivity: 'base',
+      })
+    );
+  }, [categories, language]);
 
   const handleRtfFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,6 +96,10 @@ const AddBookPage = () => {
       setError('Başlık, yazar ve kategori zorunludur.');
       return;
     }
+    if (!authorsLoading && authorsSorted.length === 0) {
+      setError('Önce en az bir yazar eklemeniz gerekir.');
+      return;
+    }
 
     const payload = {
       title: title.trim(),
@@ -74,7 +108,6 @@ const AddBookPage = () => {
       description: description.trim() || undefined,
       language,
       pages: pages ? parseInt(pages, 10) : undefined,
-      publish_year: publishYear ? parseInt(publishYear, 10) : undefined,
       tags: tags.trim() ? tags.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
     };
 
@@ -168,26 +201,53 @@ const AddBookPage = () => {
           </div>
 
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Yazar *</label>
-            {authors.length > 0 && !authorsLoading ? (
+            <label htmlFor="author" className="block text-sm font-semibold text-gray-800 mb-2">
+              Yazar *
+            </label>
+            {authorsError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p>{authorsError}</p>
+                <button
+                  type="button"
+                  onClick={() => refetchAuthors()}
+                  className="mt-2 text-sm font-medium text-red-800 underline hover:no-underline"
+                >
+                  Tekrar dene
+                </button>
+              </div>
+            )}
+            {authorsLoading ? (
               <select
+                id="author"
+                disabled
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-500"
+              >
+                <option>Yazarlar yükleniyor...</option>
+              </select>
+            ) : authorsSorted.length === 0 ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                <p className="mb-2">Veritabanında henüz yazar yok. Kitap eklemek için önce yazar ekleyin.</p>
+                <Link
+                  href="/user/authors/new"
+                  className="font-medium text-primary-700 underline hover:no-underline"
+                >
+                  Yeni yazar ekle →
+                </Link>
+              </div>
+            ) : (
+              <select
+                id="author"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Yazar seçin</option>
-                {authors.map((a) => (
-                  <option key={a.id} value={a.name}>{a.name}</option>
+                {authorsSorted.map((a) => (
+                  <option key={a.id} value={a.name}>
+                    {a.name}
+                  </option>
                 ))}
               </select>
-            ) : (
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="Yazar adı"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
             )}
           </div>
 
@@ -200,8 +260,10 @@ const AddBookPage = () => {
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Kategori seçin</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                {categoriesSorted.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {categoryDisplayName(c, language)}
+                  </option>
                 ))}
               </select>
             ) : (
@@ -237,30 +299,16 @@ const AddBookPage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="pages" className="block text-sm font-medium text-gray-700 mb-1">Sayfa sayısı</label>
-              <input
-                id="pages"
-                type="number"
-                min={0}
-                value={pages}
-                onChange={(e) => setPages(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="publishYear" className="block text-sm font-medium text-gray-700 mb-1">Yayın yılı</label>
-              <input
-                id="publishYear"
-                type="number"
-                min={1}
-                max={2100}
-                value={publishYear}
-                onChange={(e) => setPublishYear(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
+          <div className="max-w-xs">
+            <label htmlFor="pages" className="block text-sm font-medium text-gray-700 mb-1">Sayfa sayısı</label>
+            <input
+              id="pages"
+              type="number"
+              min={0}
+              value={pages}
+              onChange={(e) => setPages(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
+            />
           </div>
 
           <div>
@@ -313,7 +361,12 @@ const AddBookPage = () => {
           <div className="flex flex-wrap gap-3 pt-4">
             <button
               type="submit"
-              disabled={submitting}
+              disabled={
+                submitting ||
+                authorsLoading ||
+                !!authorsError ||
+                authorsSorted.length === 0
+              }
               className="px-5 py-2.5 rounded-lg font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Ekleniyor...' : 'Kitap Ekle'}

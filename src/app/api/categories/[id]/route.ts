@@ -1,28 +1,35 @@
 import { NextResponse } from 'next/server';
 import { normalizeAuthorTranslations } from '@/lib/author-db';
-import { createCategory, getCategories } from '@/lib/books';
+import { getCategoryById, updateCategory } from '@/lib/books';
 import { convertSupabaseCategoryToCategory } from '@/lib/converters-server';
 import type { Category as SupabaseCategoryRow } from '@/lib/supabase';
 
 /**
- * GET /api/categories
+ * GET /api/categories/[id]
  */
-export async function GET() {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { categories: rawCategories, error } = await getCategories();
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'id gerekli' }, { status: 400 });
+    }
 
-    if (error) {
+    const { category: raw, error } = await getCategoryById(id);
+    if (error || !raw) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: error?.message ?? 'Kategori bulunamadı' },
+        { status: 404 }
       );
     }
 
-    const categories = (rawCategories || []).map(convertSupabaseCategoryToCategory);
-
-    return NextResponse.json({ categories });
+    return NextResponse.json({
+      category: convertSupabaseCategoryToCategory(raw as SupabaseCategoryRow),
+    });
   } catch (err) {
-    console.error('API GET /api/categories error:', err);
+    console.error('API GET /api/categories/[id] error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 }
@@ -31,10 +38,18 @@ export async function GET() {
 }
 
 /**
- * POST /api/categories
+ * PATCH /api/categories/[id]
  */
-export async function POST(request: Request) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'id gerekli' }, { status: 400 });
+    }
+
     const body = await request.json();
     const name = String(body?.name ?? '').trim();
     const description = String(body?.description ?? '').trim();
@@ -50,7 +65,7 @@ export async function POST(request: Request) {
       description
     );
 
-    const { category: raw, error } = await createCategory({
+    const { category: raw, error } = await updateCategory(id, {
       name,
       description,
       name_translations,
@@ -62,10 +77,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const category = raw ? convertSupabaseCategoryToCategory(raw as SupabaseCategoryRow) : null;
+    const category = raw
+      ? convertSupabaseCategoryToCategory(raw as SupabaseCategoryRow)
+      : null;
     return NextResponse.json({ category });
   } catch (err) {
-    console.error('API POST /api/categories error:', err);
+    console.error('API PATCH /api/categories/[id] error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 }

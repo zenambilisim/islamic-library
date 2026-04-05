@@ -297,7 +297,6 @@ async function insertBookToDatabase(bookData) {
         : {},
       language: CONFIG.language,
       cover_image_url: bookData.coverPath,
-      publish_year: new Date().getFullYear(),
       pages: 0,
       download_count: 0,
       tags: []

@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
       description: body.description,
       description_translations: body.description_translations,
       pages: body.pages != null ? Number(body.pages) : undefined,
-      publish_year: body.publish_year != null ? Number(body.publish_year) : undefined,
       tags: Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : undefined,
     };
     if (!payload.title.trim() || !payload.author.trim() || !payload.category.trim()) {

@@ -67,7 +67,6 @@ export interface SupabaseBook {
   category_translations?: Record<string, string>
   description?: string
   description_translations?: Record<string, string>
-  publish_year?: number
   pages?: number
   language_code?: string
   language?: string
@@ -113,8 +112,8 @@ export interface Category {
   name_translations: Record<string, string>
   description?: string
   description_translations?: Record<string, string>
-  icon: string
-  book_count: number
+  icon?: string | null
+  book_count?: number
   created_at: string
 }
 

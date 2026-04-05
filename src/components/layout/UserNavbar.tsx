@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, BookOpen, Users, Home, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, FolderTree, Home, LogOut, Menu, X } from 'lucide-react';
 
 const UserNavbar = () => {
   const { t } = useTranslation();
@@ -26,6 +26,7 @@ const UserNavbar = () => {
     { key: 'dashboard', label: t('user.nav.dashboard'), href: '/user/dashboard', icon: LayoutDashboard },
     { key: 'myBooks', label: t('user.nav.myBooks'), href: '/user/books', icon: BookOpen },
     { key: 'authors', label: t('user.nav.authors'), href: '/user/authors', icon: Users },
+    { key: 'categories', label: t('user.nav.categories'), href: '/user/categories', icon: FolderTree },
   ];
 
   return (

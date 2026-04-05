@@ -34,7 +34,6 @@ export interface Book {
     pdf?: string;
     doc?: string;
   };
-  publishYear: number;
   pages: number;
   fileSize: string;
   downloadCount: number;

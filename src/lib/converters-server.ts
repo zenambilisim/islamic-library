@@ -48,7 +48,6 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
     descriptionTranslations: getTranslations(supabaseBook.description_translations, supabaseBook.description || ''),
     coverImage: coverImageUrl,
     formats,
-    publishYear: supabaseBook.publish_year || new Date().getFullYear(),
     pages: supabaseBook.pages || 0,
     fileSize: supabaseBook.file_size || '0 MB',
     downloadCount: supabaseBook.download_count || 0,
@@ -73,7 +72,7 @@ export function convertSupabaseCategoryToCategory(supabaseCategory: SupabaseCate
     description: supabaseCategory.description || '',
     descriptionTranslations: getTranslations(supabaseCategory.description_translations, supabaseCategory.description || ''),
     bookCount: supabaseCategory.book_count || 0,
-    icon: supabaseCategory.icon,
+    icon: supabaseCategory.icon ?? undefined,
   };
 }
 

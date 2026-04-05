@@ -37,7 +37,6 @@ export const mockBooks: Book[] = [
       pdf: '/downloads/quran-meal.pdf',
       doc: '/downloads/quran-meal.doc'
     },
-    publishYear: 2018,
     pages: 1024,
     fileSize: '15.2 MB',
     downloadCount: 25430,
@@ -81,7 +80,6 @@ export const mockBooks: Book[] = [
       epub: '/downloads/sahih-buhari.epub',
       pdf: '/downloads/sahih-buhari.pdf'
     },
-    publishYear: 2020,
     pages: 2048,
     fileSize: '28.5 MB',
     downloadCount: 18720,
@@ -126,7 +124,6 @@ export const mockBooks: Book[] = [
       pdf: '/downloads/ihya.pdf',
       doc: '/downloads/ihya.doc'
     },
-    publishYear: 2019,
     pages: 1536,
     fileSize: '22.1 MB',
     downloadCount: 12850,
@@ -170,7 +167,6 @@ export const mockBooks: Book[] = [
       epub: '/downloads/riyazus-salihin.epub',
       pdf: '/downloads/riyazus-salihin.pdf'
     },
-    publishYear: 2021,
     pages: 896,
     fileSize: '18.7 MB',
     downloadCount: 15240,
@@ -215,7 +211,6 @@ export const mockBooks: Book[] = [
       pdf: '/downloads/tefsir-kebir.pdf',
       doc: '/downloads/tefsir-kebir.doc'
     },
-    publishYear: 2017,
     pages: 3200,
     fileSize: '45.8 MB',
     downloadCount: 8950,
@@ -259,7 +254,6 @@ export const mockBooks: Book[] = [
       epub: '/downloads/fusus-hikem.epub',
       pdf: '/downloads/fusus-hikem.pdf'
     },
-    publishYear: 2019,
     pages: 672,
     fileSize: '12.3 MB',
     downloadCount: 6780,

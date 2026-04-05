@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto'
+import { normalizeAuthorTranslations, slugifyAuthorName } from './author-db'
 import { supabase, supabaseAdmin } from './supabase-server'
 
 /** Yazma işlemleri için: service role varsa RLS bypass, yoksa anon (RLS gerekir). */
@@ -236,6 +238,116 @@ export async function getCategories() {
   return { categories: data || [], error: null }
 }
 
+export interface CreateCategoryPayload {
+  name: string
+  name_translations?: Record<string, string>
+  description?: string
+  description_translations?: Record<string, string>
+  icon?: string | null
+}
+
+/** categories tablosuna kayıt (slug sunucuda üretilir, çakışmada sonek eklenir). */
+export async function createCategory(payload: CreateCategoryPayload) {
+  const client = db()
+  const name = payload.name.trim()
+  if (!name) {
+    return { category: null, error: new Error('name zorunludur') }
+  }
+  const description = (payload.description ?? '').trim()
+  const name_translations = normalizeAuthorTranslations(payload.name_translations, name)
+  const description_translations = normalizeAuthorTranslations(
+    payload.description_translations,
+    description
+  )
+  let slug = slugifyAuthorName(name)
+  const row = {
+    slug,
+    name,
+    name_translations,
+    description,
+    description_translations,
+    icon: payload.icon?.trim() || null,
+  }
+  let { data, error } = await client.from('categories').insert(row).select('*').single()
+  if (error?.code === '23505') {
+    slug = `${slugifyAuthorName(name)}-${randomBytes(3).toString('hex')}`
+    const retry = await client.from('categories').insert({ ...row, slug }).select('*').single()
+    data = retry.data
+    error = retry.error
+  }
+  if (error) return { category: null, error }
+  return { category: data, error: null }
+}
+
+export async function getCategoryById(id: string) {
+  const { data, error } = await supabase.from('categories').select('*').eq('id', id).maybeSingle()
+  if (error) return { category: null, error }
+  if (!data) return { category: null, error: new Error('Kategori bulunamadı') }
+  return { category: data, error: null }
+}
+
+export type UpdateCategoryPayload = CreateCategoryPayload
+
+/** categories satırını günceller; isim değişince slug yenilenir, çakışmada sonek eklenir. */
+export async function updateCategory(id: string, payload: UpdateCategoryPayload) {
+  const client = db()
+  const name = payload.name.trim()
+  if (!name) {
+    return { category: null, error: new Error('name zorunludur') }
+  }
+  const description = (payload.description ?? '').trim()
+  const name_translations = normalizeAuthorTranslations(payload.name_translations, name)
+  const description_translations = normalizeAuthorTranslations(
+    payload.description_translations,
+    description
+  )
+
+  const { data: current, error: fetchErr } = await client
+    .from('categories')
+    .select('slug')
+    .eq('id', id)
+    .maybeSingle()
+  if (fetchErr) return { category: null, error: fetchErr }
+  if (!current) return { category: null, error: new Error('Kategori bulunamadı') }
+
+  let slug = slugifyAuthorName(name)
+  if (slug !== current.slug) {
+    const { data: other } = await client
+      .from('categories')
+      .select('id')
+      .eq('slug', slug)
+      .neq('id', id)
+      .maybeSingle()
+    if (other) {
+      slug = `${slugifyAuthorName(name)}-${randomBytes(3).toString('hex')}`
+    }
+  }
+
+  const row = {
+    slug,
+    name,
+    name_translations,
+    description,
+    description_translations,
+    icon: payload.icon?.trim() || null,
+  }
+
+  let { data, error } = await client.from('categories').update(row).eq('id', id).select('*').single()
+  if (error?.code === '23505') {
+    slug = `${slugifyAuthorName(name)}-${randomBytes(3).toString('hex')}`
+    const retry = await client
+      .from('categories')
+      .update({ ...row, slug })
+      .eq('id', id)
+      .select('*')
+      .single()
+    data = retry.data
+    error = retry.error
+  }
+  if (error) return { category: null, error }
+  return { category: data, error: null }
+}
+
 // ***** FILE OPERATIONS *****
 
 // Dosya upload (kapak resmi için). body: Blob/File/Buffer, filename: uzantı için.
@@ -345,7 +457,6 @@ export interface CreateBookPayload {
   description_translations?: Record<string, string>;
   language_code: string;
   pages?: number;
-  publish_year?: number;
   tags?: string[];
 }
 
@@ -358,7 +469,6 @@ export async function createBook(payload: CreateBookPayload) {
     description_translations: payload.description_translations ?? {},
     language_code: payload.language_code,
     pages: payload.pages ?? 0,
-    publish_year: payload.publish_year ?? new Date().getFullYear(),
     download_count: 0,
     tags: payload.tags ?? [],
   };
@@ -452,7 +562,6 @@ export async function addQuickBook() {
       description: 'İslam hukukuna dair önemli bir eser',
       language: 'tr',
       pages: 250,
-      publish_year: 2024,
       download_count: 0
     })
     .select()

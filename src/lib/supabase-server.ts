@@ -3,6 +3,15 @@
  * SUPABASE_URL ve SUPABASE_ANON_KEY kullanır (NEXT_PUBLIC_ değil, tarayıcıya gönderilmez).
  */
 import { createClient } from '@supabase/supabase-js';
+import {
+  isR2Configured,
+  isR2PublicUrlConfigured,
+  isSupabaseStorageUrl,
+  r2KeyToProxyPath,
+  normalizeAppR2ProxyPath,
+  r2PublicUrlForKey,
+  tryExtractStorageKey,
+} from './r2-storage';
 
 const supabaseUrl = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim() ?? '';
 const supabaseKey = (process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)?.trim() ?? '';
@@ -33,6 +42,17 @@ export const STORAGE_BUCKETS = {
 
 export function getStoragePublicUrl(bucketName: string, filePath: string): string {
   if (!filePath) return '/placeholder-book.svg';
+  const normalized = filePath.replace(/^\/+/, '');
+  if (isR2Configured()) {
+    if (isR2PublicUrlConfigured()) {
+      try {
+        return r2PublicUrlForKey(normalized);
+      } catch {
+        return '/placeholder-book.svg';
+      }
+    }
+    return r2KeyToProxyPath(normalized);
+  }
   if (!isSupabaseConfigured) return '/placeholder-book.svg';
   try {
     const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
@@ -60,16 +80,62 @@ export function getBookFileUrl(bookFilePath: string | undefined | null): string 
   return getStoragePublicUrl('book-assets', storagePath);
 }
 
+/**
+ * İndirme / fetch için URL. R2 dosyalarında tarayıcı CORS hatası olmaması için
+ * *.r2.cloudflarestorage.com imzalı URL yerine aynı origin /api/storage/r2/… kullanılır.
+ */
 export async function getSignedBookFileUrl(
   bookFilePath: string | undefined | null,
   expiresIn: number = 3600
 ): Promise<string> {
-  if (!bookFilePath || !isSupabaseConfigured) return '';
-  if (bookFilePath.startsWith('http')) return bookFilePath;
-  let storagePath = bookFilePath;
-  if (!storagePath.startsWith('books/') && !storagePath.includes('/')) storagePath = `books/${storagePath}`;
+  if (!bookFilePath) return '';
+
+  const selfProxy = normalizeAppR2ProxyPath(bookFilePath);
+  if (selfProxy) return selfProxy;
+
+  if (bookFilePath.startsWith('http')) {
+    if (isSupabaseStorageUrl(bookFilePath) && isSupabaseConfigured) {
+      const key = tryExtractStorageKey(bookFilePath);
+      if (key) {
+        try {
+          const { data, error } = await supabase.storage
+            .from('book-assets')
+            .createSignedUrl(key, expiresIn);
+          if (!error && data?.signedUrl) return data.signedUrl;
+        } catch {
+          /* fall through */
+        }
+      }
+      return bookFilePath;
+    }
+    if (isR2Configured()) {
+      const key = tryExtractStorageKey(bookFilePath);
+      if (key && (key.startsWith('books/') || key.startsWith('covers/'))) {
+        return r2KeyToProxyPath(key);
+      }
+    }
+    return bookFilePath;
+  }
+
+  let storagePath = bookFilePath.trim();
+  if (!storagePath.startsWith('books/') && !storagePath.startsWith('covers/')) {
+    if (!storagePath.includes('/')) {
+      storagePath = `books/${storagePath}`;
+    }
+  }
+
+  if (isR2Configured()) {
+    if (storagePath.startsWith('books/') || storagePath.startsWith('covers/')) {
+      return r2KeyToProxyPath(storagePath);
+    }
+    return '';
+  }
+
+  if (!isSupabaseConfigured) return '';
   try {
-    const { data, error } = await supabase.storage.from('book-assets').createSignedUrl(storagePath, expiresIn);
+    const { data, error } = await supabase.storage
+      .from('book-assets')
+      .createSignedUrl(storagePath, expiresIn);
     if (error) return getStoragePublicUrl('book-assets', storagePath);
     return data.signedUrl;
   } catch {

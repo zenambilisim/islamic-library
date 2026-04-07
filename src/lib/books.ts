@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto'
 import { normalizeAuthorTranslations, slugifyAuthorName } from './author-db'
+import { isR2Configured, r2DeleteBookObjects, r2PutObject } from './r2-storage'
 import { supabase, supabaseAdmin } from './supabase-server'
 
 /** Yazma işlemleri için: service role varsa RLS bypass, yoksa anon (RLS gerekir). */
@@ -364,6 +365,23 @@ export async function uploadBookCover(
   const payload =
     body instanceof Buffer ? body : Buffer.from(await (body as Blob).arrayBuffer());
 
+  if (isR2Configured()) {
+    try {
+      const ext = fileExt.toLowerCase();
+      const contentType =
+        ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+      const { publicUrl } = await r2PutObject(filePath, payload, {
+        contentType,
+        cacheControl: '3600',
+      });
+      return { url: publicUrl, error: null };
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      console.error('Error uploading cover (R2):', err);
+      return { url: null, error: err };
+    }
+  }
+
   const { data, error } = await db().storage
     .from('book-assets')
     .upload(filePath, payload, {
@@ -414,23 +432,37 @@ export async function uploadBookFile(
     format === 'docx' || format === 'doc' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
     undefined;
 
-  const { data, error } = await client.storage
-    .from('book-assets')
-    .upload(filePath, payload, {
-      cacheControl: '3600',
-      upsert: true,
-      ...(contentType && { contentType }),
-    })
+  let publicUrl: string;
 
-  if (error) {
-    console.error('Error uploading book file:', error)
-    return { url: null, error }
+  if (isR2Configured()) {
+    try {
+      const out = await r2PutObject(filePath, payload, {
+        contentType,
+        cacheControl: '3600',
+      });
+      publicUrl = out.publicUrl;
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      console.error('Error uploading book file (R2):', err);
+      return { url: null, error: err };
+    }
+  } else {
+    const { data, error } = await client.storage
+      .from('book-assets')
+      .upload(filePath, payload, {
+        cacheControl: '3600',
+        upsert: true,
+        ...(contentType && { contentType }),
+      })
+
+    if (error) {
+      console.error('Error uploading book file:', error)
+      return { url: null, error }
+    }
+
+    const { data: pub } = client.storage.from('book-assets').getPublicUrl(data.path)
+    publicUrl = pub.publicUrl
   }
-
-  // Public URL al
-  const { data: { publicUrl } } = client.storage
-    .from('book-assets')
-    .getPublicUrl(data.path)
 
   // Database'e file record ekle – başarısız olursa PDF listede görünmez
   const fileSizeMB = size / (1024 * 1024)
@@ -762,6 +794,15 @@ export async function addQuickBook() {
 
 /** Storage'dan kitap dosyalarını ve kapağını siler (book_files + books tablosu silinmeden önce çağrılabilir). */
 async function deleteBookStorageFiles(bookId: string) {
+  if (isR2Configured()) {
+    try {
+      await r2DeleteBookObjects(bookId);
+    } catch (e) {
+      console.error('Error deleting book files from R2:', e);
+    }
+    return;
+  }
+
   const storage = db().storage.from('book-assets');
   const pathsToRemove: string[] = [];
 

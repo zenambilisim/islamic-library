@@ -235,6 +235,20 @@
       },
       "addNew": "Add New Book"
     },
+    "authors": {
+      "title": "Authors",
+      "loading": "Loading authors...",
+      "noAuthors": "No authors yet.",
+      "addNew": "Add New Author",
+      "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone. Authors with linked books cannot be deleted.",
+      "deleteError": "Error deleting author.",
+      "table": {
+        "name": "Name",
+        "bio": "Biography",
+        "books": "Books",
+        "actions": "Actions"
+      }
+    },
     "addBook": {
       "title": "Add New Book",
       "titleLabel": "Title (titleTranslations) *",

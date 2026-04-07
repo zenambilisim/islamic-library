@@ -35,7 +35,7 @@ const BulkUploadPage = () => {
 
   const uploadOne = async (entry: BookEntry): Promise<string | null> => {
     let description = '';
-    const descFile = entry.files.rtf ?? entry.files.docx;
+    const descFile = entry.files.rtf ?? entry.files.docx ?? entry.files.txt;
     if (descFile) {
       const form = new FormData();
       form.append('file', descFile);
@@ -116,7 +116,7 @@ const BulkUploadPage = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Klasörden toplu kitap yükle</h1>
       <p className="text-gray-600 mb-6">
-        Script ile aynı yapı: Kategori klasörleri altında &quot;Kitap Adı - Yazar&quot; klasörleri; her birinde PDF, kapak resmi; isteğe bağlı RTF veya Word (DOC/DOCX) ile açıklama, EPUB, DOC/DOCX.
+        Script ile aynı yapı: Kategori klasörleri altında &quot;Kitap Adı - Yazar&quot; klasörleri; her birinde PDF, kapak resmi; isteğe bağlı RTF, Word (DOC/DOCX) veya TXT ile açıklama, EPUB, DOC/DOCX.
       </p>
 
       <input
@@ -225,6 +225,7 @@ const BulkUploadPage = () => {
                       {entry.files.epub && ' EPUB ✓'}
                       {entry.files.docx && ' Word ✓'}
                       {entry.files.rtf && ' RTF ✓'}
+                      {entry.files.txt && ' TXT ✓'}
                     </td>
                   </tr>
                 ))}

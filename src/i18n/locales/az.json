@@ -235,6 +235,20 @@
       },
       "addNew": "Yeni kitab əlavə et"
     },
+    "authors": {
+      "title": "Müəlliflər",
+      "loading": "Müəlliflər yüklənir...",
+      "noAuthors": "Hələ müəllif yoxdur.",
+      "addNew": "Yeni müəllif əlavə et",
+      "deleteConfirm": "«{{name}}» silinsin? Bu əməli geri qaytarmaq olmaz. Bağlı kitabı olan müəllif silinə bilməz.",
+      "deleteError": "Müəllif silinərkən xəta baş verdi.",
+      "table": {
+        "name": "Ad",
+        "bio": "Bioqrafiya",
+        "books": "Kitab",
+        "actions": "Əməliyyatlar"
+      }
+    },
     "addBook": {
       "title": "Yeni kitab əlavə et",
       "titleLabel": "Başlıq (titleTranslations) *",

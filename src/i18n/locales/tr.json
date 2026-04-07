@@ -236,6 +236,20 @@
       },
       "addNew": "Yeni Kitap Ekle"
     },
+    "authors": {
+      "title": "Yazarlar",
+      "loading": "Yazarlar yükleniyor...",
+      "noAuthors": "Henüz yazar yok.",
+      "addNew": "Yeni Yazar Ekle",
+      "deleteConfirm": "“{{name}}” yazarı silinsin mi? Bu işlem geri alınamaz. Yazara bağlı kitap varsa silme yapılmaz.",
+      "deleteError": "Yazar silinirken hata oluştu.",
+      "table": {
+        "name": "Ad",
+        "bio": "Biyografi",
+        "books": "Kitap",
+        "actions": "İşlem"
+      }
+    },
     "addBook": {
       "title": "Yeni Kitap Ekle",
       "titleLabel": "Başlık (titleTranslations) *",

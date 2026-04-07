@@ -382,11 +382,11 @@ const EditBookPage = () => {
                 />
                 <div className="mt-2">
                   <label className="block text-xs text-gray-500 mb-1">
-                    Veya açıklamayı Word (DOC, DOCX) veya RTF dosyasından yükle
+                    Veya açıklamayı Word (DOC, DOCX), RTF veya düz metin (TXT) dosyasından yükle
                   </label>
                   <input
                     type="file"
-                    accept=".rtf,.doc,.docx,application/rtf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    accept=".rtf,.doc,.docx,.txt,application/rtf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                     onChange={handleDescriptionFile}
                     disabled={descFileLoading}
                     className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-50 disabled:opacity-50"

@@ -34,6 +34,7 @@ export interface BookEntry {
     epub: File | null;
     docx: File | null;
     rtf: File | null;
+    txt: File | null;
   };
 }
 
@@ -58,7 +59,20 @@ const COVER_EXT = ['.png', '.jpg', '.jpeg'];
  * Beklenen yapı: KategoriKlasörü/KitapAdı - Yazar/dosyalar
  */
 export function parseFolderFiles(fileList: File[]): BookEntry[] {
-  const map = new Map<string, Map<string, { cover: File | null; pdf: File | null; epub: File | null; docx: File | null; rtf: File | null }>>();
+  const map = new Map<
+    string,
+    Map<
+      string,
+      {
+        cover: File | null;
+        pdf: File | null;
+        epub: File | null;
+        docx: File | null;
+        rtf: File | null;
+        txt: File | null;
+      }
+    >
+  >();
 
   for (const file of fileList) {
     const path = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
@@ -73,7 +87,14 @@ export function parseFolderFiles(fileList: File[]): BookEntry[] {
     }
     const books = map.get(categoryFolder)!;
     if (!books.has(bookFolder)) {
-      books.set(bookFolder, { cover: null, pdf: null, epub: null, docx: null, rtf: null });
+      books.set(bookFolder, {
+        cover: null,
+        pdf: null,
+        epub: null,
+        docx: null,
+        rtf: null,
+        txt: null,
+      });
     }
     const entry = books.get(bookFolder)!;
 
@@ -81,6 +102,7 @@ export function parseFolderFiles(fileList: File[]): BookEntry[] {
     else if (name.endsWith('.epub')) entry.epub = file;
     else if (name.endsWith('.docx') || name.endsWith('.doc')) entry.docx = file;
     else if (name.endsWith('.rtf')) entry.rtf = file;
+    else if (name.endsWith('.txt')) entry.txt = file;
     else if (COVER_EXT.some((ext) => name.endsWith(ext))) entry.cover = file;
   }
 

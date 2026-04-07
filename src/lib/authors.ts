@@ -209,3 +209,99 @@ export async function createAuthor(payload: CreateAuthorPayload) {
   if (error) return { author: null, error };
   return { author: data, error: null };
 }
+
+export interface UpdateAuthorPayload {
+  name: string;
+  biography?: string;
+  name_translations?: Record<string, string>;
+  biography_translations?: Record<string, string>;
+  profile_image_url?: string | null;
+}
+
+/** authors tablosunda güncelleme; isim değişince slug yenilenir. */
+export async function updateAuthor(id: string, payload: UpdateAuthorPayload) {
+  const db = supabaseAdmin ?? supabase;
+  const name = payload.name.trim();
+  const biography = (payload.biography ?? '').trim();
+  if (!name) return { author: null, error: new Error('Ad zorunludur') };
+
+  const name_translations = normalizeAuthorTranslations(payload.name_translations, name);
+  const biography_translations = normalizeAuthorTranslations(
+    payload.biography_translations,
+    biography
+  );
+
+  const { data: current, error: fetchErr } = await db
+    .from('authors')
+    .select('name, slug')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (fetchErr) return { author: null, error: fetchErr };
+  if (!current) return { author: null, error: new Error('Yazar bulunamadı') };
+
+  let slug = (current as { slug?: string }).slug ?? slugifyAuthorName(name);
+  if ((current as { name: string }).name !== name) {
+    slug = slugifyAuthorName(name);
+  }
+
+  const row: Record<string, unknown> = {
+    name,
+    slug,
+    biography,
+    name_translations,
+    biography_translations,
+  };
+  if (payload.profile_image_url !== undefined) {
+    row.profile_image_url = payload.profile_image_url?.trim() || null;
+  }
+
+  let { error } = await db.from('authors').update(row).eq('id', id);
+  if (error?.code === '23505') {
+    slug = `${slugifyAuthorName(name)}-${randomBytes(3).toString('hex')}`;
+    ({ error } = await db.from('authors').update({ ...row, slug }).eq('id', id));
+  }
+
+  if (error) return { author: null, error };
+
+  const { author, error: viewErr } = await getAuthorById(id);
+  if (author) return { author, error: null };
+  if (viewErr) return { author: null, error: viewErr };
+
+  const { data: rowAgain } = await db.from('authors').select('*').eq('id', id).single();
+  if (!rowAgain) return { author: null, error: new Error('Yazar güncellendi ama okunamadı') };
+  return {
+    author: convertSupabaseAuthorToAuthor({
+      ...rowAgain,
+      book_count: 0,
+      total_downloads: 0,
+      categories: [],
+      languages: [],
+      first_book_created_at: rowAgain.created_at ?? new Date().toISOString(),
+      last_updated_at: rowAgain.updated_at ?? new Date().toISOString(),
+    } as SupabaseAuthor),
+    error: null,
+  };
+}
+
+/** Yazar silinir; book_authors kaydı varsa silinmez. */
+export async function deleteAuthor(id: string) {
+  const db = supabaseAdmin ?? supabase;
+  const { count, error: countErr } = await db
+    .from('book_authors')
+    .select('*', { count: 'exact', head: true })
+    .eq('author_id', id);
+
+  if (countErr) return { error: countErr };
+  if ((count ?? 0) > 0) {
+    return {
+      error: new Error(
+        'Bu yazara bağlı kitaplar var. Önce ilgili kitaplarda yazarı değiştirin veya kitapları silin.'
+      ),
+    };
+  }
+
+  const { error } = await db.from('authors').delete().eq('id', id);
+  if (error) return { error };
+  return { error: null };
+}

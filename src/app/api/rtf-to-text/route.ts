@@ -5,17 +5,33 @@ import rtf2text from 'rtf2text';
 // @ts-expect-error CommonJS module, no bundled types
 import WordExtractor from 'word-extractor';
 
-type DescFormat = 'rtf' | 'word';
+type DescFormat = 'rtf' | 'word' | 'txt';
 
 function extensionLower(name: string): string {
   const i = name.lastIndexOf('.');
   return i >= 0 ? name.slice(i).toLowerCase() : '';
 }
 
+/** UTF-8 / UTF-16 (BOM’lu) düz metin — açıklama için */
+function decodePlainTextBuffer(buffer: Buffer): string {
+  if (buffer.length === 0) return '';
+  if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+    return buffer.subarray(3).toString('utf8');
+  }
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+    return buffer.subarray(2).toString('utf16le');
+  }
+  if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+    return new TextDecoder('utf-16be').decode(buffer.subarray(2));
+  }
+  return buffer.toString('utf8');
+}
+
 function detectFormat(filename: string, buffer: Buffer): DescFormat | null {
   const ext = extensionLower(filename);
   if (ext === '.rtf') return 'rtf';
   if (ext === '.doc' || ext === '.docx') return 'word';
+  if (ext === '.txt') return 'txt';
 
   const head = buffer.subarray(0, Math.min(32, buffer.length));
   const rtfProbeStart =
@@ -41,7 +57,7 @@ function detectFormat(filename: string, buffer: Buffer): DescFormat | null {
 
 /**
  * POST /api/rtf-to-text
- * FormData: "file" — RTF, .doc veya .docx (açıklama metnine çevirmek için).
+ * FormData: "file" — RTF, .doc, .docx veya .txt (açıklama metnine çevirmek için).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     if (kind === null) {
       return NextResponse.json(
-        { error: 'Desteklenen biçimler: RTF, DOC, DOCX' },
+        { error: 'Desteklenen biçimler: RTF, DOC, DOCX, TXT' },
         { status: 400 }
       );
     }
@@ -72,6 +88,8 @@ export async function POST(request: NextRequest) {
           else resolve(result ?? '');
         });
       });
+    } else if (kind === 'txt') {
+      text = decodePlainTextBuffer(buffer);
     } else {
       const extractor = new WordExtractor();
       const doc = await extractor.extract(buffer);

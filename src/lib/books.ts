@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto'
+import sharp from 'sharp'
 import { normalizeAuthorTranslations, slugifyAuthorName } from './author-db'
 import { isR2Configured, r2DeleteBookObjects, r2PutObject } from './r2-storage'
 import { supabase, supabaseAdmin } from './supabase-server'
@@ -236,7 +237,33 @@ export async function getCategories() {
     return { categories: [], error }
   }
 
-  return { categories: data || [], error: null }
+  const rows = data || []
+  if (rows.length === 0) return { categories: [], error: null }
+
+  const ids = rows.map((r: { id: string }) => r.id)
+  const { data: rels, error: relErr } = await supabase
+    .from('book_categories')
+    .select('category_id')
+    .in('category_id', ids)
+
+  if (relErr) {
+    console.error('Error fetching category book counts:', relErr)
+    const fallback = rows.map((r: any) => ({ ...r, book_count: 0 }))
+    return { categories: fallback, error: null }
+  }
+
+  const countMap = new Map<string, number>()
+  for (const rel of rels || []) {
+    const cid = (rel as { category_id: string }).category_id
+    countMap.set(cid, (countMap.get(cid) ?? 0) + 1)
+  }
+
+  const categories = rows.map((r: any) => ({
+    ...r,
+    book_count: countMap.get(r.id) ?? 0,
+  }))
+
+  return { categories, error: null }
 }
 
 export interface CreateCategoryPayload {
@@ -349,6 +376,26 @@ export async function updateCategory(id: string, payload: UpdateCategoryPayload)
   return { category: data, error: null }
 }
 
+/** Kategori siler; bağlı kitap varsa silmeyi engeller. */
+export async function deleteCategory(id: string) {
+  const client = db()
+  const { count, error: relErr } = await client
+    .from('book_categories')
+    .select('*', { count: 'exact', head: true })
+    .eq('category_id', id)
+  if (relErr) return { error: relErr }
+  if ((count ?? 0) > 0) {
+    return {
+      error: new Error(
+        'Bu kategoriye bağlı kitaplar var. Önce kitapların kategorisini değiştirin veya kitapları silin.'
+      ),
+    }
+  }
+  const { error } = await client.from('categories').delete().eq('id', id)
+  if (error) return { error }
+  return { error: null }
+}
+
 // ***** FILE OPERATIONS *****
 
 // Dosya upload (kapak resmi için). body: Blob/File/Buffer, filename: uzantı için.
@@ -358,19 +405,22 @@ export async function uploadBookCover(
   filename: string = 'cover.jpg'
 ) {
   const name = typeof body === 'object' && body && 'name' in body ? (body as File).name : filename;
-  const fileExt = name.split('.').pop() || 'jpg';
-  const fileName = `${bookId}-cover.${fileExt}`;
-  const filePath = `covers/${fileName}`;
-
+  const fileExt = (name.split('.').pop() || 'jpg').toLowerCase();
   const payload =
     body instanceof Buffer ? body : Buffer.from(await (body as Blob).arrayBuffer());
+  const convertToWebp = fileExt === 'png' || fileExt === 'jpg' || fileExt === 'jpeg';
+  const outputExt = convertToWebp ? 'webp' : fileExt;
+  const fileName = `${bookId}-cover.${outputExt}`;
+  const filePath = `covers/${fileName}`;
+  const outputPayload = convertToWebp
+    ? await sharp(payload).webp({ quality: 80 }).toBuffer()
+    : payload;
+  const contentType =
+    outputExt === 'webp' ? 'image/webp' : outputExt === 'png' ? 'image/png' : 'image/jpeg';
 
   if (isR2Configured()) {
     try {
-      const ext = fileExt.toLowerCase();
-      const contentType =
-        ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
-      const { publicUrl } = await r2PutObject(filePath, payload, {
+      const { publicUrl } = await r2PutObject(filePath, outputPayload, {
         contentType,
         cacheControl: '3600',
       });
@@ -384,9 +434,10 @@ export async function uploadBookCover(
 
   const { data, error } = await db().storage
     .from('book-assets')
-    .upload(filePath, payload, {
+    .upload(filePath, outputPayload, {
       cacheControl: '3600',
-      upsert: true
+      upsert: true,
+      contentType,
     })
 
   if (error) {

@@ -51,7 +51,7 @@ function parseLanguageParam(raw: string | null): string | undefined {
 
 /**
  * GET /api/books
- * Query: page, limit, category (category varsa sayfalama yok, tüm liste döner), language (tr|en|ru|az – yoksa tüm diller).
+ * Query: page, limit, category (slug; sayfalı), language (tr|en|ru|az), withTotal (kategori + dil için toplam sayım).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -67,12 +67,15 @@ export async function GET(request: NextRequest) {
     let hasMore = false;
 
     if (category) {
-      const result = await getBooksByCategory(category, language);
+      const result = await getBooksByCategory(category, language, page, limit, {
+        includeTotal: withTotal,
+      });
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }
       rawBooks = result.books;
-      total = rawBooks.length;
+      total = withTotal ? result.total : 0;
+      hasMore = result.hasMore ?? false;
     } else {
       const result = await getBooks(page, limit, language, { includeTotal: withTotal });
       if (result.error) {

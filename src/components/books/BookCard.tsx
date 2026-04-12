@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Eye, FileText, User, Loader2 } from 'lucide-react';
+import { BookOpen, Download, Eye, FileText, Loader2, User } from 'lucide-react';
 import type { Book } from '@/types';
 import { useBookModal } from '@/contexts/BookModalContext';
 import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
@@ -84,6 +84,15 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
             <span className="line-clamp-2 text-right text-xs">{book.category}</span>
           </div>
         </div>
+
+        {book.pages > 0 && (
+          <div className="mb-3 flex items-center gap-1.5 text-xs text-gray-500">
+            <BookOpen size={14} className="shrink-0 text-primary-500" aria-hidden />
+            <span>
+              {book.pages.toLocaleString()} {t('book.pages')}
+            </span>
+          </div>
+        )}
 
         {/* Description */}
         <p className="text-gray-600 text-sm line-clamp-3 min-h-[4.5rem] leading-relaxed">

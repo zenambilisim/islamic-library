@@ -103,6 +103,12 @@ const BOOK_LIST_SELECT = `
   )
 `;
 
+/** Kategori slug ile süzmek için ilişkili olmayan kitapları dışla */
+const BOOK_LIST_SELECT_IN_CATEGORY = BOOK_LIST_SELECT.replace(
+  'book_categories (',
+  'book_categories!inner ('
+).replace('categories (', 'categories!inner (');
+
 export type GetBooksOptions = {
   /** true: tam total için COUNT (yavaş); admin sayfalama için /api/books?withTotal=1 */
   includeTotal?: boolean;
@@ -252,49 +258,75 @@ export async function searchBooks(query: string) {
   return { books: data || [], error: null }
 }
 
-// Kategoriye göre kitaplar (category = kategori slug; isteğe bağlı dil)
-export async function getBooksByCategory(categorySlug: string, language?: string) {
-  let query = supabase
+export type GetBooksByCategoryOptions = {
+  includeTotal?: boolean;
+};
+
+/**
+ * Kategoriye göre kitaplar (slug + isteğe bağlı dil). Sayfalı; ana liste ile aynı select.
+ */
+export async function getBooksByCategory(
+  categorySlug: string,
+  language: string | undefined,
+  page = 0,
+  limit = 20,
+  options?: GetBooksByCategoryOptions
+) {
+  let base = supabase
     .from('books')
-    .select(`
-      *,
-      book_files (*),
-      book_authors (
-        author_order,
-        role,
-        authors (
-          id,
-          name,
-          language_code
-        )
-      ),
-      book_categories!inner (
-        is_primary,
-        categories!inner (
-          id,
-          name,
-          slug,
-          language_code
-        )
-      )
-    `)
+    .select(BOOK_LIST_SELECT_IN_CATEGORY)
     .eq('book_categories.categories.slug', categorySlug)
     .order('created_at', { ascending: false });
 
   if (language) {
-    query = query
-      .eq('language_code', language)
-      .eq('book_categories.categories.language_code', language);
+    base = base.eq('language_code', language).eq('book_categories.categories.language_code', language);
   }
 
-  const { data, error } = await query;
+  if (options?.includeTotal) {
+    let qCount = supabase
+      .from('books')
+      .select(BOOK_LIST_SELECT_IN_CATEGORY, { count: 'exact' })
+      .eq('book_categories.categories.slug', categorySlug)
+      .order('created_at', { ascending: false });
+
+    if (language) {
+      qCount = qCount.eq('language_code', language).eq('book_categories.categories.language_code', language);
+    }
+
+    const { data, error, count } = await qCount.range(page * limit, (page + 1) * limit - 1);
+
+    if (error) {
+      console.error('Error fetching books by category (count):', error);
+      return { books: [], error, total: 0, hasMore: false };
+    }
+
+    const total = count ?? 0;
+    const books = data || [];
+    return {
+      books,
+      error: null,
+      total,
+      hasMore: total > (page + 1) * limit,
+    };
+  }
+
+  const { data, error } = await base.range(page * limit, page * limit + limit);
 
   if (error) {
     console.error('Error fetching books by category:', error);
-    return { books: [], error };
+    return { books: [], error, total: 0, hasMore: false };
   }
 
-  return { books: data || [], error: null };
+  const rows = data || [];
+  const hasMore = rows.length > limit;
+  const books = hasMore ? rows.slice(0, limit) : rows;
+
+  return {
+    books,
+    error: null,
+    total: 0,
+    hasMore,
+  };
 }
 
 // ***** CATEGORY OPERATIONS *****

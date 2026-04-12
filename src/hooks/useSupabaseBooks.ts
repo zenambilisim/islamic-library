@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Book, Language } from '../types';
 
-function resolveAppLanguage(i18nLng: string | undefined): Language {
+export function resolveAppLanguage(i18nLng: string | undefined): Language {
   const base = (i18nLng || 'tr').split('-')[0].toLowerCase();
   if (base === 'tr' || base === 'en' || base === 'ru' || base === 'az') return base;
   return 'tr';
@@ -19,6 +19,9 @@ interface UseSupabaseBooksReturn {
 }
 
 const ITEMS_PER_PAGE = 10;
+
+/** Kategori detay sayfası — bir istekte taşınacak kitap sayısı */
+const CATEGORY_ITEMS_PER_PAGE = 12;
 
 /**
  * Sunucu API'sinden kitapları çeken custom hook
@@ -119,7 +122,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
 }
 
 /**
- * Belirli bir kategoriye göre kitapları API'den çeker (seçili dil)
+ * Belirli bir kategoriye göre kitapları API'den sayfalı çeker (seçili dil).
  */
 export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
@@ -127,41 +130,96 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(0);
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const loadMoreInFlightRef = useRef(false);
 
-  const fetchBooksByCategory = async () => {
-    if (!category) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const params = new URLSearchParams({ category, language });
-      const res = await fetch(`/api/books?${params}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || res.statusText);
+  const fetchBooks = useCallback(
+    async (isLoadMore: boolean = false) => {
+      if (!category) return;
+      try {
+        if (isLoadMore) {
+          if (loadMoreInFlightRef.current) return;
+          loadMoreInFlightRef.current = true;
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+          setPage(0);
+        }
+        setError(null);
+
+        const currentPage = isLoadMore ? pageRef.current : 0;
+        const params = new URLSearchParams({
+          category,
+          language,
+          page: String(currentPage),
+          limit: String(CATEGORY_ITEMS_PER_PAGE),
+        });
+        const res = await fetch(`/api/books?${params}`);
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || res.statusText);
+        }
+
+        const data = await res.json();
+        const { books: nextBooks, hasMore: nextHasMore } = data;
+
+        if (!Array.isArray(nextBooks)) {
+          if (!isLoadMore) setBooks([]);
+          return;
+        }
+
+        if (isLoadMore) {
+          setBooks((prev) => [...prev, ...nextBooks]);
+          setPage(currentPage + 1);
+        } else {
+          setBooks(nextBooks);
+          setPage(1);
+        }
+        setHasMore(
+          typeof nextHasMore === 'boolean'
+            ? nextHasMore
+            : nextBooks.length >= CATEGORY_ITEMS_PER_PAGE
+        );
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu';
+        setError(errorMessage);
+        if (!isLoadMore) setBooks([]);
+      } finally {
+        if (isLoadMore) {
+          loadMoreInFlightRef.current = false;
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
       }
-      const data = await res.json();
-      setBooks(Array.isArray(data.books) ? data.books : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu');
-      setBooks([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [category, language]
+  );
 
   useEffect(() => {
-    if (category) fetchBooksByCategory();
-  }, [category, language]);
+    if (category) void fetchBooks(false);
+  }, [category, fetchBooks]);
+
+  const loadMore = useCallback(async () => {
+    if (!category || loading || loadingMore || !hasMore) return;
+    await fetchBooks(true);
+  }, [category, loading, loadingMore, hasMore, fetchBooks]);
 
   return {
     books,
     loading,
     error,
-    refetch: fetchBooksByCategory,
-    loadMore: async () => {},
-    hasMore: false,
-    loadingMore: false,
+    refetch: () => fetchBooks(false),
+    loadMore,
+    hasMore,
+    loadingMore,
   };
 }
 

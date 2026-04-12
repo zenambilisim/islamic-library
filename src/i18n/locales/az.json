@@ -197,7 +197,21 @@
       "backToSite": "Sayta qayıt",
       "logout": "Çıxış",
       "userArea": "İstifadəçi",
-      "bulkUpload": "Toplu yüklə"
+      "bulkUpload": "Toplu yüklə",
+      "changePassword": "Şifrəni dəyiş"
+    },
+    "changePassword": {
+      "title": "Şifrəni dəyiş",
+      "description": "Giriş üçün istifadə etdiyiniz e-poçt hesabının şifrəsini yeniləyin.",
+      "currentLabel": "Cari şifrə",
+      "newLabel": "Yeni şifrə",
+      "confirmLabel": "Yeni şifrə (təkrar)",
+      "submit": "Şifrəni yenilə",
+      "submitting": "Saxlanılır…",
+      "success": "Şifrəniz yeniləndi.",
+      "mismatch": "Yeni şifrələr uyğun gəlmir.",
+      "errorDefault": "Şifrə yenilənmədi. Yenidən cəhd edin.",
+      "back": "Panelə qayıt"
     },
     "dashboard": {
       "title": "Panel",

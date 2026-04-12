@@ -197,7 +197,21 @@
       "backToSite": "Back to Site",
       "logout": "Log out",
       "userArea": "User",
-      "bulkUpload": "Bulk upload"
+      "bulkUpload": "Bulk upload",
+      "changePassword": "Change password"
+    },
+    "changePassword": {
+      "title": "Change password",
+      "description": "Update the password for the email account you use to sign in.",
+      "currentLabel": "Current password",
+      "newLabel": "New password",
+      "confirmLabel": "Confirm new password",
+      "submit": "Update password",
+      "submitting": "Saving…",
+      "success": "Your password has been updated.",
+      "mismatch": "New passwords do not match.",
+      "errorDefault": "Could not update password. Please try again.",
+      "back": "Back to dashboard"
     },
     "dashboard": {
       "title": "Dashboard",

@@ -198,7 +198,21 @@
       "backToSite": "Siteye Dön",
       "logout": "Çıkış",
       "userArea": "Kullanıcı",
-      "bulkUpload": "Toplu yükle"
+      "bulkUpload": "Toplu yükle",
+      "changePassword": "Şifre değiştir"
+    },
+    "changePassword": {
+      "title": "Şifre değiştir",
+      "description": "Giriş için kullandığınız e-posta hesabının şifresini güncelleyin.",
+      "currentLabel": "Mevcut şifre",
+      "newLabel": "Yeni şifre",
+      "confirmLabel": "Yeni şifre (tekrar)",
+      "submit": "Şifreyi güncelle",
+      "submitting": "Kaydediliyor…",
+      "success": "Şifreniz güncellendi.",
+      "mismatch": "Yeni şifreler eşleşmiyor.",
+      "errorDefault": "Şifre güncellenemedi. Lütfen tekrar deneyin.",
+      "back": "Panele dön"
     },
     "dashboard": {
       "title": "Panel",

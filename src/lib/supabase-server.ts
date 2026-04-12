@@ -27,6 +27,11 @@ const key = isSupabaseConfigured ? supabaseKey : 'placeholder';
 
 export const supabase = createClient(url, key);
 
+/** Yeni anon istemci (sunucuda ayrı oturum / şifre doğrulama zinciri için). */
+export function createAnonSupabaseClient() {
+  return createClient(url, key);
+}
+
 /** Service role ile client – RLS bypass. Sadece sunucuda, yazma işlemleri için kullanın. */
 const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
 export const supabaseAdmin =

@@ -1,7 +1,21 @@
 import { getSignedBookFileUrl } from '@/lib/supabase';
 
-export function safeDownloadBasename(title: string): string {
-  return title.replace(/[/\\?%*:|"<>]/g, '_').trim().slice(0, 180) || 'kitap';
+const INVALID_FILENAME_CHARS = /[/\\?%*:|"<>]/g;
+
+function sanitizeFilenameSegment(s: string, maxLen: number): string {
+  return s.replace(INVALID_FILENAME_CHARS, '_').trim().slice(0, maxLen);
+}
+
+/** İndirilen dosya adı için güvenli taban: isteğe bağlı yazar ile "Başlık - Yazar". */
+export function safeDownloadBasename(title: string, author?: string): string {
+  const authorTrim = author?.trim();
+  if (!authorTrim) {
+    return sanitizeFilenameSegment(title, 180) || 'kitap';
+  }
+  const t = sanitizeFilenameSegment(title, 120);
+  const a = sanitizeFilenameSegment(authorTrim, 80);
+  const combined = t && a ? `${t} - ${a}` : t || a;
+  return (combined || 'kitap').slice(0, 180);
 }
 
 function isSameOriginR2Proxy(url: string): boolean {

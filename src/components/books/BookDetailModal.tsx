@@ -46,7 +46,7 @@ const BookDetailModal = () => {
   const handleDownload = async (format: string, url: string) => {
     try {
       setLoadingUrls((prev) => ({ ...prev, [format]: true }));
-      const base = safeDownloadBasename(book.title);
+      const base = safeDownloadBasename(book.title, book.author);
       await downloadBookAsset(url, `${base}.${format.toLowerCase()}`);
     } catch (error) {
       console.error('Download error:', error);

@@ -19,7 +19,7 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
   const handleFormatDownload = async (e: React.MouseEvent, format: string, url: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const base = safeDownloadBasename(book.title);
+    const base = safeDownloadBasename(book.title, book.author);
     const fileName = `${base}.${format.toLowerCase()}`;
     setDownloadLoading((s) => ({ ...s, [format]: true }));
     try {

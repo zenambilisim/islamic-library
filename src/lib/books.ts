@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto'
 import sharp from 'sharp'
+import { countPdfPages } from './pdf-page-count'
 import { normalizeLanguageCode, slugifyAuthorName } from './author-db'
 import { isR2Configured, r2DeleteBookObjects, r2PutObject } from './r2-storage'
 import { supabase, supabaseAdmin } from './supabase-server'
@@ -594,7 +595,20 @@ export async function uploadBookFile(
     return { url: null, error: dbError }
   }
 
-  return { url: publicUrl, error: null }
+  let pagesFromPdf: number | undefined;
+  if (formatNorm === 'pdf') {
+    const n = await countPdfPages(payload);
+    if (n != null) {
+      const { error: pageErr } = await client.from('books').update({ pages: n }).eq('id', bookId);
+      if (pageErr) {
+        console.error('Error updating book pages from PDF:', pageErr);
+      } else {
+        pagesFromPdf = n;
+      }
+    }
+  }
+
+  return { url: publicUrl, error: null, pages: pagesFromPdf }
 }
 
 // ***** KİTAP EKLEME FONKSİYONLARI *****

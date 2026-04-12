@@ -37,13 +37,13 @@ export async function POST(
       (formData.get('filename') as string) ||
       (file instanceof File ? file.name : null) ||
       `file.${format}`;
-    const { url, error } = await uploadBookFile(blob, id, format, filename);
+    const { url, error, pages } = await uploadBookFile(blob, id, format, filename);
     if (error || !url) {
       const msg = error?.message ?? 'Dosya yüklenemedi';
       console.error('Book file upload failed:', msg, error);
       return NextResponse.json({ error: msg }, { status: 500 });
     }
-    return NextResponse.json({ url });
+    return NextResponse.json({ url, ...(pages != null ? { pages } : {}) });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('API POST /api/books/[id]/files error:', err);

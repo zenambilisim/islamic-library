@@ -353,6 +353,9 @@ const AddBookPage = () => {
               onChange={(e) => setPages(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              PDF yüklendiğinde sayfa sayısı dosyadan okunup kaydedilir (şifreli veya bozuk PDF’lerde atlanabilir).
+            </p>
           </div>
 
           <div>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, type InputHTMLAttributes } from 'react';
+import { useState, useRef, useEffect, type InputHTMLAttributes } from 'react';
 import Link from 'next/link';
 import { Upload, FolderOpen, CheckCircle, XCircle } from 'lucide-react';
-import { parseFolderFiles, type BookEntry } from '@/lib/bulkUploadUtils';
+import { parseFolderFiles, type BookBulkLanguage, type BookEntry } from '@/lib/bulkUploadUtils';
 
 const BulkUploadPage = () => {
   const [entries, setEntries] = useState<BookEntry[]>([]);
@@ -11,14 +11,29 @@ const BulkUploadPage = () => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [result, setResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
+  const [defaultLanguage, setDefaultLanguage] = useState<BookBulkLanguage>('en');
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastFolderFilesRef = useRef<File[] | null>(null);
+
+  const applyParsed = (parsed: BookEntry[]) => {
+    setEntries(parsed);
+    setSelected(new Set(parsed.map((_, i) => i)));
+  };
+
+  useEffect(() => {
+    const list = lastFolderFilesRef.current;
+    if (!list?.length) return;
+    applyParsed(parseFolderFiles(list, { defaultLanguage }));
+    setResult(null);
+  }, [defaultLanguage]);
 
   const handleFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const list = Array.from(files);
-    const parsed = parseFolderFiles(list);
-    setEntries(parsed);
+    lastFolderFilesRef.current = list;
+    const parsed = parseFolderFiles(list, { defaultLanguage });
+    applyParsed(parsed);
     setSelected(new Set(parsed.map((_, i) => i)));
     setResult(null);
     e.target.value = '';
@@ -54,7 +69,7 @@ const BulkUploadPage = () => {
         author: entry.author,
         category: entry.categorySlug,
         description: description || undefined,
-        language: 'en',
+        language: entry.language,
       }),
     });
     const data = await res.json();
@@ -116,8 +131,30 @@ const BulkUploadPage = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Klasörden toplu kitap yükle</h1>
       <p className="text-gray-600 mb-6">
-        Script ile aynı yapı: Kategori klasörleri altında &quot;Kitap Adı - Yazar&quot; klasörleri; her birinde PDF, kapak resmi; isteğe bağlı RTF, Word (DOC/DOCX) veya TXT ile açıklama, EPUB, DOC/DOCX.
+        Önerilen yapı: kök altında dil klasörleri (<code className="text-xs bg-gray-100 px-1 rounded">en</code>,{' '}
+        <code className="text-xs bg-gray-100 px-1 rounded">tr</code>, <code className="text-xs bg-gray-100 px-1 rounded">ru</code>,{' '}
+        <code className="text-xs bg-gray-100 px-1 rounded">az</code>), altında kategoriler, altında &quot;Kitap Adı - Yazar&quot;
+        klasörleri. Sadece dil klasörünü seçerseniz tarayıcı üst klasör adını vermez; aşağıdaki &quot;Varsayılan dil&quot; o kitaplar
+        için kullanılır. Eski kök/kategori/kitap yapısında da varsayılan dil geçerlidir.
       </p>
+
+      <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
+        <label htmlFor="bulk-default-lang" className="text-gray-700">
+          Varsayılan dil (tek dil kökü veya eski yapı):
+        </label>
+        <select
+          id="bulk-default-lang"
+          value={defaultLanguage}
+          onChange={(e) => setDefaultLanguage(e.target.value as BookBulkLanguage)}
+          disabled={uploading}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-900"
+        >
+          <option value="en">English (en)</option>
+          <option value="tr">Türkçe (tr)</option>
+          <option value="ru">Русский (ru)</option>
+          <option value="az">Azərbaycan (az)</option>
+        </select>
+      </div>
 
       <input
         ref={inputRef}
@@ -200,6 +237,7 @@ const BulkUploadPage = () => {
                       }}
                     />
                   </th>
+                  <th className="text-left py-2 px-3">Dil</th>
                   <th className="text-left py-2 px-3">Kategori</th>
                   <th className="text-left py-2 px-3">Başlık</th>
                   <th className="text-left py-2 px-3">Yazar</th>
@@ -216,6 +254,9 @@ const BulkUploadPage = () => {
                         onChange={() => toggle(i)}
                         disabled={uploading}
                       />
+                    </td>
+                    <td className="py-2 px-3 text-gray-600 font-mono text-xs">
+                      {entry.languageFolder || entry.language}
                     </td>
                     <td className="py-2 px-3 text-gray-600">{entry.categoryFolder}</td>
                     <td className="py-2 px-3 font-medium">{entry.title}</td>

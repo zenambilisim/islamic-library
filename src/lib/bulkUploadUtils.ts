@@ -22,7 +22,29 @@ export const CATEGORY_FOLDER_TO_SLUG: Record<string, string> = {
   'The Infallibles (a)': 'infallibles',
 };
 
+export type BookBulkLanguage = 'tr' | 'en' | 'ru' | 'az';
+
+const VALID_LANG = new Set<string>(['tr', 'en', 'ru', 'az']);
+
+/** Kök klasör adından kitap dili (ör. en, tr). Tanınmazsa null → eski yapı veya yedek. */
+export function folderNameToLanguage(name: string): BookBulkLanguage | null {
+  const k = name.trim().toLowerCase();
+  if (VALID_LANG.has(k)) return k as BookBulkLanguage;
+  const aliases: Record<string, BookBulkLanguage> = {
+    english: 'en',
+    turkish: 'tr',
+    türkçe: 'tr',
+    russian: 'ru',
+    azerbaijani: 'az',
+    azərbaycan: 'az',
+  };
+  return aliases[k] ?? null;
+}
+
 export interface BookEntry {
+  /** Yeni yapıda webkitRelativePath’in dil segmenti; eski yapıda boş (dil alanına bakın). */
+  languageFolder: string;
+  language: BookBulkLanguage;
   categoryFolder: string;
   categorySlug: string;
   bookFolder: string;
@@ -55,39 +77,96 @@ export function parseBookFolderName(folderName: string): { title: string; author
 const COVER_EXT = ['.png', '.jpg', '.jpeg'];
 
 /**
- * Klasör seçildiğinde dönen File[] listesini kitap gruplarına ayırır.
- * Beklenen yapı: KategoriKlasörü/KitapAdı - Yazar/dosyalar
+ * Dil/kategori/kitap yolu segmentlerini çıkarır.
+ * Yeni: dil/kategori/kitap-klasörü/dosya (dil = en|tr|ru|az veya eşanlamlı).
+ * Eski: kök/kategori/kitap-klasörü/dosya (dil yoksa language=en, languageFolder="").
  */
-export function parseFolderFiles(fileList: File[]): BookEntry[] {
+function pathSegmentsToBookLocation(
+  parts: string[],
+  fallbackLanguage: BookBulkLanguage
+): {
+  language: BookBulkLanguage;
+  languageFolder: string;
+  categoryFolder: string;
+  bookFolder: string;
+} | null {
+  if (parts.length < 3) return null;
+  const dirParts = parts.slice(0, -1);
+  if (parts.length >= 4) {
+    const fromLang = folderNameToLanguage(parts[0]);
+    if (fromLang) {
+      if (dirParts.length < 3) return null;
+      return {
+        language: fromLang,
+        languageFolder: parts[0],
+        categoryFolder: dirParts[1],
+        bookFolder: dirParts.slice(2).join('/'),
+      };
+    }
+    if (dirParts.length < 3) return null;
+    return {
+      language: fallbackLanguage,
+      languageFolder: '',
+      categoryFolder: dirParts[1],
+      bookFolder: dirParts.slice(2).join('/'),
+    };
+  }
+  // Tarayıcıda yalnızca dil klasörü seçildiğinde: Kategori/Kitap/dosya (3 segment)
+  if (dirParts.length < 2) return null;
+  return {
+    language: fallbackLanguage,
+    languageFolder: '',
+    categoryFolder: dirParts[0],
+    bookFolder: dirParts[1],
+  };
+}
+
+type BookFileBucket = {
+  languageFolder: string;
+  cover: File | null;
+  pdf: File | null;
+  epub: File | null;
+  docx: File | null;
+  rtf: File | null;
+  txt: File | null;
+};
+
+/**
+ * Klasör seçildiğinde dönen File[] listesini kitap gruplarına ayırır.
+ * Beklenen yapı: [dil]/KategoriKlasörü/KitapAdı - Yazar/dosyalar.
+ * Eski: kök/Kategori/Kitap/dosyalar — dil `defaultLanguage` ile (varsayılan en).
+ * Yalnızca dil klasörünü seçtiğinizde yol Kategori/Kitap/dosya olur; dil için `defaultLanguage` kullanılır.
+ */
+export function parseFolderFiles(
+  fileList: File[],
+  options?: { defaultLanguage?: BookBulkLanguage }
+): BookEntry[] {
+  const fallbackLanguage = options?.defaultLanguage ?? 'en';
   const map = new Map<
-    string,
-    Map<
-      string,
-      {
-        cover: File | null;
-        pdf: File | null;
-        epub: File | null;
-        docx: File | null;
-        rtf: File | null;
-        txt: File | null;
-      }
-    >
+    BookBulkLanguage,
+    Map<string, Map<string, BookFileBucket>>
   >();
 
   for (const file of fileList) {
     const path = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
-    const parts = path.split('/');
-    if (parts.length < 3) continue;
-    const categoryFolder = parts[1];
-    const bookFolder = parts[2];
+    const parts = path.split('/').filter(Boolean);
+    const loc = pathSegmentsToBookLocation(parts, fallbackLanguage);
+    if (!loc) continue;
+
+    const { language, languageFolder, categoryFolder, bookFolder } = loc;
     const name = (parts[parts.length - 1] || '').toLowerCase();
 
-    if (!map.has(categoryFolder)) {
-      map.set(categoryFolder, new Map());
+    if (!map.has(language)) {
+      map.set(language, new Map());
     }
-    const books = map.get(categoryFolder)!;
+    const byLang = map.get(language)!;
+    if (!byLang.has(categoryFolder)) {
+      byLang.set(categoryFolder, new Map());
+    }
+    const books = byLang.get(categoryFolder)!;
     if (!books.has(bookFolder)) {
       books.set(bookFolder, {
+        languageFolder,
         cover: null,
         pdf: null,
         epub: null,
@@ -107,19 +186,25 @@ export function parseFolderFiles(fileList: File[]): BookEntry[] {
   }
 
   const result: BookEntry[] = [];
-  for (const [categoryFolder, books] of map) {
-    const categorySlug = CATEGORY_FOLDER_TO_SLUG[categoryFolder] ?? categoryFolder.toLowerCase().replace(/\s+/g, '-');
-    for (const [bookFolder, files] of books) {
-      if (!files.pdf || !files.cover) continue;
-      const { title, author } = parseBookFolderName(bookFolder);
-      result.push({
-        categoryFolder,
-        categorySlug,
-        bookFolder,
-        title,
-        author,
-        files,
-      });
+  for (const [language, byLang] of map) {
+    for (const [categoryFolder, books] of byLang) {
+      const categorySlug =
+        CATEGORY_FOLDER_TO_SLUG[categoryFolder] ?? categoryFolder.toLowerCase().replace(/\s+/g, '-');
+      for (const [bookFolder, bucket] of books) {
+        if (!bucket.pdf || !bucket.cover) continue;
+        const { title, author } = parseBookFolderName(bookFolder);
+        const { languageFolder, ...files } = bucket;
+        result.push({
+          languageFolder,
+          language,
+          categoryFolder,
+          categorySlug,
+          bookFolder,
+          title,
+          author,
+          files,
+        });
+      }
     }
   }
   return result;

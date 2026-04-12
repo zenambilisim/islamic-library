@@ -92,6 +92,26 @@ const CONFIG = {
 };
 
 // Kategori mapping (Klasör adı → Supabase slug)
+const VALID_LANG_DIRS = new Set(['en', 'tr', 'ru', 'az']);
+
+/**
+ * Kök altında yalnızca dil klasörleri (en, tr, ru, az) varsa çoklu dil düzeni.
+ * Aksi halde mevcut düzen: kök doğrudan kategori klasörlerini içerir; LANGUAGE env kullanılır.
+ */
+function detectBooksFolderLayout(booksFolder) {
+  const dirs = fs
+    .readdirSync(booksFolder)
+    .filter((name) => fs.statSync(path.join(booksFolder, name)).isDirectory());
+  if (dirs.length === 0) {
+    return { mode: 'legacy' };
+  }
+  const allLang = dirs.every((d) => VALID_LANG_DIRS.has(d.toLowerCase()));
+  if (allLang) {
+    return { mode: 'multi-lang', langDirs: dirs };
+  }
+  return { mode: 'legacy' };
+}
+
 const CATEGORY_MAPPING = {
   'Beliefs and Theology': 'beliefs',
   'Biography': 'biography',
@@ -336,13 +356,13 @@ async function uploadToStorage(localPath, storagePath, bucketName = 'book-assets
 /**
  * Kitabı veritabanına kaydet
  */
-async function insertBookToDatabase(bookData) {
+async function insertBookToDatabase(bookData, languageCode) {
   if (CONFIG.dryRun) {
     log.debug('[DRY RUN] Would insert book to database');
     return { id: 'dry-run-id-' + Date.now() };
   }
 
-  const lang = CONFIG.language;
+  const lang = languageCode || CONFIG.language;
   const authorId = await resolveOrCreateAuthorId(bookData.author, lang);
 
   const { data: newBook, error: bookError } = await supabase
@@ -436,7 +456,7 @@ async function insertBookToDatabase(bookData) {
 /**
  * Tek bir kitabı işle ve yükle
  */
-async function processBook(bookFolderPath, categoryId, categoryName) {
+async function processBook(bookFolderPath, categoryId, categoryName, languageCode) {
   const bookFolderName = path.basename(bookFolderPath);
   const startTime = Date.now();
 
@@ -506,16 +526,19 @@ async function processBook(bookFolderPath, categoryId, categoryName) {
     }
 
     // 7. Veritabanına kaydet
-    const newBook = await insertBookToDatabase({
-      title: bookTitle,
-      author: authorName,
-      description,
-      categoryId,
-      coverPath,
-      pdfPath,
-      epubPath,
-      docxPath
-    });
+    const newBook = await insertBookToDatabase(
+      {
+        title: bookTitle,
+        author: authorName,
+        description,
+        categoryId,
+        coverPath,
+        pdfPath,
+        epubPath,
+        docxPath,
+      },
+      languageCode
+    );
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     log.success(`✅ Book uploaded successfully in ${duration}s`);
@@ -557,7 +580,7 @@ async function processBook(bookFolderPath, categoryId, categoryName) {
 /**
  * Bir kategoriyi işle
  */
-async function processCategory(categoryFolderPath, categories) {
+async function processCategory(categoryFolderPath, categories, languageCode) {
   const categoryName = path.basename(categoryFolderPath);
   
   log.info(`\n📂 Processing Category: ${categoryName}`);
@@ -574,7 +597,7 @@ async function processCategory(categoryFolderPath, categories) {
 
   // Kategori ID'sini al
   const category = categories.find(
-    (cat) => cat.slug === categorySlug && cat.language_code === CONFIG.language
+    (cat) => cat.slug === categorySlug && cat.language_code === languageCode
   );
   if (!category) {
     log.error(`  ❌ Category not found in database: ${categorySlug}`);
@@ -602,7 +625,7 @@ async function processCategory(categoryFolderPath, categories) {
     log.progress(stats.processed, stats.totalBooks, bookFolder);
 
     try {
-      await processBook(bookFolderPath, category.id, categoryName);
+      await processBook(bookFolderPath, category.id, categoryName, languageCode);
     } catch (error) {
       // Hata zaten loglandı, devam et
       continue;
@@ -620,7 +643,7 @@ async function uploadBooks() {
 
   log.info('🚀 Book Uploader Started');
   log.info(`📁 Books Folder: ${CONFIG.booksFolder}`);
-  log.info(`🌐 Language: ${CONFIG.language}`);
+  log.info(`🌐 Default language (legacy kök): ${CONFIG.language}`);
   log.info(`🧪 Dry Run Mode: ${CONFIG.dryRun ? 'ON (No uploads will happen)' : 'OFF (Real uploads!)'}`);
   
   if (!CONFIG.dryRun) {
@@ -638,28 +661,65 @@ async function uploadBooks() {
     throw new Error(`Books folder not found: ${CONFIG.booksFolder}`);
   }
 
-  const categoryFolders = fs.readdirSync(CONFIG.booksFolder)
-    .filter(name => {
-      const fullPath = path.join(CONFIG.booksFolder, name);
-      return fs.statSync(fullPath).isDirectory();
-    });
+  const layout = detectBooksFolderLayout(CONFIG.booksFolder);
 
-  log.info(`\n📂 Found ${categoryFolders.length} categories`);
+  if (layout.mode === 'multi-lang') {
+    log.info(`\n📂 Multi-language layout: ${layout.langDirs.join(', ')}`);
+  } else {
+    log.info(`\n📂 Legacy layout: categories directly under books folder (language=${CONFIG.language})`);
+  }
 
-  // Toplam kitap sayısını hesapla
-  for (const categoryFolder of categoryFolders) {
-    const categoryPath = path.join(CONFIG.booksFolder, categoryFolder);
-    const bookFolders = fs.readdirSync(categoryPath)
-      .filter(name => fs.statSync(path.join(categoryPath, name)).isDirectory());
-    stats.totalBooks += bookFolders.length;
+  const isDir = (root, name) => fs.statSync(path.join(root, name)).isDirectory();
+
+  if (layout.mode === 'multi-lang') {
+    for (const langDir of layout.langDirs) {
+      const langRoot = path.join(CONFIG.booksFolder, langDir);
+      const categoryFolders = fs.readdirSync(langRoot).filter((name) => isDir(langRoot, name));
+      for (const cat of categoryFolders) {
+        const categoryPath = path.join(langRoot, cat);
+        stats.totalBooks += fs.readdirSync(categoryPath).filter((name) => isDir(categoryPath, name))
+          .length;
+      }
+    }
+  } else {
+    const categoryFolders = fs
+      .readdirSync(CONFIG.booksFolder)
+      .filter((name) => isDir(CONFIG.booksFolder, name));
+    log.info(`\n📂 Found ${categoryFolders.length} categories`);
+    for (const categoryFolder of categoryFolders) {
+      const categoryPath = path.join(CONFIG.booksFolder, categoryFolder);
+      stats.totalBooks += fs.readdirSync(categoryPath).filter((name) => isDir(categoryPath, name))
+        .length;
+    }
   }
 
   log.info(`📚 Total books to process: ${stats.totalBooks}`);
 
-  // 4. Her kategoriyi işle
-  for (const categoryFolder of categoryFolders) {
-    const categoryPath = path.join(CONFIG.booksFolder, categoryFolder);
-    await processCategory(categoryPath, categories);
+  // 4. Kategorileri işle
+  if (layout.mode === 'multi-lang') {
+    for (const langDir of layout.langDirs) {
+      const langRoot = path.join(CONFIG.booksFolder, langDir);
+      const languageCode = langDir.toLowerCase();
+      log.info(`\n🌐 Language folder: ${langDir} → ${languageCode}`);
+      const categoryFolders = fs.readdirSync(langRoot).filter((name) => {
+        const fullPath = path.join(langRoot, name);
+        return fs.statSync(fullPath).isDirectory();
+      });
+      for (const categoryFolder of categoryFolders) {
+        const categoryPath = path.join(langRoot, categoryFolder);
+        await processCategory(categoryPath, categories, languageCode);
+      }
+    }
+  } else {
+    const categoryFolders = fs.readdirSync(CONFIG.booksFolder).filter((name) => {
+      const fullPath = path.join(CONFIG.booksFolder, name);
+      return fs.statSync(fullPath).isDirectory();
+    });
+    log.info(`\n📂 Found ${categoryFolders.length} categories`);
+    for (const categoryFolder of categoryFolders) {
+      const categoryPath = path.join(CONFIG.booksFolder, categoryFolder);
+      await processCategory(categoryPath, categories, CONFIG.language);
+    }
   }
 
   // 5. Özet göster

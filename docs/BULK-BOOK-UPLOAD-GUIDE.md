@@ -128,23 +128,35 @@ CREATE TABLE book_files (
 
 ## 📁 Klasör Yapısı
 
-### Beklenen Yapı
+### Beklenen Yapı (güncel — dil / kategori / kitap)
+
+Web arayüzündeki toplu yükleme ve script, aynı mantığı kullanır: **ilk seviye dil**, **ikinci seviye kategori**, **üçüncü seviye kitap klasörü** (`Kitap Adı - Yazar`).
 
 ```
-Books_en/                                    ← Ana dil klasörü
-  ├── Beliefs and Theology/                 ← Kategori klasörü
-  │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib/    ← Kitap klasörü
-  │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.rtf   ← Açıklama
-  │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.pdf   ← PDF
-  │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.epub  ← EPUB
-  │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.docx  ← DOCX
-  │   │   └── 82 Questions - Sayyid Abdul Husayn Dastghaib.png   ← Kapak
-  │   └── Another Book - Author Name/
-  │       └── ...
-  ├── Biography/
+Books/                                       ← Seçilen kök (veya BOOKS_FOLDER_PATH)
+  ├── en/                                    ← Dil: en, tr, ru, az (küçük/büyük harf olabilir)
+  │   ├── Beliefs and Theology/              ← Kategori klasörü
+  │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib/   ← Kitap klasörü
+  │   │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.rtf
+  │   │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.pdf
+  │   │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.epub
+  │   │   │   ├── 82 Questions - Sayyid Abdul Husayn Dastghaib.docx
+  │   │   │   └── 82 Questions - Sayyid Abdul Husayn Dastghaib.png
+  │   │   └── Another Book - Author Name/
+  │   └── Biography/
+  └── tr/
+      └── History/
+          └── ...
+```
+
+**Tarayıcıda toplu yükleme:** Üst kökü seçtiğinizde yollar `en/Kategori/Kitap/...` biçiminde gelir. Yalnızca bir dil klasörünü (ör. `en`) seçerseniz tarayıcı üst klasör adını yola eklemez; bu durumda arayüzdeki **varsayılan dil** seçimi kullanılır.
+
+**Node script (`upload-books.js`):** Kök altındaki tüm klasörler `en` / `tr` / `ru` / `az` ise **çoklu dil kökü** sayılır; her dil klasörünün altı doğrudan kategori klasörleridir. Aksi halde **eski düzen** kullanılır: kökün altı doğrudan kategorilerdir ve dil `LANGUAGE` (veya `Books_en` gibi tek dil kökü) env üzerinden gelir.
+
+```
+Books_en/                                    ← Eski tek-dil kökü (hâlâ desteklenir)
+  ├── Beliefs and Theology/
   │   └── ...
-  └── Ethics/
-      └── ...
 ```
 
 ### Dosya İsimlendirme Kuralı

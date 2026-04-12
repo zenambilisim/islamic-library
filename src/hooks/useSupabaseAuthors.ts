@@ -79,6 +79,21 @@ export async function getBooksByAuthor(authorName: string, language?: string) {
   }
 }
 
+/** Yazar UUID’sine göre kitaplar: GET /api/authors/by-id/[id]/books */
+export async function getBooksByAuthorId(authorId: string) {
+  try {
+    const res = await fetch(`/api/authors/by-id/${encodeURIComponent(authorId)}/books`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return { books: [], error: new Error(data.error || res.statusText) };
+    }
+    const data = await res.json();
+    return { books: Array.isArray(data.books) ? data.books : [], error: null };
+  } catch (err) {
+    return { books: [], error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
 /** İleride API ile implement edilebilir */
 export async function getPopularAuthors(_limit: number = 10): Promise<Author[]> {
   return [];

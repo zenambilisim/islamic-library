@@ -3,23 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { Language } from '@/types';
 
-const LANG_LABELS: Record<string, string> = {
-  en: 'English',
-  ru: 'Русский',
-  az: 'Azərbaycan',
-};
+const LANG_OPTIONS: { code: Language; label: string }[] = [
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'en', label: 'English' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'az', label: 'Azərbaycan' },
+];
 
 const AddAuthorPage = () => {
   const router = useRouter();
   const [name, setName] = useState('');
   const [biography, setBiography] = useState('');
-  const [nameEn, setNameEn] = useState('');
-  const [nameRu, setNameRu] = useState('');
-  const [nameAz, setNameAz] = useState('');
-  const [bioEn, setBioEn] = useState('');
-  const [bioRu, setBioRu] = useState('');
-  const [bioAz, setBioAz] = useState('');
+  const [language, setLanguage] = useState<Language>('tr');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,18 +40,7 @@ const AddAuthorPage = () => {
         body: JSON.stringify({
           name: nameTrim,
           biography: bioTrim,
-          name_translations: {
-            tr: nameTrim,
-            en: nameEn.trim(),
-            ru: nameRu.trim(),
-            az: nameAz.trim(),
-          },
-          biography_translations: {
-            tr: bioTrim,
-            en: bioEn.trim(),
-            ru: bioRu.trim(),
-            az: bioAz.trim(),
-          },
+          language_code: language,
         }),
       });
 
@@ -73,8 +59,8 @@ const AddAuthorPage = () => {
       <div className="max-w-2xl">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Yeni Yazar Ekle</h1>
         <p className="text-sm text-gray-600 mb-6">
-          Birincil ad ve biyografi Türkçe alanlara yazılır; diğer dilleri isteğe bağlı doldurabilirsiniz.
-          Adres için kısa bir slug sunucuda otomatik üretilir.
+          Her dil için ayrı bir yazar kaydı oluşturun; aynı kişinin farklı dillerdeki adları için
+          yeni kayıt ekleyin. Adres için kısa bir slug sunucuda otomatik üretilir.
         </p>
 
         {error && (
@@ -85,7 +71,22 @@ const AddAuthorPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Ad (Türkçe / birincil) *</label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">Dil *</label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
+            >
+              {LANG_OPTIONS.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="p-4 rounded-xl border border-gray-200 bg-white">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">Ad *</label>
             <input
               type="text"
               value={name}
@@ -93,30 +94,6 @@ const AddAuthorPage = () => {
               placeholder="Yazar adı"
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
-          </div>
-
-          <div className="p-4 rounded-xl border border-gray-200 bg-white space-y-4">
-            <h2 className="text-sm font-semibold text-gray-800">İsim çevirileri (isteğe bağlı)</h2>
-            <p className="text-xs text-gray-500">
-              Boş bıraktığınız dillerde birincil ad kullanılır.
-            </p>
-            {(['en', 'ru', 'az'] as const).map((code) => (
-              <div key={code}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Ad — {LANG_LABELS[code]}
-                </label>
-                <input
-                  type="text"
-                  value={code === 'en' ? nameEn : code === 'ru' ? nameRu : nameAz}
-                  onChange={(e) => {
-                    if (code === 'en') setNameEn(e.target.value);
-                    else if (code === 'ru') setNameRu(e.target.value);
-                    else setNameAz(e.target.value);
-                  }}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            ))}
           </div>
 
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
@@ -128,27 +105,6 @@ const AddAuthorPage = () => {
               rows={5}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
-          </div>
-
-          <div className="p-4 rounded-xl border border-gray-200 bg-white space-y-4">
-            <h2 className="text-sm font-semibold text-gray-800">Biyografi çevirileri (isteğe bağlı)</h2>
-            {(['en', 'ru', 'az'] as const).map((code) => (
-              <div key={code}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Biyografi — {LANG_LABELS[code]}
-                </label>
-                <textarea
-                  value={code === 'en' ? bioEn : code === 'ru' ? bioRu : bioAz}
-                  onChange={(e) => {
-                    if (code === 'en') setBioEn(e.target.value);
-                    else if (code === 'ru') setBioRu(e.target.value);
-                    else setBioAz(e.target.value);
-                  }}
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            ))}
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">

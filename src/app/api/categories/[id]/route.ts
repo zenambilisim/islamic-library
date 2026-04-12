@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { normalizeAuthorTranslations } from '@/lib/author-db';
+import { normalizeLanguageCode } from '@/lib/author-db';
 import { deleteCategory, getCategoryById, updateCategory } from '@/lib/books';
 import { convertSupabaseCategoryToCategory } from '@/lib/converters-server';
 import type { Category as SupabaseCategoryRow } from '@/lib/supabase';
@@ -53,24 +53,16 @@ export async function PATCH(
     const body = await request.json();
     const name = String(body?.name ?? '').trim();
     const description = String(body?.description ?? '').trim();
-    const icon = String(body?.icon ?? '').trim();
-
     if (!name) {
       return NextResponse.json({ error: 'name zorunludur' }, { status: 400 });
     }
 
-    const name_translations = normalizeAuthorTranslations(body?.name_translations, name);
-    const description_translations = normalizeAuthorTranslations(
-      body?.description_translations,
-      description
-    );
+    const language_code = normalizeLanguageCode(body?.language_code ?? body?.language, 'tr');
 
     const { category: raw, error } = await updateCategory(id, {
       name,
       description,
-      name_translations,
-      description_translations,
-      icon: icon || null,
+      language_code,
     });
 
     if (error) {

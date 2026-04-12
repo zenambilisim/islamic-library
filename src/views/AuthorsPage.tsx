@@ -4,14 +4,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, BookOpen, Calendar, Grid3X3, List } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
-import { useSupabaseAuthors, getBooksByAuthor as fetchBooksByAuthor } from '@/hooks/useSupabaseAuthors';
+import {
+  useSupabaseAuthors,
+  getBooksByAuthorId as fetchBooksByAuthorId,
+} from '@/hooks/useSupabaseAuthors';
 import BookCard from '@/components/books/BookCard';
 import type { Book } from '@/types';
 
 const AuthorsPage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
-  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
@@ -27,17 +30,13 @@ const AuthorsPage = () => {
     setPlaceholder(t('search.authorsPlaceholder') || 'Yazar ara...');
   }, [setSearchMode, setPlaceholder, t]);
 
-  const getLocalizedText = (translations: any, fallback: string) => {
-    return translations[currentLang] || translations.tr || fallback;
-  };
-
-  // Fetch author books when author is selected (API'den zaten Book[] formatında gelir)
+  // Fetch author books when author is selected
   useEffect(() => {
-    if (selectedAuthor) {
+    if (selectedAuthorId) {
       const fetchBooks = async () => {
         setLoadingBooks(true);
         try {
-          const { books, error } = await fetchBooksByAuthor(selectedAuthor);
+          const { books, error } = await fetchBooksByAuthorId(selectedAuthorId);
           setAuthorBooks(error || !books ? [] : books);
         } catch {
           setAuthorBooks([]);
@@ -49,7 +48,7 @@ const AuthorsPage = () => {
     } else {
       setAuthorBooks([]);
     }
-  }, [selectedAuthor]);
+  }, [selectedAuthorId]);
 
   // Generate alphabet for navigation based on current language
   const alphabet = useMemo(() => {
@@ -69,13 +68,13 @@ const AuthorsPage = () => {
   // Get available letters (letters that have authors)
   const availableLetters = useMemo(() => {
     const letters = new Set<string>();
-    supabaseAuthors.forEach(author => {
-      const name = getLocalizedText(author.nameTranslations, author.name);
+    supabaseAuthors.forEach((author) => {
+      const name = author.name;
       const firstLetter = name.charAt(0).toUpperCase();
       letters.add(firstLetter);
     });
     return Array.from(letters).sort();
-  }, [supabaseAuthors, currentLang]);
+  }, [supabaseAuthors]);
 
   // Filter authors based on search term and selected letter
   const filteredAuthors = useMemo(() => {
@@ -84,28 +83,24 @@ const AuthorsPage = () => {
     // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      authors = authors.filter(author => 
-        author.name.toLowerCase().includes(term) ||
-        Object.values(author.nameTranslations).some(name => 
-          name.toLowerCase().includes(term)
-        ) ||
-        author.biography.toLowerCase().includes(term) ||
-        Object.values(author.biographyTranslations).some(bio => 
-          bio.toLowerCase().includes(term)
-        )
+      authors = authors.filter(
+        (author) =>
+          author.name.toLowerCase().includes(term) ||
+          author.biography.toLowerCase().includes(term) ||
+          author.language.toLowerCase().includes(term)
       );
     }
     
     // Filter by selected letter
     if (selectedLetter) {
-      authors = authors.filter(author => {
-        const name = getLocalizedText(author.nameTranslations, author.name);
+      authors = authors.filter((author) => {
+        const name = author.name;
         return name.charAt(0).toUpperCase() === selectedLetter;
       });
     }
     
     return authors;
-  }, [searchTerm, selectedLetter, supabaseAuthors, currentLang]);
+  }, [searchTerm, selectedLetter, supabaseAuthors]);
 
   // Calculate total stats
   const totalStats = useMemo(() => {
@@ -153,8 +148,8 @@ const AuthorsPage = () => {
   }
 
   // If an author is selected, show their books
-  if (selectedAuthor) {
-    const author = supabaseAuthors.find(auth => auth.name === selectedAuthor);
+  if (selectedAuthorId) {
+    const author = supabaseAuthors.find((auth) => auth.id === selectedAuthorId);
 
     if (!author) return null;
 
@@ -165,7 +160,7 @@ const AuthorsPage = () => {
           <div className="mb-8">
             <button
               onClick={() => {
-                setSelectedAuthor(null);
+                setSelectedAuthorId(null);
                 setSelectedLetter(null);
               }}
               className="text-primary-600 hover:text-primary-700 font-medium mb-4 flex items-center space-x-2"
@@ -180,11 +175,10 @@ const AuthorsPage = () => {
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {getLocalizedText(author.nameTranslations, author.name)}
+                  {author.name}{' '}
+                  <span className="text-lg font-normal text-gray-500">({author.language.toUpperCase()})</span>
                 </h1>
-                <p className="text-gray-600 mt-2">
-                  {getLocalizedText(author.biographyTranslations, author.biography)}
-                </p>
+                <p className="text-gray-600 mt-2">{author.biography}</p>
                 <div className="flex items-center space-x-4 mt-4 text-sm text-gray-600">
                   <div className="flex items-center space-x-2">
                     <BookOpen size={16} />
@@ -324,7 +318,7 @@ const AuthorsPage = () => {
             return (
               <div
                 key={author.id}
-                onClick={() => setSelectedAuthor(author.name)}
+                onClick={() => setSelectedAuthorId(author.id)}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer overflow-hidden group"
               >
                 <div className="p-6">
@@ -335,7 +329,8 @@ const AuthorsPage = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-                        {getLocalizedText(author.nameTranslations, author.name)}
+                        {author.name}{' '}
+                        <span className="text-sm font-normal text-gray-500">({author.language.toUpperCase()})</span>
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
                         {author.bookCount} {t('authors.booksCount')}
@@ -344,9 +339,7 @@ const AuthorsPage = () => {
                   </div>
 
                   {/* Author Biography */}
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {getLocalizedText(author.biographyTranslations, author.biography)}
-                  </p>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">{author.biography}</p>
 
                   {/* Author Stats */}
                   <div className="flex items-center space-x-4 text-sm text-gray-600">

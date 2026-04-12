@@ -81,7 +81,6 @@ npm run dev
 - cover_image_url (text)
 - file_size (text)
 - download_count (integer)
-- tags (text[])
 - created_at (timestamp)
 - updated_at (timestamp)
 ```

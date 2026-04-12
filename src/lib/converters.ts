@@ -11,14 +11,15 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
   const primaryAuthorRel = (supabaseBook.book_authors || [])
     .slice()
     .sort((a, b) => (a.author_order || 9999) - (b.author_order || 9999))[0];
-  const authorName = supabaseBook.author || primaryAuthorRel?.authors?.name || '';
-  const authorTranslations = supabaseBook.author_translations || primaryAuthorRel?.authors?.name_translations;
+  const authorName = primaryAuthorRel?.authors?.name || '';
 
   const primaryCategoryRel =
     (supabaseBook.book_categories || []).find((c) => c.is_primary) ||
     (supabaseBook.book_categories || [])[0];
-  const categoryName = supabaseBook.category || primaryCategoryRel?.categories?.name || '';
-  const categoryTranslations = supabaseBook.category_translations || primaryCategoryRel?.categories?.name_translations;
+  const cat = primaryCategoryRel?.categories;
+  const categoryName = cat?.name || '';
+  const categorySlug = cat?.slug;
+  const categoryId = cat?.id;
 
   // Book files'ı formats objesine dönüştür ve Storage URL'lerini al
   const formats: { epub?: string; pdf?: string; doc?: string } = {};
@@ -36,33 +37,23 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
     });
   }
 
-  // Translation helper function
-  const getTranslations = (translations: Record<string, string> | undefined, fallback: string) => ({
-    tr: translations?.tr || fallback,
-    en: translations?.en || fallback,
-    ru: translations?.ru || fallback,
-    az: translations?.az || fallback
-  });
-
   // Kapak resmini Storage'dan al
   const coverImageUrl = getBookCoverUrl(supabaseBook.cover_image_url);
 
   return {
     id: supabaseBook.id,
     title: supabaseBook.title,
-    titleTranslations: getTranslations(supabaseBook.title_translations, supabaseBook.title),
     author: authorName,
-    authorTranslations: getTranslations(authorTranslations, authorName),
+    authorId: primaryAuthorRel?.authors?.id,
     category: categoryName,
-    categoryTranslations: getTranslations(categoryTranslations, categoryName),
+    categoryId,
+    categorySlug,
     description: supabaseBook.description || '',
-    descriptionTranslations: getTranslations(supabaseBook.description_translations, supabaseBook.description || ''),
     coverImage: coverImageUrl,
     formats,
     pages: supabaseBook.pages || 0,
     fileSize: supabaseBook.file_size || '0 MB',
     downloadCount: supabaseBook.download_count || 0,
-    tags: supabaseBook.tags || [],
     language: ((supabaseBook.language_code || supabaseBook.language) as 'tr' | 'en' | 'ru' | 'az') || 'tr',
     createdAt: new Date(supabaseBook.created_at),
     updatedAt: new Date(supabaseBook.updated_at)
@@ -75,23 +66,15 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
  * @returns Frontend Category objesi
  */
 export function convertSupabaseCategoryToCategory(supabaseCategory: SupabaseCategory): Category {
-  // Translation helper function
-  const getTranslations = (translations: Record<string, string> | undefined, fallback: string) => ({
-    tr: translations?.tr || fallback,
-    en: translations?.en || fallback,
-    ru: translations?.ru || fallback,
-    az: translations?.az || fallback
-  });
-
+  const lang = (supabaseCategory.language_code || 'tr') as Category['language'];
   return {
     id: supabaseCategory.id,
+    slug: supabaseCategory.slug,
     name: supabaseCategory.name,
-    nameTranslations: getTranslations(supabaseCategory.name_translations, supabaseCategory.name),
+    language: lang,
     description: supabaseCategory.description || '',
-    descriptionTranslations: getTranslations(supabaseCategory.description_translations, supabaseCategory.description || ''),
     bookCount: supabaseCategory.book_count || 0,
-    icon: supabaseCategory.icon ?? undefined
-  }
+  };
 }
 
 /**
@@ -100,25 +83,17 @@ export function convertSupabaseCategoryToCategory(supabaseCategory: SupabaseCate
  * @returns Frontend Author objesi
  */
 export function convertSupabaseAuthorToAuthor(supabaseAuthor: SupabaseAuthor): Author {
-  // Translation helper function
-  const getTranslations = (translations: Record<string, string> | undefined, fallback: string) => ({
-    tr: translations?.tr || fallback,
-    en: translations?.en || fallback,
-    ru: translations?.ru || fallback,
-    az: translations?.az || fallback
-  });
-
+  const lang = (supabaseAuthor.language_code || 'tr') as Author['language'];
   return {
     id: supabaseAuthor.id,
     name: supabaseAuthor.name,
-    nameTranslations: getTranslations(supabaseAuthor.name_translations, supabaseAuthor.name),
+    language: lang,
     biography: supabaseAuthor.biography || '',
-    biographyTranslations: getTranslations(supabaseAuthor.biography_translations, supabaseAuthor.biography || ''),
     photo: supabaseAuthor.profile_image_url || supabaseAuthor.profile_image || undefined,
     bookCount: supabaseAuthor.book_count || 0,
     birthYear: supabaseAuthor.first_publish_year,
-    deathYear: supabaseAuthor.last_publish_year
-  }
+    deathYear: supabaseAuthor.last_publish_year,
+  };
 }
 
 // Birden fazla book'u dönüştür

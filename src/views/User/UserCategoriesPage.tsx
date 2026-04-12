@@ -64,9 +64,6 @@ const UserCategoriesPage = () => {
             <table className="w-full min-w-[560px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/80">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-14">
-                    İkon
-                  </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Ad
                   </th>
@@ -84,7 +81,6 @@ const UserCategoriesPage = () => {
               <tbody>
                 {categories.map((c) => (
                   <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2 px-4 text-xl text-gray-700">{c.icon || '—'}</td>
                     <td className="py-2 px-4 font-medium text-gray-900">{c.name}</td>
                     <td className="py-2 px-4 text-gray-600 max-w-md truncate">{c.description || '—'}</td>
                     <td className="py-2 px-4 text-right text-gray-600 tabular-nums">{c.bookCount ?? 0}</td>

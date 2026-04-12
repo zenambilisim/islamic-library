@@ -2,7 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useMemo } from 'react';
-import { Grid3X3, List, BookOpen } from 'lucide-react';
+import { Grid3X3, List, BookOpen, Folder } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
@@ -12,7 +12,7 @@ import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import type { Book } from '@/types';
 
 const CategoriesPage = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -27,20 +27,16 @@ const CategoriesPage = () => {
     watchKey: selectedCategory ?? 'overview',
   });
   
-  const currentLang = i18n.language as 'tr' | 'en' | 'ru' | 'az';
-
   useEffect(() => {
     setSearchMode('categories');
     setPlaceholder(t('search.categoriesPlaceholder') || 'Kategori ara...');
   }, [setSearchMode, setPlaceholder, t]);
 
-  const getLocalizedText = (translations: any, fallback: string) => {
-    return translations[currentLang] || translations.tr || fallback;
-  };
-
-  // Get books by category
-  const getBooksByCategory = (categoryName: string) => {
-    return supabaseBooks.filter(book => book.category === categoryName);
+  // Get books by category (slug veya görünen ad)
+  const getBooksByCategory = (slugOrName: string) => {
+    return supabaseBooks.filter(
+      (book) => book.categorySlug === slugOrName || book.category === slugOrName
+    );
   };
 
   // Filter categories based on search term
@@ -50,15 +46,11 @@ const CategoriesPage = () => {
     }
     
     const term = searchTerm.toLowerCase();
-    return supabaseCategories.filter(category => 
-      category.name.toLowerCase().includes(term) ||
-      Object.values(category.nameTranslations).some(name => 
-        name.toLowerCase().includes(term)
-      ) ||
-      category.description.toLowerCase().includes(term) ||
-      Object.values(category.descriptionTranslations).some(desc => 
-        desc.toLowerCase().includes(term)
-      )
+    return supabaseCategories.filter(
+      (category) =>
+        category.name.toLowerCase().includes(term) ||
+        category.slug.toLowerCase().includes(term) ||
+        category.description.toLowerCase().includes(term)
     );
   }, [searchTerm, supabaseCategories]);
 
@@ -110,7 +102,7 @@ const CategoriesPage = () => {
 
   // If a category is selected, show its books
   if (selectedCategory) {
-    const category = supabaseCategories.find(cat => cat.name === selectedCategory);
+    const category = supabaseCategories.find((cat) => cat.slug === selectedCategory);
     const categoryBooks = getBooksByCategory(selectedCategory);
 
     if (!category) return null;
@@ -129,13 +121,15 @@ const CategoriesPage = () => {
             </button>
             
             <div className="flex items-center space-x-4 mb-4">
-              <div className="text-4xl">{category.icon}</div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+                <Folder size={28} strokeWidth={1.75} aria-hidden />
+              </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {getLocalizedText(category.nameTranslations, category.name)}
+                  {category.name}
                 </h1>
                 <p className="text-gray-600">
-                  {getLocalizedText(category.descriptionTranslations, category.description)}
+                  {category.description}
                 </p>
               </div>
             </div>
@@ -240,21 +234,23 @@ const CategoriesPage = () => {
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {filteredCategories.map((category) => {
-            const categoryBooks = getBooksByCategory(category.name);
+            const categoryBooks = getBooksByCategory(category.slug);
             
             return (
               <div
                 key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
+                onClick={() => setSelectedCategory(category.slug)}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer overflow-hidden group"
               >
                 <div className="p-6">
                   {/* Category Icon & Title */}
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="text-4xl">{category.icon}</div>
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+                      <Folder size={24} strokeWidth={1.75} aria-hidden />
+                    </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-                        {getLocalizedText(category.nameTranslations, category.name)}
+                        {category.name}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
                         {booksListLoading ? (
@@ -270,7 +266,7 @@ const CategoriesPage = () => {
 
                   {/* Category Description */}
                   <p className="text-gray-600 mb-4 line-clamp-2">
-                    {getLocalizedText(category.descriptionTranslations, category.description)}
+                    {category.description}
                   </p>
 
                   {/* Action Button */}

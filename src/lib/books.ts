@@ -1,11 +1,76 @@
 import { randomBytes } from 'crypto'
 import sharp from 'sharp'
-import { normalizeAuthorTranslations, slugifyAuthorName } from './author-db'
+import { normalizeLanguageCode, slugifyAuthorName } from './author-db'
 import { isR2Configured, r2DeleteBookObjects, r2PutObject } from './r2-storage'
 import { supabase, supabaseAdmin } from './supabase-server'
 
 /** Yazma işlemleri için: service role varsa RLS bypass, yoksa anon (RLS gerekir). */
 const db = () => supabaseAdmin ?? supabase
+
+async function resolveOrCreateAuthorId(
+  client: ReturnType<typeof db>,
+  opts: { author_id?: string | null; authorName: string; language_code: string }
+): Promise<{ id: string } | { error: Error }> {
+  const lang = normalizeLanguageCode(opts.language_code, 'tr');
+  const name = opts.authorName.trim();
+  if (!name) return { error: new Error('Yazar zorunludur') };
+
+  const idIn = opts.author_id?.trim();
+  if (idIn) {
+    const { data: byId, error: e1 } = await client
+      .from('authors')
+      .select('id, language_code')
+      .eq('id', idIn)
+      .maybeSingle();
+    if (e1) return { error: e1 as Error };
+    if (!byId?.id) return { error: new Error('Seçilen yazar bulunamadı') };
+    const row = byId as { id: string; language_code?: string };
+    if (row.language_code && row.language_code !== lang) {
+      return {
+        error: new Error(
+          `Yazar kaydının dili (${row.language_code}) ile kitap dili (${lang}) uyuşmuyor. Aynı dilde bir yazar seçin veya yeni yazar ekleyin.`
+        ),
+      };
+    }
+    return { id: row.id };
+  }
+
+  const { data: existingAuthor, error: existingAuthorError } = await client
+    .from('authors')
+    .select('id')
+    .eq('name', name)
+    .eq('language_code', lang)
+    .limit(1)
+    .maybeSingle();
+  if (existingAuthorError) return { error: existingAuthorError as Error };
+  if (existingAuthor?.id) return { id: existingAuthor.id as string };
+
+  let slug = slugifyAuthorName(name);
+  let { data: createdAuthor, error: createdAuthorError } = await client
+    .from('authors')
+    .insert({
+      name,
+      biography: '',
+      language_code: lang,
+      slug,
+    })
+    .select('id')
+    .single();
+
+  if (createdAuthorError?.code === '23505') {
+    slug = `${slugifyAuthorName(name)}-${randomBytes(3).toString('hex')}`;
+    const retry = await client
+      .from('authors')
+      .insert({ name, biography: '', language_code: lang, slug })
+      .select('id')
+      .single();
+    createdAuthor = retry.data;
+    createdAuthorError = retry.error;
+  }
+  if (createdAuthorError) return { error: createdAuthorError as Error };
+  if (!createdAuthor?.id) return { error: new Error('Yazar oluşturulamadı') };
+  return { id: createdAuthor.id as string };
+}
 
 // ***** BOOK OPERATIONS *****
 
@@ -23,7 +88,7 @@ const BOOK_LIST_SELECT = `
     authors (
       id,
       name,
-      name_translations
+      language_code
     )
   ),
   book_categories (
@@ -31,7 +96,8 @@ const BOOK_LIST_SELECT = `
     categories (
       id,
       name,
-      name_translations
+      slug,
+      language_code
     )
   )
 `;
@@ -122,7 +188,7 @@ export async function getBookById(id: string) {
         authors (
           id,
           name,
-          name_translations
+          language_code
         )
       ),
       book_categories (
@@ -130,7 +196,8 @@ export async function getBookById(id: string) {
         categories (
           id,
           name,
-          name_translations
+          slug,
+          language_code
         )
       )
     `)
@@ -160,7 +227,7 @@ export async function searchBooks(query: string) {
         authors (
           id,
           name,
-          name_translations
+          language_code
         )
       ),
       book_categories (
@@ -168,11 +235,12 @@ export async function searchBooks(query: string) {
         categories (
           id,
           name,
-          name_translations
+          slug,
+          language_code
         )
       )
     `)
-    .or(`title.ilike.%${query}%,tags.cs.{${query}}`)
+    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
     .limit(50)
 
   if (error) {
@@ -183,8 +251,8 @@ export async function searchBooks(query: string) {
   return { books: data || [], error: null }
 }
 
-// Kategoriye göre kitaplar (isteğe bağlı dil filtresi)
-export async function getBooksByCategory(categoryName: string, language?: string) {
+// Kategoriye göre kitaplar (category = kategori slug; isteğe bağlı dil)
+export async function getBooksByCategory(categorySlug: string, language?: string) {
   let query = supabase
     .from('books')
     .select(`
@@ -196,7 +264,7 @@ export async function getBooksByCategory(categoryName: string, language?: string
         authors (
           id,
           name,
-          name_translations
+          language_code
         )
       ),
       book_categories!inner (
@@ -204,14 +272,19 @@ export async function getBooksByCategory(categoryName: string, language?: string
         categories!inner (
           id,
           name,
-          name_translations
+          slug,
+          language_code
         )
       )
     `)
-    .eq('book_categories.categories.name', categoryName)
+    .eq('book_categories.categories.slug', categorySlug)
     .order('created_at', { ascending: false });
 
-  if (language) query = query.eq('language_code', language);
+  if (language) {
+    query = query
+      .eq('language_code', language)
+      .eq('book_categories.categories.language_code', language);
+  }
 
   const { data, error } = await query;
 
@@ -268,13 +341,11 @@ export async function getCategories() {
 
 export interface CreateCategoryPayload {
   name: string
-  name_translations?: Record<string, string>
   description?: string
-  description_translations?: Record<string, string>
-  icon?: string | null
+  language_code?: string
 }
 
-/** categories tablosuna kayıt (slug sunucuda üretilir, çakışmada sonek eklenir). */
+/** categories tablosuna kayıt (slug + language_code benzersiz). */
 export async function createCategory(payload: CreateCategoryPayload) {
   const client = db()
   const name = payload.name.trim()
@@ -282,19 +353,13 @@ export async function createCategory(payload: CreateCategoryPayload) {
     return { category: null, error: new Error('name zorunludur') }
   }
   const description = (payload.description ?? '').trim()
-  const name_translations = normalizeAuthorTranslations(payload.name_translations, name)
-  const description_translations = normalizeAuthorTranslations(
-    payload.description_translations,
-    description
-  )
+  const language_code = normalizeLanguageCode(payload.language_code, 'tr')
   let slug = slugifyAuthorName(name)
   const row = {
     slug,
     name,
-    name_translations,
+    language_code,
     description,
-    description_translations,
-    icon: payload.icon?.trim() || null,
   }
   let { data, error } = await client.from('categories').insert(row).select('*').single()
   if (error?.code === '23505') {
@@ -324,26 +389,24 @@ export async function updateCategory(id: string, payload: UpdateCategoryPayload)
     return { category: null, error: new Error('name zorunludur') }
   }
   const description = (payload.description ?? '').trim()
-  const name_translations = normalizeAuthorTranslations(payload.name_translations, name)
-  const description_translations = normalizeAuthorTranslations(
-    payload.description_translations,
-    description
-  )
+  const language_code = normalizeLanguageCode(payload.language_code, 'tr')
 
   const { data: current, error: fetchErr } = await client
     .from('categories')
-    .select('slug')
+    .select('slug, language_code')
     .eq('id', id)
     .maybeSingle()
   if (fetchErr) return { category: null, error: fetchErr }
   if (!current) return { category: null, error: new Error('Kategori bulunamadı') }
 
+  const cur = current as { slug: string; language_code?: string }
   let slug = slugifyAuthorName(name)
-  if (slug !== current.slug) {
+  if (slug !== cur.slug) {
     const { data: other } = await client
       .from('categories')
       .select('id')
       .eq('slug', slug)
+      .eq('language_code', cur.language_code ?? language_code)
       .neq('id', id)
       .maybeSingle()
     if (other) {
@@ -354,10 +417,8 @@ export async function updateCategory(id: string, payload: UpdateCategoryPayload)
   const row = {
     slug,
     name,
-    name_translations,
+    language_code,
     description,
-    description_translations,
-    icon: payload.icon?.trim() || null,
   }
 
   let { data, error } = await client.from('categories').update(row).eq('id', id).select('*').single()
@@ -540,33 +601,61 @@ export async function uploadBookFile(
 
 /**
  * Mevcut categories satırını bulur; yeni kategori oluşturmaz.
- * Öncelik: category_id → slug (ham) → slugify(name) → tam isim eşleşmesi.
+ * Öncelik: category_id (dil kitapla uyumlu olmalı) → slug → slugify(isim) → isim.
  */
 async function resolveExistingCategoryId(
   client: ReturnType<typeof db>,
-  opts: { category_id?: string | null; category: string }
+  opts: { category_id?: string | null; category: string; language_code: string }
 ): Promise<{ id: string } | { error: Error }> {
+  const lang = normalizeLanguageCode(opts.language_code, 'tr');
   const idIn = opts.category_id?.trim();
   if (idIn) {
-    const { data, error } = await client.from('categories').select('id').eq('id', idIn).maybeSingle();
+    const { data, error } = await client
+      .from('categories')
+      .select('id, language_code')
+      .eq('id', idIn)
+      .maybeSingle();
     if (error) return { error: error as Error };
     if (!data?.id) return { error: new Error('Kategori bulunamadı') };
-    return { id: data.id };
+    const row = data as { id: string; language_code?: string };
+    if (row.language_code && row.language_code !== lang) {
+      return {
+        error: new Error(
+          `Kategori dil kodu (${row.language_code}) ile kitap dili (${lang}) uyuşmuyor. Aynı dilde bir kategori seçin.`
+        ),
+      };
+    }
+    return { id: row.id };
   }
 
   const raw = (opts.category ?? '').trim();
   if (!raw) return { error: new Error('Kategori zorunludur') };
 
   const slugLower = raw.toLowerCase();
-  let { data: row } = await client.from('categories').select('id').eq('slug', slugLower).maybeSingle();
-  if (row?.id) return { id: row.id };
+  let { data: row } = await client
+    .from('categories')
+    .select('id')
+    .eq('slug', slugLower)
+    .eq('language_code', lang)
+    .maybeSingle();
+  if (row?.id) return { id: row.id as string };
 
   const slugified = slugifyAuthorName(raw);
-  ({ data: row } = await client.from('categories').select('id').eq('slug', slugified).maybeSingle());
-  if (row?.id) return { id: row.id };
+  ({ data: row } = await client
+    .from('categories')
+    .select('id')
+    .eq('slug', slugified)
+    .eq('language_code', lang)
+    .maybeSingle());
+  if (row?.id) return { id: row.id as string };
 
-  ({ data: row } = await client.from('categories').select('id').eq('name', raw).maybeSingle());
-  if (row?.id) return { id: row.id };
+  ({ data: row } = await client
+    .from('categories')
+    .select('id')
+    .eq('name', raw)
+    .eq('language_code', lang)
+    .maybeSingle());
+  if (row?.id) return { id: row.id as string };
 
   return {
     error: new Error(
@@ -577,32 +666,26 @@ async function resolveExistingCategoryId(
 
 export interface CreateBookPayload {
   title: string;
-  title_translations?: Record<string, string>;
   author: string;
-  author_translations?: Record<string, string>;
+  /** Arayüzden seçim: doğrudan bu id ile bağlanır */
+  author_id?: string | null;
   /** Liste dışı / toplu yükleme için slug veya tam ad */
   category?: string;
   /** Arayüzden seçim: doğrudan bu id ile bağlanır, yeni kategori oluşturulmaz */
   category_id?: string | null;
-  category_translations?: Record<string, string>;
   description?: string;
-  description_translations?: Record<string, string>;
   language_code: string;
   pages?: number;
-  tags?: string[];
 }
 
 /** Yeni kitap kaydı oluşturur (dosya/kapak yok). */
 export async function createBook(payload: CreateBookPayload) {
   const row = {
     title: payload.title,
-    title_translations: payload.title_translations ?? { tr: payload.title, en: payload.title, ru: payload.title, az: payload.title },
     description: payload.description ?? '',
-    description_translations: payload.description_translations ?? {},
     language_code: payload.language_code,
     pages: payload.pages ?? 0,
     download_count: 0,
-    tags: payload.tags ?? [],
   };
 
   const { data, error } = await db()
@@ -614,31 +697,18 @@ export async function createBook(payload: CreateBookPayload) {
   if (error) return { book: null, error };
   const bookId = data.id as string;
 
-  const { data: existingAuthor, error: existingAuthorError } = await db()
-    .from('authors')
-    .select('id')
-    .eq('name', payload.author)
-    .limit(1)
-    .maybeSingle();
-  if (existingAuthorError) return { book: null, error: existingAuthorError };
-
-  const { data: createdAuthor, error: createdAuthorError } = existingAuthor ? { data: null, error: null } : await db()
-    .from('authors')
-    .insert({
-      name: payload.author,
-      name_translations: payload.author_translations ?? { tr: payload.author, en: payload.author, ru: payload.author, az: payload.author },
-      biography: '',
-      biography_translations: {},
-    })
-    .select('id')
-    .single();
-  if (createdAuthorError) return { book: null, error: createdAuthorError };
-  const authorId = existingAuthor?.id || createdAuthor?.id;
-  if (!authorId) return { book: null, error: new Error('Author relation could not be created') };
+  const authorRes = await resolveOrCreateAuthorId(db(), {
+    author_id: payload.author_id,
+    authorName: payload.author,
+    language_code: payload.language_code,
+  });
+  if ('error' in authorRes) return { book: null, error: authorRes.error };
+  const authorId = authorRes.id;
 
   const catRes = await resolveExistingCategoryId(db(), {
     category_id: payload.category_id,
     category: payload.category ?? '',
+    language_code: payload.language_code,
   });
   if ('error' in catRes) return { book: null, error: catRes.error };
   const categoryIdToLink = catRes.id;
@@ -668,14 +738,12 @@ export async function createBook(payload: CreateBookPayload) {
 export interface UpdateBookPayload {
   title: string;
   author: string;
+  author_id?: string | null;
   category?: string;
   category_id?: string | null;
   description?: string;
   language_code: string;
   pages?: number;
-  tags?: string[];
-  title_translations?: Record<string, string>;
-  description_translations?: Record<string, string>;
 }
 
 /** Mevcut kitabın metadatasını ve yazar/kategori ilişkilerini günceller. */
@@ -691,54 +759,27 @@ export async function updateBook(bookId: string, payload: UpdateBookPayload) {
     return { book: null, error: new Error('Kategori zorunludur') };
   }
 
-  const title_translations =
-    payload.title_translations ?? {
-      tr: title,
-      en: title,
-      ru: title,
-      az: title,
-    };
   const description = (payload.description ?? '').trim();
-  const description_translations = payload.description_translations ?? {};
 
   const { error: updateErr } = await client
     .from('books')
     .update({
       title,
-      title_translations,
       description,
-      description_translations,
       language_code: payload.language_code,
       pages: payload.pages ?? 0,
-      tags: payload.tags ?? [],
     })
     .eq('id', bookId);
 
   if (updateErr) return { book: null, error: updateErr };
 
-  const { data: existingAuthor } = await client
-    .from('authors')
-    .select('id')
-    .eq('name', author)
-    .limit(1)
-    .maybeSingle();
-
-  let authorId = existingAuthor?.id as string | undefined;
-  if (!authorId) {
-    const { data: createdAuthor, error: createdAuthorError } = await client
-      .from('authors')
-      .insert({
-        name: author,
-        name_translations: { tr: author, en: author, ru: author, az: author },
-        biography: '',
-        biography_translations: {},
-      })
-      .select('id')
-      .single();
-    if (createdAuthorError) return { book: null, error: createdAuthorError };
-    authorId = createdAuthor?.id;
-  }
-  if (!authorId) return { book: null, error: new Error('Yazar ilişkisi kurulamadı') };
+  const authorRes = await resolveOrCreateAuthorId(client, {
+    author_id: payload.author_id,
+    authorName: author,
+    language_code: payload.language_code,
+  });
+  if ('error' in authorRes) return { book: null, error: authorRes.error };
+  const authorId = authorRes.id;
 
   const { error: delAuthRel } = await client.from('book_authors').delete().eq('book_id', bookId);
   if (delAuthRel) return { book: null, error: delAuthRel };
@@ -754,6 +795,7 @@ export async function updateBook(bookId: string, payload: UpdateBookPayload) {
   const catRes = await resolveExistingCategoryId(client, {
     category_id: payload.category_id,
     category: payload.category ?? '',
+    language_code: payload.language_code,
   });
   if ('error' in catRes) return { book: null, error: catRes.error };
 
@@ -784,25 +826,19 @@ export async function updateBookCover(bookId: string, coverUrl: string) {
 // Hızlı kitap ekleme
 export async function addQuickBook() {
   console.log('📚 Adding quick book...')
-  
-  // Önce kitabı ekle
-  const { data: bookData, error: bookError } = await supabase
-    .from('books')
-    .insert({
-      title: 'Ağır İtki',
-      author: 'Said Ellamian',
-      category: 'fiqh',
-      description: 'İslam hukukuna dair önemli bir eser',
-      language: 'tr',
-      pages: 250,
-      download_count: 0
-    })
-    .select()
-    .single()
 
-  if (bookError) {
+  const { book: bookData, error: bookError } = await createBook({
+    title: 'Ağır İtki',
+    author: 'Said Ellamian',
+    category: 'fiqh',
+    description: 'İslam hukukuna dair önemli bir eser',
+    language_code: 'tr',
+    pages: 250,
+  })
+
+  if (bookError || !bookData) {
     console.error('❌ Book insert error:', bookError)
-    return { error: bookError }
+    return { error: bookError ?? new Error('Kitap oluşturulamadı') }
   }
 
   console.log('✅ Book inserted:', bookData)

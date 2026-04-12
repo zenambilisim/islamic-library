@@ -151,7 +151,6 @@ npm run dev
 - language (TEXT)
 - file_size (TEXT)
 - download_count (INTEGER)
-- tags (TEXT[])
 - created_at (TIMESTAMP)
 - updated_at (TIMESTAMP)
 ```

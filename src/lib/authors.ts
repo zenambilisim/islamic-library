@@ -5,10 +5,10 @@ import { convertSupabaseBookToBook } from './converters-server';
 import type { Author } from '@/types';
 import type { Book } from '@/types';
 import type { SupabaseAuthor, SupabaseBook } from './supabase';
-import { normalizeAuthorTranslations, slugifyAuthorName } from './author-db';
+import { normalizeLanguageCode, slugifyAuthorName } from './author-db';
 
 /**
- * Tüm yazarları getirir (authors_view veya books tablosundan türetilmiş)
+ * Tüm yazarları getirir (authors_view veya authors tablosu)
  */
 export async function getAuthors(): Promise<{ authors: Author[]; error: Error | null }> {
   try {
@@ -24,73 +24,25 @@ export async function getAuthors(): Promise<{ authors: Author[]; error: Error | 
         .order('name');
 
       if (!tableAuthorsError && tableAuthors?.length) {
-        data = tableAuthors.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          name_translations: row.name_translations || {},
-          biography: row.biography || '',
-          biography_translations: row.biography_translations || {},
+        data = tableAuthors.map((row: Record<string, unknown>) => ({
+          id: String(row.id),
+          name: String(row.name),
+          language_code: String(row.language_code ?? 'tr'),
+          biography: String(row.biography ?? ''),
           book_count: 0,
           total_downloads: 0,
           first_publish_year: undefined,
           last_publish_year: undefined,
-          categories: [],
-          languages: [],
-          profile_image_url: row.profile_image_url ?? undefined,
-          first_book_created_at: row.created_at ?? new Date().toISOString(),
-          last_updated_at: row.updated_at ?? new Date().toISOString(),
-        })) as SupabaseAuthor[];
+          categories: [] as string[],
+          languages: [] as string[],
+          profile_image_url:
+            row.profile_image_url != null ? String(row.profile_image_url) : undefined,
+          first_book_created_at: String(row.created_at ?? new Date().toISOString()),
+          last_updated_at: String(row.updated_at ?? new Date().toISOString()),
+        })) as unknown as SupabaseAuthor[];
       } else {
-        const { data: booksData, error: booksError } = await supabase
-          .from('books')
-          .select('author, author_translations, description, description_translations');
-
-        if (booksError) return { authors: [], error: booksError };
-
-        if (!booksData?.length) return { authors: [], error: null };
-
-        const authorsMap = new Map<string, {
-          name: string;
-          name_translations: Record<string, string>;
-          book_count: number;
-          biography?: string;
-          biography_translations?: Record<string, string>;
-        }>();
-
-        booksData.forEach((book: any) => {
-          if (!book.author) return;
-          if (!authorsMap.has(book.author)) {
-            authorsMap.set(book.author, {
-              name: book.author,
-              name_translations: book.author_translations || {},
-              book_count: 1,
-              biography: book.description,
-              biography_translations: book.description_translations || {}
-            });
-          } else {
-            const existing = authorsMap.get(book.author)!;
-            existing.book_count += 1;
-          }
-        });
-
-        data = Array.from(authorsMap.values()).map((author, index) => ({
-          id: `author-${index}`,
-          name: author.name,
-          name_translations: author.name_translations,
-          biography: author.biography || '',
-          biography_translations: author.biography_translations || {},
-          book_count: author.book_count,
-          total_downloads: 0,
-          first_publish_year: undefined,
-          last_publish_year: undefined,
-          categories: [],
-          languages: [],
-          profile_image: undefined,
-          first_book_created_at: new Date().toISOString(),
-          last_updated_at: new Date().toISOString()
-        })) as SupabaseAuthor[];
-
-        (data as SupabaseAuthor[]).sort((a, b) => b.book_count - a.book_count);
+        // authors tablosu / view yok; kitaplarda artık düz yazar alanı yok — boş liste
+        data = [] as SupabaseAuthor[];
       }
     } else if (supabaseError) {
       return { authors: [], error: supabaseError };
@@ -103,6 +55,29 @@ export async function getAuthors(): Promise<{ authors: Author[]; error: Error | 
   }
 }
 
+const BOOKS_BY_AUTHOR_SELECT = `
+  *,
+  book_files (*),
+  book_authors!inner (
+    author_order,
+    role,
+    authors!inner (
+      id,
+      name,
+      language_code
+    )
+  ),
+  book_categories (
+    is_primary,
+    categories (
+      id,
+      name,
+      slug,
+      language_code
+    )
+  )
+`;
+
 /**
  * Yazar adına göre kitapları getirir
  */
@@ -113,27 +88,7 @@ export async function getBooksByAuthor(
   try {
     let query = supabase
       .from('books')
-      .select(`
-        *,
-        book_files (*),
-        book_authors!inner (
-          author_order,
-          role,
-          authors!inner (
-            id,
-            name,
-            name_translations
-          )
-        ),
-        book_categories (
-          is_primary,
-          categories (
-            id,
-            name,
-            name_translations
-          )
-        )
-      `)
+      .select(BOOKS_BY_AUTHOR_SELECT)
       .eq('book_authors.authors.name', authorName);
 
     if (language) query = query.eq('language_code', language);
@@ -150,18 +105,60 @@ export async function getBooksByAuthor(
 }
 
 /**
- * ID'ye göre tek yazar getirir (authors_view)
+ * Yazar UUID'sine göre kitapları getirir (aynı isimde farklı dil satırlarını ayırt etmek için)
+ */
+export async function getBooksByAuthorId(
+  authorId: string
+): Promise<{ books: Book[]; error: Error | null }> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(BOOKS_BY_AUTHOR_SELECT)
+      .eq('book_authors.author_id', authorId)
+      .order('created_at', { ascending: false });
+
+    if (error) return { books: [], error };
+
+    const books = (data || []).map((b: SupabaseBook) => convertSupabaseBookToBook(b));
+    return { books, error: null };
+  } catch (err) {
+    return { books: [], error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
+/**
+ * ID'ye göre tek yazar getirir (authors_view, yoksa authors)
  */
 export async function getAuthorById(id: string): Promise<{ author: Author | null; error: Error | null }> {
   try {
-    const { data, error } = await supabase
-      .from('authors_view')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('authors_view').select('*').eq('id', id).single();
 
-    if (error || !data) return { author: null, error: error || null };
-    return { author: convertSupabaseAuthorToAuthor(data), error: null };
+    if (!error && data) {
+      return { author: convertSupabaseAuthorToAuthor(data as SupabaseAuthor), error: null };
+    }
+
+    const { data: row, error: rowErr } = await supabase.from('authors').select('*').eq('id', id).maybeSingle();
+
+    if (rowErr) return { author: null, error: rowErr };
+    if (!row) return { author: null, error: error || null };
+
+    const a = row as Record<string, unknown>;
+    return {
+      author: convertSupabaseAuthorToAuthor({
+        id: a.id as string,
+        name: a.name as string,
+        language_code: (a.language_code as string) || 'tr',
+        biography: (a.biography as string) || '',
+        book_count: 0,
+        total_downloads: 0,
+        categories: [],
+        languages: [],
+        profile_image_url: a.profile_image_url as string | undefined,
+        first_book_created_at: (a.created_at as string) ?? new Date().toISOString(),
+        last_updated_at: (a.updated_at as string) ?? new Date().toISOString(),
+      } as SupabaseAuthor),
+      error: null,
+    };
   } catch (err) {
     return { author: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
@@ -170,30 +167,23 @@ export async function getAuthorById(id: string): Promise<{ author: Author | null
 export interface CreateAuthorPayload {
   name: string;
   biography?: string;
-  name_translations?: Record<string, string>;
-  biography_translations?: Record<string, string>;
+  language_code?: string;
   profile_image_url?: string;
 }
 
-/** Yazar kaydı oluşturur (authors tablosu: slug, name_translations, biography_translations). */
+/** Yazar kaydı oluşturur (slug + language_code benzersiz) */
 export async function createAuthor(payload: CreateAuthorPayload) {
   const db = supabaseAdmin ?? supabase;
   const name = payload.name.trim();
   const biography = (payload.biography ?? '').trim();
-
-  const name_translations = normalizeAuthorTranslations(payload.name_translations, name);
-  const biography_translations = normalizeAuthorTranslations(
-    payload.biography_translations,
-    biography
-  );
+  const language_code = normalizeLanguageCode(payload.language_code, 'tr');
 
   let slug = slugifyAuthorName(name);
   const row = {
     name,
     slug,
+    language_code,
     biography,
-    name_translations,
-    biography_translations,
     profile_image_url: payload.profile_image_url?.trim() || null,
   };
 
@@ -213,44 +203,39 @@ export async function createAuthor(payload: CreateAuthorPayload) {
 export interface UpdateAuthorPayload {
   name: string;
   biography?: string;
-  name_translations?: Record<string, string>;
-  biography_translations?: Record<string, string>;
+  language_code?: string;
   profile_image_url?: string | null;
 }
 
-/** authors tablosunda güncelleme; isim değişince slug yenilenir. */
+/** authors tablosunda güncelleme */
 export async function updateAuthor(id: string, payload: UpdateAuthorPayload) {
   const db = supabaseAdmin ?? supabase;
   const name = payload.name.trim();
   const biography = (payload.biography ?? '').trim();
   if (!name) return { author: null, error: new Error('Ad zorunludur') };
 
-  const name_translations = normalizeAuthorTranslations(payload.name_translations, name);
-  const biography_translations = normalizeAuthorTranslations(
-    payload.biography_translations,
-    biography
-  );
+  const language_code = normalizeLanguageCode(payload.language_code, 'tr');
 
   const { data: current, error: fetchErr } = await db
     .from('authors')
-    .select('name, slug')
+    .select('name, slug, language_code')
     .eq('id', id)
     .maybeSingle();
 
   if (fetchErr) return { author: null, error: fetchErr };
   if (!current) return { author: null, error: new Error('Yazar bulunamadı') };
 
-  let slug = (current as { slug?: string }).slug ?? slugifyAuthorName(name);
-  if ((current as { name: string }).name !== name) {
+  const cur = current as { name: string; slug?: string; language_code?: string };
+  let slug = cur.slug ?? slugifyAuthorName(name);
+  if (cur.name !== name) {
     slug = slugifyAuthorName(name);
   }
 
   const row: Record<string, unknown> = {
     name,
     slug,
+    language_code,
     biography,
-    name_translations,
-    biography_translations,
   };
   if (payload.profile_image_url !== undefined) {
     row.profile_image_url = payload.profile_image_url?.trim() || null;

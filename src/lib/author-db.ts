@@ -1,7 +1,13 @@
-/** authors tablosu ile uyumlu yardımcılar (ideal_schema: slug, name_translations, biography_translations) */
+/** authors tablosu ile uyumlu yardımcılar (ideal_schema: slug, language_code, name, biography) */
 
 export const AUTHOR_LANGS = ['tr', 'en', 'ru', 'az'] as const;
 export type AuthorLang = (typeof AUTHOR_LANGS)[number];
+
+/** API / formdan gelen dil kodunu tr|en|ru|az ile sınırlar. */
+export function normalizeLanguageCode(raw: unknown, fallback: AuthorLang = 'tr'): AuthorLang {
+  const s = typeof raw === 'string' ? raw.trim().toLowerCase().split('-')[0] : '';
+  return (AUTHOR_LANGS as readonly string[]).includes(s) ? (s as AuthorLang) : fallback;
+}
 
 export function slugifyAuthorName(name: string): string {
   const map: Record<string, string> = {

@@ -14,8 +14,68 @@
 
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+
+function slugifyAuthorName(name) {
+  const map = {
+    ğ: 'g',
+    ü: 'u',
+    ş: 's',
+    ı: 'i',
+    i: 'i',
+    ö: 'o',
+    ç: 'c',
+    â: 'a',
+    î: 'i',
+    û: 'u',
+    İ: 'i',
+    I: 'i',
+  };
+  let s = name.trim().toLowerCase();
+  s = s.replace(/[ğüşıöçâîûİI]/g, (c) => map[c] ?? c);
+  s = s.normalize('NFD').replace(/\p{M}/gu, '');
+  s = s.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return s || 'yazar';
+}
+
+async function resolveOrCreateAuthorId(authorName, languageCode) {
+  const name = authorName.trim();
+  if (!name) throw new Error('Yazar adı gerekli');
+
+  const { data: existing } = await supabase
+    .from('authors')
+    .select('id')
+    .eq('name', name)
+    .eq('language_code', languageCode)
+    .limit(1)
+    .maybeSingle();
+
+  if (existing?.id) return existing.id;
+
+  let slug = slugifyAuthorName(name);
+  let { data: created, error } = await supabase
+    .from('authors')
+    .insert({ name, biography: '', language_code: languageCode, slug })
+    .select('id')
+    .single();
+
+  if (error?.code === '23505') {
+    slug = `${slugifyAuthorName(name)}-${crypto.randomBytes(3).toString('hex')}`;
+    const retry = await supabase
+      .from('authors')
+      .insert({ name, biography: '', language_code: languageCode, slug })
+      .select('id')
+      .single();
+    created = retry.data;
+    error = retry.error;
+  }
+
+  if (error) throw error;
+  if (!created?.id) throw new Error('Yazar oluşturulamadı');
+  return created.id;
+}
 
 // ============================================================================
 // CONFIGURATION
@@ -282,24 +342,18 @@ async function insertBookToDatabase(bookData) {
     return { id: 'dry-run-id-' + Date.now() };
   }
 
-  // 1. books tablosuna insert
+  const lang = CONFIG.language;
+  const authorId = await resolveOrCreateAuthorId(bookData.author, lang);
+
   const { data: newBook, error: bookError } = await supabase
     .from('books')
     .insert({
       title: bookData.title,
-      title_translations: { [CONFIG.language]: bookData.title },
-      author: bookData.author,
-      author_translations: { [CONFIG.language]: bookData.author },
-      category: bookData.categoryId,
       description: bookData.description || '',
-      description_translations: bookData.description 
-        ? { [CONFIG.language]: bookData.description } 
-        : {},
-      language: CONFIG.language,
+      language_code: lang,
       cover_image_url: bookData.coverPath,
       pages: 0,
       download_count: 0,
-      tags: []
     })
     .select()
     .single();
@@ -308,7 +362,29 @@ async function insertBookToDatabase(bookData) {
     throw new Error(`Database insert failed: ${bookError.message}`);
   }
 
-  // 2. book_files tablosuna formatları insert
+  const { error: relAuthorError } = await supabase.from('book_authors').insert({
+    book_id: newBook.id,
+    author_id: authorId,
+    author_order: 1,
+    role: 'author',
+  });
+  if (relAuthorError) {
+    await supabase.from('books').delete().eq('id', newBook.id);
+    throw relAuthorError;
+  }
+
+  const { error: relCatError } = await supabase.from('book_categories').insert({
+    book_id: newBook.id,
+    category_id: bookData.categoryId,
+    is_primary: true,
+  });
+  if (relCatError) {
+    await supabase.from('book_authors').delete().eq('book_id', newBook.id);
+    await supabase.from('books').delete().eq('id', newBook.id);
+    throw relCatError;
+  }
+
+  // book_files
   const fileInserts = [];
 
   if (bookData.pdfPath) {
@@ -342,7 +418,8 @@ async function insertBookToDatabase(bookData) {
 
     if (filesError) {
       log.error(`Failed to insert book_files: ${filesError.message}`);
-      // Kitabı da sil (rollback)
+      await supabase.from('book_categories').delete().eq('book_id', newBook.id);
+      await supabase.from('book_authors').delete().eq('book_id', newBook.id);
       await supabase.from('books').delete().eq('id', newBook.id);
       throw filesError;
     }
@@ -496,7 +573,9 @@ async function processCategory(categoryFolderPath, categories) {
   log.debug(`  Slug: ${categorySlug}`);
 
   // Kategori ID'sini al
-  const category = categories.find(cat => cat.slug === categorySlug);
+  const category = categories.find(
+    (cat) => cat.slug === categorySlug && cat.language_code === CONFIG.language
+  );
   if (!category) {
     log.error(`  ❌ Category not found in database: ${categorySlug}`);
     stats.skipped++;

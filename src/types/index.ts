@@ -1,34 +1,17 @@
 export interface Book {
   id: string;
   title: string;
-  titleTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
   author: string;
-  authorTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
+  /** book_authors üzerinden birincil yazarın authors.id değeri */
+  authorId?: string;
   description: string;
-  descriptionTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
   coverImage: string;
+  /** Birincil kategori adı (book_categories → categories) */
   category: string;
-  categoryTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
+  /** book_categories üzerinden birincil kategorinin categories.id değeri */
+  categoryId?: string;
+  /** Filtreleme / API için kategori slug */
+  categorySlug?: string;
   formats: {
     epub?: string;
     pdf?: string;
@@ -37,7 +20,6 @@ export interface Book {
   pages: number;
   fileSize: string;
   downloadCount: number;
-  tags: string[];
   language: 'tr' | 'en' | 'ru' | 'az';
   createdAt: Date;
   updatedAt: Date;
@@ -45,40 +27,20 @@ export interface Book {
 
 export interface Category {
   id: string;
+  slug: string;
   name: string;
-  nameTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
+  /** Bu satırın kategori metninin dili */
+  language: Language;
   description: string;
-  descriptionTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
   bookCount: number;
-  icon?: string;
 }
 
 export interface Author {
   id: string;
   name: string;
-  nameTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
+  /** Bu satırın yazar adının dili (aynı kişi için farklı dillerde ayrı satırlar) */
+  language: Language;
   biography: string;
-  biographyTranslations: {
-    tr: string;
-    en: string;
-    ru: string;
-    az: string;
-  };
   photo?: string;
   bookCount: number;
   birthYear?: number;

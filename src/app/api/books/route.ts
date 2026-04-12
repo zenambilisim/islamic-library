@@ -12,16 +12,12 @@ export async function POST(request: NextRequest) {
     const payload: CreateBookPayload = {
       title: body.title ?? '',
       author: body.author ?? '',
+      author_id: typeof body.author_id === 'string' ? body.author_id : undefined,
       category: typeof body.category === 'string' ? body.category : '',
       category_id: typeof body.category_id === 'string' ? body.category_id : undefined,
       language_code: body.language ?? body.language_code ?? 'tr',
-      title_translations: body.title_translations,
-      author_translations: body.author_translations,
-      category_translations: body.category_translations,
       description: body.description,
-      description_translations: body.description_translations,
       pages: body.pages != null ? Number(body.pages) : undefined,
-      tags: Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : undefined,
     };
     const hasCat = Boolean(payload.category_id?.trim() || payload.category?.trim());
     if (!payload.title.trim() || !payload.author.trim() || !hasCat) {

@@ -1,20 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Category } from '@/types';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 
-const LANGUAGES = ['tr', 'en', 'ru', 'az'] as const;
-
-function categoryDisplayName(cat: Category, bookLanguage: string): string {
-  const code = bookLanguage as keyof Category['nameTranslations'];
-  if (code && LANGUAGES.includes(code as (typeof LANGUAGES)[number])) {
-    const t = cat.nameTranslations[code]?.trim();
-    if (t) return t;
-  }
+function categoryDisplayName(cat: Category): string {
   return cat.name;
 }
 
@@ -25,6 +18,8 @@ function sortLocaleForLanguage(lang: string): string {
   return 'en';
 }
 
+const LANGUAGES = ['tr', 'en', 'ru', 'az'] as const;
+
 const AddBookPage = () => {
   const router = useRouter();
   const { categories, loading: categoriesLoading } = useSupabaseCategories();
@@ -33,13 +28,12 @@ const AddBookPage = () => {
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  /** Dropdown: gerçek categories.id; metin kutusu yedek yolunda boş kalır */
+  const [authorId, setAuthorId] = useState('');
+  /** Seçilen satırın categories.id — book_categories ile DB’ye bağlanır */
   const [categoryId, setCategoryId] = useState('');
-  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [language, setLanguage] = useState<string>('');
   const [pages, setPages] = useState('');
-  const [tags, setTags] = useState('');
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -54,14 +48,30 @@ const AddBookPage = () => {
     a.name.localeCompare(b.name, 'tr', { sensitivity: 'base' })
   );
 
+  const authorsForLanguage = useMemo(
+    () => authorsSorted.filter((a) => a.language === language),
+    [authorsSorted, language]
+  );
+
+  useEffect(() => {
+    setAuthorId('');
+    setAuthor('');
+    setCategoryId('');
+  }, [language]);
+
+  const categoriesForLanguage = useMemo(
+    () => categories.filter((c) => c.language === language),
+    [categories, language]
+  );
+
   const categoriesSorted = useMemo(() => {
     const loc = sortLocaleForLanguage(language);
-    return [...categories].sort((a, b) =>
-      categoryDisplayName(a, language).localeCompare(categoryDisplayName(b, language), loc, {
+    return [...categoriesForLanguage].sort((a, b) =>
+      categoryDisplayName(a).localeCompare(categoryDisplayName(b), loc, {
         sensitivity: 'base',
       })
     );
-  }, [categories, language]);
+  }, [categoriesForLanguage, language]);
 
   const handleDescriptionFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,16 +108,21 @@ const AddBookPage = () => {
       setError('Başlık ve yazar zorunludur.');
       return;
     }
-    const useCategoryList = categories.length > 0 && !categoriesLoading;
-    if (useCategoryList && !categoryId.trim()) {
-      setError('Lütfen kategori seçin.');
+    if (categoriesLoading) {
+      setError('Kategoriler yükleniyor, lütfen bekleyin.');
       return;
     }
-    if (!useCategoryList && !category.trim()) {
-      setError('Kategori zorunludur.');
+    if (categoriesSorted.length === 0) {
+      setError(
+        'Bu dil için veritabanında kategori yok. Önce Kategoriler’den aynı dilde kategori ekleyin.'
+      );
       return;
     }
-    if (!authorsLoading && authorsSorted.length === 0) {
+    if (!categoryId.trim()) {
+      setError('Lütfen listeden bir kategori seçin.');
+      return;
+    }
+    if (!authorsLoading && authorsForLanguage.length === 0) {
       setError('Önce en az bir yazar eklemeniz gerekir.');
       return;
     }
@@ -115,16 +130,12 @@ const AddBookPage = () => {
     const payload: Record<string, unknown> = {
       title: title.trim(),
       author: author.trim(),
+      author_id: authorId.trim() || undefined,
       description: description.trim() || undefined,
       language,
       pages: pages ? parseInt(pages, 10) : undefined,
-      tags: tags.trim() ? tags.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
     };
-    if (useCategoryList) {
-      payload.category_id = categoryId.trim();
-    } else {
-      payload.category = category.trim();
-    }
+    payload.category_id = categoryId.trim();
 
     setSubmitting(true);
     try {
@@ -239,7 +250,7 @@ const AddBookPage = () => {
               >
                 <option>Yazarlar yükleniyor...</option>
               </select>
-            ) : authorsSorted.length === 0 ? (
+            ) : authorsForLanguage.length === 0 ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
                 <p className="mb-2">Veritabanında henüz yazar yok. Kitap eklemek için önce yazar ekleyin.</p>
                 <Link
@@ -252,13 +263,18 @@ const AddBookPage = () => {
             ) : (
               <select
                 id="author"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
+                value={authorId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setAuthorId(id);
+                  const a = authorsForLanguage.find((x) => x.id === id);
+                  if (a) setAuthor(a.name);
+                }}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Yazar seçin</option>
-                {authorsSorted.map((a) => (
-                  <option key={a.id} value={a.name}>
+                {authorsForLanguage.map((a) => (
+                  <option key={a.id} value={a.id}>
                     {a.name}
                   </option>
                 ))}
@@ -268,7 +284,26 @@ const AddBookPage = () => {
 
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
             <label className="block text-sm font-semibold text-gray-800 mb-2">Kategori *</label>
-            {categories.length > 0 && !categoriesLoading ? (
+            <p className="text-xs text-gray-500 mb-2">
+              Liste veritabanındaki kategorilerden gelir; seçilen kitap diliyle aynı dilde kayıtlı satırlar
+              gösterilir.
+            </p>
+            {categoriesLoading ? (
+              <p className="text-sm text-gray-600">Kategoriler yükleniyor…</p>
+            ) : categoriesSorted.length === 0 ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                <p className="mb-2">
+                  Bu dil için henüz kategori yok. Kitap eklemek için önce veritabanında bu dilde en az bir kategori
+                  oluşturun.
+                </p>
+                <Link
+                  href="/user/categories/new"
+                  className="font-medium text-primary-700 underline hover:no-underline"
+                >
+                  Yeni kategori ekle →
+                </Link>
+              </div>
+            ) : (
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
@@ -277,18 +312,10 @@ const AddBookPage = () => {
                 <option value="">Kategori seçin</option>
                 {categoriesSorted.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {categoryDisplayName(c, language)}
+                    {categoryDisplayName(c)}
                   </option>
                 ))}
               </select>
-            ) : (
-              <input
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="Kategori"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
             )}
           </div>
 
@@ -324,18 +351,6 @@ const AddBookPage = () => {
               min={0}
               value={pages}
               onChange={(e) => setPages(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">Etiketler (virgülle ayırın)</label>
-            <input
-              id="tags"
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="etiket1, etiket2"
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
             />
           </div>
@@ -382,7 +397,7 @@ const AddBookPage = () => {
                 submitting ||
                 authorsLoading ||
                 !!authorsError ||
-                authorsSorted.length === 0
+                authorsForLanguage.length === 0
               }
               className="px-5 py-2.5 rounded-lg font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >

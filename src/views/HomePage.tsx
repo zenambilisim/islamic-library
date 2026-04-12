@@ -76,23 +76,17 @@ const HomePage = () => {
         book.title.toLowerCase().includes(term) ||
         book.author.toLowerCase().includes(term) ||
         book.category.toLowerCase().includes(term) ||
-        book.description.toLowerCase().includes(term) ||
-        book.tags.some(tag => tag.toLowerCase().includes(term)) ||
-        Object.values(book.titleTranslations).some(title => 
-          title.toLowerCase().includes(term)
-        ) ||
-        Object.values(book.authorTranslations).some(author => 
-          author.toLowerCase().includes(term)
-        )
+        book.description.toLowerCase().includes(term)
       );
     }
 
     // Apply category filter
     if (filters.category) {
-      books = books.filter(book => {
-        // Kategori adı ile eşleştirme (case-insensitive)
-        return book.category.toLowerCase() === filters.category?.toLowerCase();
-      });
+      const fc = filters.category.toLowerCase();
+      books = books.filter(
+        (book) =>
+          book.categorySlug?.toLowerCase() === fc || book.category.toLowerCase() === fc
+      );
     }
 
     return books;

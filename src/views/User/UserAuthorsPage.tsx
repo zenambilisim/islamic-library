@@ -81,6 +81,9 @@ const UserAuthorsPage = () => {
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     {t('user.authors.table.name')}
                   </th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
+                    Dil
+                  </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     {t('user.authors.table.bio')}
                   </th>
@@ -99,6 +102,9 @@ const UserAuthorsPage = () => {
                     className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="py-2 px-4 font-medium text-gray-900">{author.name}</td>
+                    <td className="py-2 px-4 text-gray-600 uppercase text-xs tabular-nums">
+                      {author.language}
+                    </td>
                     <td className="py-2 px-4 text-gray-600 max-w-md truncate">{author.biography || '—'}</td>
                     <td className="py-2 px-4 text-right text-gray-600 tabular-nums">
                       {author.bookCount || 0}

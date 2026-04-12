@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { normalizeAuthorTranslations } from '@/lib/author-db';
+import { normalizeLanguageCode } from '@/lib/author-db';
 import { createAuthor, getAuthors } from '@/lib/authors';
 
 /**
@@ -39,14 +39,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'name zorunludur' }, { status: 400 });
     }
 
-    const name_translations = normalizeAuthorTranslations(body?.name_translations, name);
-    const biography_translations = normalizeAuthorTranslations(body?.biography_translations, biography);
+    const language_code = normalizeLanguageCode(body?.language_code ?? body?.language, 'tr');
 
     const { author, error } = await createAuthor({
       name,
       biography,
-      name_translations,
-      biography_translations,
+      language_code,
     });
 
     if (error) {

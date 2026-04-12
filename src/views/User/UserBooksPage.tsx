@@ -6,23 +6,12 @@ import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
 import { BookPlus, FolderUp, Pencil, Trash2 } from 'lucide-react';
 import type { Book } from '@/types';
-import type { Language } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
 import { useBookModal } from '@/contexts/BookModalContext';
 
-function getLocalized(
-  value: string,
-  translations: { tr: string; en: string; ru: string; az: string } | undefined,
-  lang: string
-): string {
-  const key = (translations && lang in translations ? lang : 'en') as Language;
-  return (translations && translations[key]) || value;
-}
-
 const UserBooksPage = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { openDetails } = useBookModal();
-  const lang = i18n.language;
 
   const {
     books,
@@ -158,14 +147,14 @@ const UserBooksPage = () => {
                           onClick={() => openDetails(book)}
                           className="font-medium text-primary-600 hover:text-primary-700 hover:underline text-left"
                         >
-                          {getLocalized(book.title, book.titleTranslations, lang)}
+                          {book.title}
                         </button>
                       </td>
                       <td className="py-2 px-4 text-gray-700">
-                        {getLocalized(book.author, book.authorTranslations, lang)}
+                        {book.author}
                       </td>
                       <td className="py-2 px-4 text-gray-600 hidden sm:table-cell">
-                        {getLocalized(book.category, book.categoryTranslations, lang)}
+                        {book.category}
                       </td>
                       <td className="py-2 px-4 text-right text-gray-600 tabular-nums">
                         {book.pages || '—'}

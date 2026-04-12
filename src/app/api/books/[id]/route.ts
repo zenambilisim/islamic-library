@@ -44,14 +44,12 @@ export async function PATCH(
     const { error } = await updateBook(id, {
       title: body.title ?? '',
       author: body.author ?? '',
+      author_id: typeof body.author_id === 'string' ? body.author_id : undefined,
       category: typeof body.category === 'string' ? body.category : undefined,
       category_id: typeof body.category_id === 'string' ? body.category_id : undefined,
       language_code: body.language ?? body.language_code ?? 'tr',
       description: body.description,
-      title_translations: body.title_translations,
-      description_translations: body.description_translations,
       pages: body.pages != null ? Number(body.pages) : undefined,
-      tags: Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : undefined,
     });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Filter, X, Loader2 } from 'lucide-react';
+import { Filter, Folder, X, Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
-import type { SearchFilters, Language } from '../../types';
+import type { SearchFilters } from '../../types';
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -11,18 +11,13 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSidebarProps) => {
-  const { t, i18n } = useTranslation();
-  const currentLang = i18n.language as Language;
+  const { t } = useTranslation();
   const { categories, loading, error } = useSupabaseCategories();
 
-  const getLocalizedText = (translations: any, fallback: string) => {
-    return translations[currentLang] || translations.tr || fallback;
-  };
-
-  const handleCategoryChange = (categoryName: string) => {
+  const handleCategoryChange = (categorySlug: string) => {
     onFiltersChange({
       ...filters,
-      category: filters.category === categoryName ? undefined : categoryName,
+      category: filters.category === categorySlug ? undefined : categorySlug,
     });
   };
 
@@ -116,21 +111,23 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSid
               {categories.map((category, index) => (
                 <button
                   key={category.id}
-                  onClick={() => handleCategoryChange(category.name)}
+                  onClick={() => handleCategoryChange(category.slug)}
                   className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 transform hover:scale-[1.02] ${
-                    filters.category === category.name
+                    filters.category === category.slug
                       ? 'bg-gradient-to-r from-primary-100 to-purple-100 text-primary-800 border-2 border-primary-300 shadow-lg'
                       : 'bg-white/70 hover:bg-white border-2 border-gray-100 hover:border-primary-200 hover:shadow-md'
                   }`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="text-2xl">{category.icon}</div>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+                    <Folder size={18} strokeWidth={1.75} aria-hidden />
+                  </div>
                   <div className="flex-1">
                     <span className="font-semibold text-sm">
-                      {getLocalizedText(category.nameTranslations, category.name)}
+                      {category.name}
                     </span>
                   </div>
-                  {filters.category === category.name && (
+                  {filters.category === category.slug && (
                     <div className="text-primary-600">✓</div>
                   )}
                 </button>

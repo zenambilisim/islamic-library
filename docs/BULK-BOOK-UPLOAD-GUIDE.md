@@ -94,7 +94,6 @@ CREATE TABLE books (
   cover_image_url TEXT,
   file_size TEXT,
   download_count INTEGER DEFAULT 0,
-  tags TEXT[],
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -441,8 +440,7 @@ async function insertBookToDatabase(bookData) {
       cover_image_url: bookData.coverPath,
       publish_year: 2024,
       pages: 0,
-      download_count: 0,
-      tags: []
+      download_count: 0
     })
     .select()
     .single();

@@ -35,11 +35,7 @@ const BookDetailModal = () => {
 
   if (!isOpen || !book) return null;
 
-  const currentLang = i18n.language as keyof typeof book.titleTranslations;
-
-  const getLocalizedText = (translations: any, fallback: string) => {
-    return translations[currentLang] || translations.tr || fallback;
-  };
+  const locale = i18n.language;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -50,7 +46,7 @@ const BookDetailModal = () => {
   const handleDownload = async (format: string, url: string) => {
     try {
       setLoadingUrls((prev) => ({ ...prev, [format]: true }));
-      const base = safeDownloadBasename(getLocalizedText(book.titleTranslations, book.title));
+      const base = safeDownloadBasename(book.title);
       await downloadBookAsset(url, `${base}.${format.toLowerCase()}`);
     } catch (error) {
       console.error('Download error:', error);
@@ -86,7 +82,7 @@ const BookDetailModal = () => {
                 {/* Cover Image */}
                 <img
                   src={book.coverImage || '/placeholder-book.jpg'}
-                  alt={getLocalizedText(book.titleTranslations, book.title)}
+                  alt={book.title}
                   className="w-full max-w-sm mx-auto rounded-lg shadow-lg mb-6"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -149,16 +145,16 @@ const BookDetailModal = () => {
               {/* Title & Author */}
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                  {getLocalizedText(book.titleTranslations, book.title)}
+                  {book.title}
                 </h1>
                 
                 <div className="flex items-center text-lg text-gray-600 mb-4">
                   <User size={20} className="mr-2" />
-                  <span>{getLocalizedText(book.authorTranslations, book.author)}</span>
+                  <span>{book.author}</span>
                 </div>
                 <div className="flex items-center text-lg text-gray-600 mb-4">
                   <FileText size={20} className="mr-2" />
-                  <span>{t('book.category')}: {getLocalizedText(book.categoryTranslations, book.category)}</span>
+                  <span>{t('book.category')}: {book.category}</span>
                 </div>
               </div>
 
@@ -166,15 +162,15 @@ const BookDetailModal = () => {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('book.description')}</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  {getLocalizedText(book.descriptionTranslations, book.description)}
+                  {book.description}
                 </p>
               </div>
               {/* Publication Info */}
               <div className="border-t border-gray-200 pt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Yayın Bilgileri</h3>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><span className="font-medium">Eklenme Tarihi:</span> {new Date(book.createdAt).toLocaleDateString(currentLang)}</p>
-                  <p><span className="font-medium">Son Güncelleme:</span> {new Date(book.updatedAt).toLocaleDateString(currentLang)}</p>
+                  <p><span className="font-medium">Eklenme Tarihi:</span> {new Date(book.createdAt).toLocaleDateString(locale)}</p>
+                  <p><span className="font-medium">Son Güncelleme:</span> {new Date(book.updatedAt).toLocaleDateString(locale)}</p>
                 </div>
               </div>
             </div>

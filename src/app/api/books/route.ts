@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBooks, getBooksByCategory, createBook, type CreateBookPayload } from '@/lib/books';
+import {
+  getBooks,
+  getBooksByCategory,
+  createBook,
+  type CreateBookPayload,
+  type BookSortBy,
+} from '@/lib/books';
 import { convertSupabaseBookToBook } from '@/lib/converters-server';
 
 /**
@@ -42,6 +48,7 @@ export async function POST(request: NextRequest) {
 }
 
 const APP_LANGS = new Set(['tr', 'en', 'ru', 'az']);
+const SORT_OPTIONS = new Set<BookSortBy>(['uploadDate', 'alphabetical', 'mostDownloaded']);
 
 function parseLanguageParam(raw: string | null): string | undefined {
   if (!raw?.trim()) return undefined;
@@ -49,9 +56,15 @@ function parseLanguageParam(raw: string | null): string | undefined {
   return APP_LANGS.has(code) ? code : undefined;
 }
 
+function parseSortByParam(raw: string | null): BookSortBy {
+  if (!raw?.trim()) return 'uploadDate';
+  return SORT_OPTIONS.has(raw as BookSortBy) ? (raw as BookSortBy) : 'uploadDate';
+}
+
 /**
  * GET /api/books
- * Query: page, limit, category (slug; sayfalı), language (tr|en|ru|az), withTotal (kategori + dil için toplam sayım).
+ * Query: page, limit, category (slug; sayfalı), language (tr|en|ru|az),
+ * withTotal (kategori + dil için toplam sayım), sortBy (uploadDate|alphabetical|mostDownloaded).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -61,6 +74,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined;
     const language = parseLanguageParam(searchParams.get('language'));
     const withTotal = searchParams.get('withTotal') === '1';
+    const sortBy = parseSortByParam(searchParams.get('sortBy'));
 
     let rawBooks: any[];
     let total = 0;
@@ -69,6 +83,7 @@ export async function GET(request: NextRequest) {
     if (category) {
       const result = await getBooksByCategory(category, language, page, limit, {
         includeTotal: withTotal,
+        sortBy,
       });
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
@@ -77,7 +92,10 @@ export async function GET(request: NextRequest) {
       total = withTotal ? result.total : 0;
       hasMore = result.hasMore ?? false;
     } else {
-      const result = await getBooks(page, limit, language, { includeTotal: withTotal });
+      const result = await getBooks(page, limit, language, {
+        includeTotal: withTotal,
+        sortBy,
+      });
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
       }

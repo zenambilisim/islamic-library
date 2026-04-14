@@ -53,4 +53,5 @@ export interface SearchFilters {
   category?: string;
   author?: string;
   language?: Language;
+  sortBy?: 'uploadDate' | 'alphabetical' | 'mostDownloaded';
 }

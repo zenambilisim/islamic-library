@@ -33,7 +33,19 @@ function isSameOriginR2Proxy(url: string): boolean {
 }
 
 /** İmzalı veya aynı-origin proxy URL ile dosyayı fetch edip indirir. */
-export async function downloadBookAsset(sourceUrl: string, downloadFileName: string): Promise<void> {
+export async function downloadBookAsset(
+  sourceUrl: string,
+  downloadFileName: string,
+  opts?: { bookId?: string; format?: string }
+): Promise<void> {
+  if (opts?.bookId && opts?.format) {
+    await fetch('/api/download-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookId: opts.bookId, format: opts.format }),
+    }).catch(() => {});
+  }
+
   const fetchUrl = isSameOriginR2Proxy(sourceUrl)
     ? sourceUrl.trim().split('?')[0]
     : await getSignedBookFileUrl(sourceUrl, 3600);

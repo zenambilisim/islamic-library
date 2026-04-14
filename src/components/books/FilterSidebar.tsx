@@ -25,7 +25,14 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSid
     onFiltersChange({});
   };
 
-  const hasActiveFilters = filters.category;
+  const handleSortChange = (sortBy: SearchFilters['sortBy']) => {
+    onFiltersChange({
+      ...filters,
+      sortBy: sortBy === 'uploadDate' ? undefined : sortBy,
+    });
+  };
+
+  const hasActiveFilters = filters.category || (filters.sortBy && filters.sortBy !== 'uploadDate');
 
   return (
     <>
@@ -82,6 +89,24 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSid
               <X size={18} />
             </button>
           </div>
+        </div>
+
+        {/* Sort Filter */}
+        <div className="mb-8">
+          <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+            <span>↕️</span>
+            <span>{t('search.sortBy')}</span>
+          </h4>
+
+          <select
+            value={filters.sortBy ?? 'uploadDate'}
+            onChange={(event) => handleSortChange(event.target.value as SearchFilters['sortBy'])}
+            className="w-full rounded-xl border-2 border-gray-100 bg-white/80 px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-300 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          >
+            <option value="uploadDate">{t('search.sortUploadDate')}</option>
+            <option value="alphabetical">{t('search.sortAlphabetical')}</option>
+            <option value="mostDownloaded">{t('search.sortMostDownloaded')}</option>
+          </select>
         </div>
 
         {/* Categories Filter */}

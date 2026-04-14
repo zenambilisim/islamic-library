@@ -47,7 +47,10 @@ const BookDetailModal = () => {
     try {
       setLoadingUrls((prev) => ({ ...prev, [format]: true }));
       const base = safeDownloadBasename(book.title, book.author);
-      await downloadBookAsset(url, `${base}.${format.toLowerCase()}`);
+      await downloadBookAsset(url, `${base}.${format.toLowerCase()}`, {
+        bookId: book.id,
+        format,
+      });
     } catch (error) {
       console.error('Download error:', error);
       alert(t('errors.downloadFailed') || 'İndirme başarısız oldu. Lütfen tekrar deneyin.');

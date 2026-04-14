@@ -112,7 +112,25 @@ const BOOK_LIST_SELECT_IN_CATEGORY = BOOK_LIST_SELECT.replace(
 export type GetBooksOptions = {
   /** true: tam total için COUNT (yavaş); admin sayfalama için /api/books?withTotal=1 */
   includeTotal?: boolean;
+  sortBy?: BookSortBy;
 };
+
+export type BookSortBy = 'uploadDate' | 'alphabetical' | 'mostDownloaded';
+
+function applyBookSort<T extends { order: (column: string, options?: { ascending?: boolean }) => T }>(
+  query: T,
+  sortBy: BookSortBy = 'uploadDate'
+): T {
+  if (sortBy === 'alphabetical') {
+    return query.order('title', { ascending: true }).order('created_at', { ascending: false });
+  }
+  if (sortBy === 'mostDownloaded') {
+    return query
+      .order('download_count', { ascending: false })
+      .order('created_at', { ascending: false });
+  }
+  return query.order('created_at', { ascending: false });
+}
 
 // Tüm kitapları getir (sayfalama; varsayılan: COUNT yok, limit+1 ile hasMore — daha hızlı)
 export async function getBooks(
@@ -121,12 +139,15 @@ export async function getBooks(
   language?: string,
   options?: GetBooksOptions
 ) {
+  const sortBy = options?.sortBy ?? 'uploadDate';
   if (options?.includeTotal) {
-    let query = supabase
+    let query = applyBookSort(
+      supabase
       .from('books')
       .select(BOOK_LIST_SELECT, { count: 'exact' })
-      .range(page * limit, (page + 1) * limit - 1)
-      .order('created_at', { ascending: false });
+      .range(page * limit, (page + 1) * limit - 1),
+      sortBy
+    );
 
     if (language) query = query.eq('language_code', language);
 
@@ -151,11 +172,13 @@ export async function getBooks(
     };
   }
 
-  let query = supabase
+  let query = applyBookSort(
+    supabase
     .from('books')
     .select(BOOK_LIST_SELECT)
-    .range(page * limit, page * limit + limit)
-    .order('created_at', { ascending: false });
+    .range(page * limit, page * limit + limit),
+    sortBy
+  );
 
   if (language) query = query.eq('language_code', language);
 
@@ -260,6 +283,7 @@ export async function searchBooks(query: string) {
 
 export type GetBooksByCategoryOptions = {
   includeTotal?: boolean;
+  sortBy?: BookSortBy;
 };
 
 /**
@@ -272,22 +296,28 @@ export async function getBooksByCategory(
   limit = 20,
   options?: GetBooksByCategoryOptions
 ) {
-  let base = supabase
+  const sortBy = options?.sortBy ?? 'uploadDate';
+
+  let base = applyBookSort(
+    supabase
     .from('books')
     .select(BOOK_LIST_SELECT_IN_CATEGORY)
-    .eq('book_categories.categories.slug', categorySlug)
-    .order('created_at', { ascending: false });
+    .eq('book_categories.categories.slug', categorySlug),
+    sortBy
+  );
 
   if (language) {
     base = base.eq('language_code', language).eq('book_categories.categories.language_code', language);
   }
 
   if (options?.includeTotal) {
-    let qCount = supabase
+    let qCount = applyBookSort(
+      supabase
       .from('books')
       .select(BOOK_LIST_SELECT_IN_CATEGORY, { count: 'exact' })
-      .eq('book_categories.categories.slug', categorySlug)
-      .order('created_at', { ascending: false });
+      .eq('book_categories.categories.slug', categorySlug),
+      sortBy
+    );
 
     if (language) {
       qCount = qCount.eq('language_code', language).eq('book_categories.categories.language_code', language);

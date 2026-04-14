@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import type { Language } from '../../types';
 const Header = () => {
   const { t, i18n } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { searchTerm, setSearchTerm, placeholder } = useSearch();
 
   const languages: { code: Language; name: string; flag: string }[] = [
@@ -21,7 +22,14 @@ const Header = () => {
   ];
 
   const pathname = usePathname();
-  
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const currentLangCode =
+    (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0] ?? 'en';
+
   const navigationItems = [
     { key: 'home', label: t('navigation.home'), href: '/' },
     { key: 'categories', label: t('navigation.categories'), href: '/categories' },
@@ -39,6 +47,16 @@ const Header = () => {
     const value = e.target.value;
     setSearchTerm(value);
   };
+
+  if (!isMounted) {
+    return (
+      <header className="sticky top-0 z-50 border-b border-white/20 bg-white/80 shadow-xl backdrop-blur-lg">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          <div className="h-10 w-full rounded-xl bg-gray-100/80" />
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="bg-white/80 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-white/20">
@@ -58,7 +76,9 @@ const Header = () => {
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
                   className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2 ${
-                    i18n.language === lang.code ? 'bg-primary-50 text-primary-700' : ''
+                    isMounted && currentLangCode === lang.code
+                      ? 'bg-primary-50 text-primary-700'
+                      : ''
                   }`}
                 >
                   <span>{lang.flag}</span>
@@ -119,8 +139,8 @@ const Header = () => {
                   key={item.key}
                   href={item.href}
                   className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    pathname === item.href 
-                      ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg transform scale-105' 
+                    isMounted && pathname === item.href
+                      ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg transform scale-105'
                       : 'text-gray-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-purple-50 hover:text-primary-700'
                   }`}
                 >
@@ -135,7 +155,9 @@ const Header = () => {
               <div className="relative group">
                 <button className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm">
                   <Globe size={18} className="text-primary-600" />
-                  <span className="text-xs font-medium text-gray-700">{languages.find(l => l.code === i18n.language)?.flag}</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    {languages.find((l) => l.code === currentLangCode)?.flag}
+                  </span>
                 </button>
                 
                 {/* Language dropdown - Mobile */}
@@ -145,7 +167,9 @@ const Header = () => {
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
                       className={`w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg ${
-                        i18n.language === lang.code ? 'bg-primary-50 text-primary-700' : ''
+                        isMounted && currentLangCode === lang.code
+                          ? 'bg-primary-50 text-primary-700'
+                          : ''
                       }`}
                     >
                       <span>{lang.flag}</span>
@@ -188,7 +212,7 @@ const Header = () => {
                 key={item.key}
                 href={item.href}
                 className={`block py-2 px-4 rounded-md transition-colors ${
-                  pathname === item.href
+                  isMounted && pathname === item.href
                     ? 'text-primary-600 bg-primary-50 font-medium'
                     : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                 }`}

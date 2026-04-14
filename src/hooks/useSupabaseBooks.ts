@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Book, Language } from '../types';
+import type { Book, Language, SearchFilters } from '../types';
 
 export function resolveAppLanguage(i18nLng: string | undefined): Language {
   const base = (i18nLng || 'tr').split('-')[0].toLowerCase();
@@ -27,7 +27,7 @@ const CATEGORY_ITEMS_PER_PAGE = 12;
  * Sunucu API'sinden kitapları çeken custom hook
  * GET /api/books – sayfalama; seçili arayüz diline göre filtre (books.language)
  */
-export function useSupabaseBooks(): UseSupabaseBooksReturn {
+export function useSupabaseBooks(sortBy: SearchFilters['sortBy'] = 'uploadDate'): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
 
@@ -58,6 +58,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         page: String(currentPage),
         limit: String(ITEMS_PER_PAGE),
         language,
+        sortBy: sortBy ?? 'uploadDate',
       });
       const res = await fetch(`/api/books?${params}`);
 
@@ -98,7 +99,7 @@ export function useSupabaseBooks(): UseSupabaseBooksReturn {
         setLoading(false);
       }
     }
-  }, [language]);
+  }, [language, sortBy]);
 
   const loadMore = useCallback(async () => {
     if (loading || loadingMore || !hasMore) return;

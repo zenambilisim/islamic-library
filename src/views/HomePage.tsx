@@ -13,10 +13,12 @@ import type { SearchFilters } from '@/types';
 const HomePage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
+  const [isMounted, setIsMounted] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } = useSupabaseBooks();
+  const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } =
+    useSupabaseBooks(filters.sortBy ?? 'uploadDate');
   const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
     hasMore,
     loading,
@@ -24,29 +26,33 @@ const HomePage = () => {
     prefetchPx: 1200,
   });
 
+  const activeLanguage = (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0];
+
   // Dil bazlı banner resmi seç
   const getBannerImage = () => {
-    const language = i18n.language;
     const bannerImages: Record<string, string> = {
       'tr': '/images/HomePage/Banner turkish.png',
       'en': '/images/HomePage/Banner english.png',
       'ru': '/images/HomePage/Banner russian.png',
       'az': '/images/HomePage/Banner azerbaijani.png'
     };
-    return bannerImages[language] || bannerImages['en'];
+    return bannerImages[activeLanguage] || bannerImages.en;
   };
 
   // Dil bazlı mockup resmi seç
   const getMockupImage = () => {
-    const language = i18n.language;
     const mockupImages: Record<string, string> = {
       'tr': '/images/HomePage/iPad Pro Mockup turkish.png',
       'en': '/images/HomePage/iPad Pro Mockup english.png',
       'ru': '/images/HomePage/iPad Pro Mockup russian.png',
       'az': '/images/HomePage/İPad Pro Mockup azerbaijani.png'
     };
-    return mockupImages[language] || mockupImages['en'];
+    return mockupImages[activeLanguage] || mockupImages.en;
   };
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     setSearchMode('books');
@@ -93,6 +99,10 @@ const HomePage = () => {
   }, [supabaseBooks, searchTerm, filters]);
 
   const awaitingFirstBooks = loading && supabaseBooks.length === 0;
+
+  if (!isMounted) {
+    return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100" />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -171,7 +181,7 @@ const HomePage = () => {
               
               {/* Right Image - Mockup */}
               <div className="flex justify-center lg:justify-end order-2 lg:order-2">
-                <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                <div className="relative w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
                   <img
                     src={getMockupImage()}
                     alt={t('hero.mockupAlt') || 'Islamic Books'}

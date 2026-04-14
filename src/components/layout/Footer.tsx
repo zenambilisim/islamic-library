@@ -1,11 +1,17 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Mail } from 'lucide-react';
 
 const Footer = () => {
   const { t } = useTranslation();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const quickLinks = [
     { key: 'home', label: t('navigation.home'), href: '/' },
@@ -13,6 +19,18 @@ const Footer = () => {
     { key: 'authors', label: t('navigation.authors'), href: '/authors' },
     { key: 'about', label: t('navigation.about'), href: '/about' },
   ];
+
+  if (!isMounted) {
+    return (
+      <footer className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 via-purple-600/10 to-blue-600/10" />
+        <div className="container relative mx-auto px-4 py-16">
+          <div className="h-40 w-full max-w-3xl animate-pulse rounded-2xl bg-white/5" />
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white relative overflow-hidden">
       {/* Background decoration */}

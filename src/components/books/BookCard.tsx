@@ -23,7 +23,7 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
     const fileName = `${base}.${format.toLowerCase()}`;
     setDownloadLoading((s) => ({ ...s, [format]: true }));
     try {
-      await downloadBookAsset(url, fileName);
+      await downloadBookAsset(url, fileName, { bookId: book.id, format });
     } catch (err) {
       console.error(err);
       alert(t('errors.downloadFailed') || 'İndirme başarısız oldu. Lütfen tekrar deneyin.');

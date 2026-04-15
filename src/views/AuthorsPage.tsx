@@ -10,6 +10,7 @@ import {
 } from '@/hooks/useSupabaseAuthors';
 import BookCard from '@/components/books/BookCard';
 import type { Book } from '@/types';
+import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 
 const AuthorsPage = () => {
   const { t, i18n } = useTranslation();
@@ -21,9 +22,9 @@ const AuthorsPage = () => {
   const [loadingBooks, setLoadingBooks] = useState(false);
   
   // Supabase'den yazarları çek
-  const { authors: supabaseAuthors, loading: authorsLoading, error: authorsError } = useSupabaseAuthors();
-  
-  const currentLang = i18n.language as 'tr' | 'en' | 'ru' | 'az';
+  const currentLang = resolveAppLanguage(i18n.language);
+  const { authors: supabaseAuthors, loading: authorsLoading, error: authorsError } =
+    useSupabaseAuthors(currentLang);
 
   useEffect(() => {
     setSearchMode('authors');

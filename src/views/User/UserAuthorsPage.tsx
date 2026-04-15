@@ -5,14 +5,16 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
+import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 
 function canEditAuthorInDb(id: string): boolean {
   return Boolean(id) && !id.startsWith('author-');
 }
 
 const UserAuthorsPage = () => {
-  const { t } = useTranslation();
-  const { authors, loading, error, refetch } = useSupabaseAuthors();
+  const { t, i18n } = useTranslation();
+  const language = resolveAppLanguage(i18n.language);
+  const { authors, loading, error, refetch } = useSupabaseAuthors(language);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 

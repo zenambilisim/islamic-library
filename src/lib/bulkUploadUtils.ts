@@ -179,7 +179,8 @@ export function parseFolderFiles(
 
     if (name.endsWith('.pdf')) entry.pdf = file;
     else if (name.endsWith('.epub')) entry.epub = file;
-    else if (name.endsWith('.docx') || name.endsWith('.doc')) entry.docx = file;
+    else if (name.endsWith('.docx')) entry.docx = file;
+    else if (name.endsWith('.doc') && !entry.docx) entry.docx = file;
     else if (name.endsWith('.rtf')) entry.rtf = file;
     else if (name.endsWith('.txt')) entry.txt = file;
     else if (COVER_EXT.some((ext) => name.endsWith(ext))) entry.cover = file;

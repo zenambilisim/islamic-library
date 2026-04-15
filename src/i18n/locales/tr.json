@@ -245,6 +245,13 @@
       "deleteConfirm": "Bu kitabı silmek istediğinize emin misiniz?",
       "deleting": "Siliniyor...",
       "deleteError": "Kitap silinirken hata oluştu.",
+      "bulkDeleteButton": "Seçilenleri sil ({{count}})",
+      "bulkDeleteConfirm": "{{count}} kitabı silmek istediğinize emin misiniz?",
+      "bulkDeleting": "Toplu siliniyor...",
+      "bulkDeleteError": "Seçilen kitaplar silinirken hata oluştu.",
+      "bulkDeletePartialError": "{{deleted}} kitap silindi, {{failed}} kitap silinemedi.",
+      "selectAll": "Bu sayfadaki tüm kitapları seç",
+      "selectOne": "\"{{title}}\" kitabını seç",
       "pagination": {
         "prev": "Önceki",
         "next": "Sonraki",

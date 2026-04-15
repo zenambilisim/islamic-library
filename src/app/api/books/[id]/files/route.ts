@@ -33,9 +33,13 @@ export async function POST(
         { status: 400 }
       );
     }
+    const fileNameFromField =
+      file && typeof file === 'object' && 'name' in file
+        ? String((file as { name?: unknown }).name ?? '')
+        : '';
     const filename =
       (formData.get('filename') as string) ||
-      (file instanceof File ? file.name : null) ||
+      fileNameFromField ||
       `file.${format}`;
     const { url, error, pages } = await uploadBookFile(blob, id, format, filename);
     if (error || !url) {

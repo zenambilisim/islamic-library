@@ -8,10 +8,16 @@ interface UseSupabaseCategoriesReturn {
   refetch: () => Promise<void>;
 }
 
+function normalizeQueryLanguage(language?: string): string | null {
+  const base = (language || '').trim().toLowerCase().split('-')[0];
+  if (base === 'tr' || base === 'en' || base === 'ru' || base === 'az') return base;
+  return null;
+}
+
 /**
  * Sunucu API'sinden kategorileri çeker – GET /api/categories
  */
-export function useSupabaseCategories(): UseSupabaseCategoriesReturn {
+export function useSupabaseCategories(language?: string): UseSupabaseCategoriesReturn {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +26,9 @@ export function useSupabaseCategories(): UseSupabaseCategoriesReturn {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/categories');
+      const lang = normalizeQueryLanguage(language);
+      const qs = lang ? `?language=${encodeURIComponent(lang)}` : '';
+      const res = await fetch(`/api/categories${qs}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || res.statusText);
@@ -37,7 +45,7 @@ export function useSupabaseCategories(): UseSupabaseCategoriesReturn {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [language]);
 
   return {
     categories,

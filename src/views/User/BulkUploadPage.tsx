@@ -50,7 +50,7 @@ const BulkUploadPage = () => {
 
   const uploadOne = async (entry: BookEntry): Promise<string | null> => {
     let description = '';
-    const descFile = entry.files.rtf ?? entry.files.docx ?? entry.files.txt;
+    const descFile = entry.files.txt;
     if (descFile) {
       const form = new FormData();
       form.append('file', descFile);
@@ -164,7 +164,7 @@ const BulkUploadPage = () => {
           directory: "",
         } as InputHTMLAttributes<HTMLInputElement>)}
         multiple
-        accept=".pdf,.epub,.docx,.doc,.rtf,.png,.jpg,.jpeg"
+        accept=".pdf,.epub,.doc,.docx,.txt,.png,.jpg,.jpeg"
         onChange={handleFolderChange}
         className="hidden"
       />

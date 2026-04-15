@@ -20,9 +20,13 @@ export async function POST(
     if (!blob) {
       return NextResponse.json({ error: 'Dosya (file) gerekli' }, { status: 400 });
     }
+    const fileNameFromField =
+      file && typeof file === 'object' && 'name' in file
+        ? String((file as { name?: unknown }).name ?? '')
+        : '';
     const filename =
       (formData.get('filename') as string) ||
-      (file instanceof File ? file.name : null) ||
+      fileNameFromField ||
       'cover.jpg';
     const { url, error: uploadError } = await uploadBookCover(blob, id, filename);
     if (uploadError || !url) {

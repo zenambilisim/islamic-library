@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto'
 import sharp from 'sharp'
 import { countPdfPages } from './pdf-page-count'
 import { normalizeLanguageCode, slugifyAuthorName } from './author-db'
-import { isR2Configured, r2DeleteBookObjects, r2PutObject } from './r2-storage'
+import { isR2Configured, r2DeleteBookObjects, r2DeleteKeys, r2PutObject, tryExtractStorageKey } from './r2-storage'
 import { supabase, supabaseAdmin } from './supabase-server'
 
 /** Yazma işlemleri için: service role varsa RLS bypass, yoksa anon (RLS gerekir). */
@@ -362,11 +362,15 @@ export async function getBooksByCategory(
 // ***** CATEGORY OPERATIONS *****
 
 // Tüm kategorileri getir
-export async function getCategories() {
-  const { data, error } = await supabase
+export async function getCategories(language?: string) {
+  let query = supabase
     .from('categories')
     .select('*')
-    .order('name')
+    .order('name');
+  if (language?.trim()) {
+    query = query.eq('language_code', language.trim().toLowerCase());
+  }
+  const { data, error } = await query
 
   if (error) {
     console.error('Error fetching categories:', error)
@@ -955,10 +959,50 @@ export async function addQuickBook() {
   return { book: bookData, files: filesData }
 }
 
+async function collectBookStorageKeys(bookId: string): Promise<string[]> {
+  const client = db();
+  const keys = new Set<string>();
+
+  const { data: bookRow, error: bookRowErr } = await client
+    .from('books')
+    .select('cover_image_url')
+    .eq('id', bookId)
+    .maybeSingle();
+  if (bookRowErr) {
+    console.error('Error fetching book cover for storage delete:', bookRowErr);
+  } else {
+    const coverUrl = (bookRow as { cover_image_url?: string | null } | null)?.cover_image_url;
+    if (typeof coverUrl === 'string' && coverUrl.trim()) {
+      const key = tryExtractStorageKey(coverUrl);
+      if (key && (key.startsWith('covers/') || key.startsWith('books/'))) keys.add(key);
+    }
+  }
+
+  const { data: fileRows, error: fileRowsErr } = await client
+    .from('book_files')
+    .select('file_url')
+    .eq('book_id', bookId);
+  if (fileRowsErr) {
+    console.error('Error fetching book files for storage delete:', fileRowsErr);
+  } else {
+    for (const row of fileRows ?? []) {
+      const fileUrl = (row as { file_url?: string | null }).file_url;
+      if (typeof fileUrl !== 'string' || !fileUrl.trim()) continue;
+      const key = tryExtractStorageKey(fileUrl);
+      if (key && (key.startsWith('covers/') || key.startsWith('books/'))) keys.add(key);
+    }
+  }
+
+  return [...keys];
+}
+
 /** Storage'dan kitap dosyalarını ve kapağını siler (book_files + books tablosu silinmeden önce çağrılabilir). */
-async function deleteBookStorageFiles(bookId: string) {
+async function deleteBookStorageFiles(bookId: string, knownKeys: string[] = []) {
   if (isR2Configured()) {
     try {
+      if (knownKeys.length > 0) {
+        await r2DeleteKeys(knownKeys);
+      }
       await r2DeleteBookObjects(bookId);
     } catch (e) {
       console.error('Error deleting book files from R2:', e);
@@ -967,7 +1011,7 @@ async function deleteBookStorageFiles(bookId: string) {
   }
 
   const storage = db().storage.from('book-assets');
-  const pathsToRemove: string[] = [];
+  const pathsToRemove = [...knownKeys];
 
   // books/{bookId}/ altındaki tüm dosyalar (PDF, EPUB, DOCX)
   const { data: bookFiles } = await storage.list(`books/${bookId}`);
@@ -995,6 +1039,7 @@ async function deleteBookStorageFiles(bookId: string) {
 /** Kitabı, ilişkili book_files kayıtlarını ve Storage'daki dosyaları siler. */
 export async function deleteBook(bookId: string) {
   const client = db();
+  const storageKeys = await collectBookStorageKeys(bookId);
 
   const { error: filesError } = await client
     .from('book_files')
@@ -1015,7 +1060,7 @@ export async function deleteBook(bookId: string) {
     return { error: bookError };
   }
 
-  await deleteBookStorageFiles(bookId);
+  await deleteBookStorageFiles(bookId, storageKeys);
 
   return { error: null };
 }

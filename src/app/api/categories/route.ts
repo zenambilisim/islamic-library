@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { normalizeLanguageCode } from '@/lib/author-db';
 import { createCategory, getCategories } from '@/lib/books';
 import { convertSupabaseCategoryToCategory } from '@/lib/converters-server';
@@ -7,9 +7,14 @@ import type { Category as SupabaseCategoryRow } from '@/lib/supabase';
 /**
  * GET /api/categories
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { categories: rawCategories, error } = await getCategories();
+    const { searchParams } = new URL(request.url);
+    const languageRaw = searchParams.get('language');
+    const language = languageRaw?.trim()
+      ? normalizeLanguageCode(languageRaw, 'tr')
+      : undefined;
+    const { categories: rawCategories, error } = await getCategories(language);
 
     if (error) {
       return NextResponse.json(

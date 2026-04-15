@@ -244,6 +244,13 @@
       "deleteConfirm": "Bu kitabı silmək istədiyinizə əminsiniz?",
       "deleting": "Silinir...",
       "deleteError": "Kitab silinərkən xəta baş verdi.",
+      "bulkDeleteButton": "Seçilənləri sil ({{count}})",
+      "bulkDeleteConfirm": "{{count}} kitabı silmək istədiyinizə əminsiniz?",
+      "bulkDeleting": "Toplu silinir...",
+      "bulkDeleteError": "Seçilən kitablar silinərkən xəta baş verdi.",
+      "bulkDeletePartialError": "{{deleted}} kitab silindi, {{failed}} kitab silinə bilmədi.",
+      "selectAll": "Bu səhifədəki bütün kitabları seç",
+      "selectOne": "\"{{title}}\" kitabını seç",
       "pagination": {
         "prev": "Əvvəlki",
         "next": "Növbəti",

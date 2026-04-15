@@ -8,20 +8,28 @@ import type { SupabaseAuthor, SupabaseBook } from './supabase';
 import { normalizeLanguageCode, slugifyAuthorName } from './author-db';
 
 /**
- * Tüm yazarları getirir (authors_view veya authors tablosu)
+ * Yazarları getirir (authors_view veya authors tablosu), opsiyonel dil filtresi ile.
  */
-export async function getAuthors(): Promise<{ authors: Author[]; error: Error | null }> {
+export async function getAuthors(language?: string): Promise<{ authors: Author[]; error: Error | null }> {
   try {
-    let { data, error: supabaseError } = await supabase
+    let query = supabase
       .from('authors_view')
       .select('*')
       .order('book_count', { ascending: false });
+    if (language?.trim()) {
+      query = query.eq('language_code', language.trim().toLowerCase());
+    }
+    let { data, error: supabaseError } = await query;
 
     if (supabaseError?.message?.includes('does not exist')) {
-      const { data: tableAuthors, error: tableAuthorsError } = await supabase
+      let fallbackQuery = supabase
         .from('authors')
         .select('*')
         .order('name');
+      if (language?.trim()) {
+        fallbackQuery = fallbackQuery.eq('language_code', language.trim().toLowerCase());
+      }
+      const { data: tableAuthors, error: tableAuthorsError } = await fallbackQuery;
 
       if (!tableAuthorsError && tableAuthors?.length) {
         data = tableAuthors.map((row: Record<string, unknown>) => ({

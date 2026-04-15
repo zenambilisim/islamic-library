@@ -244,6 +244,13 @@
       "deleteConfirm": "Are you sure you want to delete this book?",
       "deleting": "Deleting...",
       "deleteError": "Error deleting book.",
+      "bulkDeleteButton": "Delete selected ({{count}})",
+      "bulkDeleteConfirm": "Are you sure you want to delete {{count}} books?",
+      "bulkDeleting": "Deleting selected...",
+      "bulkDeleteError": "Error deleting selected books.",
+      "bulkDeletePartialError": "{{deleted}} books were deleted, {{failed}} books could not be deleted.",
+      "selectAll": "Select all books on this page",
+      "selectOne": "Select book \"{{title}}\"",
       "pagination": {
         "prev": "Previous",
         "next": "Next",

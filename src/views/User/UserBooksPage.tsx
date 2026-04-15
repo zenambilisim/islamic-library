@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
@@ -27,22 +27,92 @@ const UserBooksPage = () => {
   } = useUserBooksPaginated(20);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  useEffect(() => {
+    const visibleIds = new Set(books.map((book) => book.id));
+    setSelectedIds((prev) => {
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (visibleIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+  }, [books]);
+
+  const deleteMany = async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    const isBulk = ids.length > 1;
+    setDeleteError(null);
+    setDeletingId(ids.length === 1 ? ids[0] : null);
+    setBulkDeleting(isBulk);
+    try {
+      const res = await fetch('/api/books/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+
+      const failedCount = Array.isArray(data.failed) ? data.failed.length : 0;
+      if (failedCount > 0) {
+        setDeleteError(
+          t('user.books.bulkDeletePartialError', {
+            deleted: Number(data.deleted) || 0,
+            failed: failedCount,
+          })
+        );
+      }
+
+      await refetch();
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : t('user.books.bulkDeleteError'));
+    } finally {
+      setDeletingId(null);
+      setBulkDeleting(false);
+    }
+  };
 
   const handleDelete = async (book: Book) => {
     if (!window.confirm(t('user.books.deleteConfirm'))) return;
-    setDeleteError(null);
-    setDeletingId(book.id);
-    try {
-      const res = await fetch(`/api/books/${book.id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.statusText);
-      await refetch();
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : t('user.books.deleteError'));
-    } finally {
-      setDeletingId(null);
-    }
+    await deleteMany([book.id]);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = books.filter((book) => selectedIds.has(book.id)).map((book) => book.id);
+    if (ids.length === 0) return;
+    if (!window.confirm(t('user.books.bulkDeleteConfirm', { count: ids.length }))) return;
+    await deleteMany(ids);
+  };
+
+  const allOnPageSelected = books.length > 0 && books.every((book) => selectedIds.has(book.id));
+
+  const toggleSelectAllOnPage = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const book of books) {
+        if (checked) next.add(book.id);
+        else next.delete(book.id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectOne = (bookId: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(bookId);
+      else next.delete(bookId);
+      return next;
+    });
   };
 
   if (error) {
@@ -60,6 +130,19 @@ const UserBooksPage = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('user.books.title')}</h1>
         <div className="flex flex-wrap items-center gap-3">
+          {books.length > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting || selectedIds.size === 0 || deletingId !== null}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 size={18} />
+              {bulkDeleting
+                ? t('user.books.bulkDeleting')
+                : t('user.books.bulkDeleteButton', { count: selectedIds.size })}
+            </button>
+          )}
           <Link
             href="/user/books/new"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
@@ -96,6 +179,15 @@ const UserBooksPage = () => {
               <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50/80">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-10">
+                      <input
+                        type="checkbox"
+                        checked={allOnPageSelected}
+                        onChange={(e) => toggleSelectAllOnPage(e.target.checked)}
+                        disabled={bulkDeleting || deletingId !== null || books.length === 0}
+                        aria-label={t('user.books.selectAll')}
+                      />
+                    </th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
                       {t('user.books.table.cover')}
                     </th>
@@ -122,6 +214,15 @@ const UserBooksPage = () => {
                       key={book.id}
                       className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                     >
+                      <td className="py-2 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(book.id)}
+                          onChange={(e) => toggleSelectOne(book.id, e.target.checked)}
+                          disabled={bulkDeleting || deletingId !== null}
+                          aria-label={t('user.books.selectOne', { title: book.title })}
+                        />
+                      </td>
                       <td className="py-2 px-4">
                         <button
                           type="button"
@@ -171,7 +272,7 @@ const UserBooksPage = () => {
                           <button
                             type="button"
                             onClick={() => handleDelete(book)}
-                            disabled={deletingId !== null}
+                            disabled={bulkDeleting || deletingId !== null}
                             className="p-2 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             title={t('user.books.table.delete')}
                           >

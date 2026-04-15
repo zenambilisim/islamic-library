@@ -1,13 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { normalizeLanguageCode } from '@/lib/author-db';
 import { createAuthor, getAuthors } from '@/lib/authors';
 
 /**
  * GET /api/authors
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { authors, error } = await getAuthors();
+    const { searchParams } = new URL(request.url);
+    const languageRaw = searchParams.get('language');
+    const language = languageRaw?.trim()
+      ? normalizeLanguageCode(languageRaw, 'tr')
+      : undefined;
+    const { authors, error } = await getAuthors(language);
 
     if (error) {
       return NextResponse.json(

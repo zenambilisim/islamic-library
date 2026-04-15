@@ -244,6 +244,13 @@
       "deleteConfirm": "Вы уверены, что хотите удалить эту книгу?",
       "deleting": "Удаление...",
       "deleteError": "Ошибка при удалении книги.",
+      "bulkDeleteButton": "Удалить выбранные ({{count}})",
+      "bulkDeleteConfirm": "Вы уверены, что хотите удалить {{count}} книг?",
+      "bulkDeleting": "Массовое удаление...",
+      "bulkDeleteError": "Ошибка при удалении выбранных книг.",
+      "bulkDeletePartialError": "Удалено книг: {{deleted}}, не удалось удалить: {{failed}}.",
+      "selectAll": "Выбрать все книги на этой странице",
+      "selectOne": "Выбрать книгу «{{title}}»",
       "pagination": {
         "prev": "Назад",
         "next": "Вперёд",

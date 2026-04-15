@@ -141,8 +141,9 @@ const CategoriesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  const activeLanguage = resolveAppLanguage(i18n.language);
   const { categories: supabaseCategories, loading: categoriesLoading, error: categoriesError } =
-    useSupabaseCategories();
+    useSupabaseCategories(activeLanguage);
 
   const [totalBooksCount, setTotalBooksCount] = useState<number | null>(null);
   const [totalBooksLoading, setTotalBooksLoading] = useState(true);

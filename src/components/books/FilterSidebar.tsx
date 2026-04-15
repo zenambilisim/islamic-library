@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Filter, Folder, X, Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
+import { resolveAppLanguage } from '../../hooks/useSupabaseBooks';
 import type { SearchFilters } from '../../types';
 
 interface FilterSidebarProps {
@@ -11,8 +12,9 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSidebarProps) => {
-  const { t } = useTranslation();
-  const { categories, loading, error } = useSupabaseCategories();
+  const { t, i18n } = useTranslation();
+  const language = resolveAppLanguage(i18n.language);
+  const { categories, loading, error } = useSupabaseCategories(language);
 
   const handleCategoryChange = (categorySlug: string) => {
     onFiltersChange({

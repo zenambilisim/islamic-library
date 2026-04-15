@@ -8,11 +8,17 @@ interface UseSupabaseAuthorsReturn {
   refetch: () => Promise<void>;
 }
 
+function normalizeQueryLanguage(language?: string): string | null {
+  const base = (language || '').trim().toLowerCase().split('-')[0];
+  if (base === 'tr' || base === 'en' || base === 'ru' || base === 'az') return base;
+  return null;
+}
+
 /**
  * Sunucu API'sinden yazarları çeken custom hook
  * GET /api/authors – Supabase env sadece sunucuda (SUPABASE_URL, SUPABASE_ANON_KEY)
  */
-export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
+export function useSupabaseAuthors(language?: string): UseSupabaseAuthorsReturn {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +27,9 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/authors');
+      const lang = normalizeQueryLanguage(language);
+      const qs = lang ? `?language=${encodeURIComponent(lang)}` : '';
+      const res = await fetch(`/api/authors${qs}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || res.statusText);
@@ -38,7 +46,7 @@ export function useSupabaseAuthors(): UseSupabaseAuthorsReturn {
 
   useEffect(() => {
     fetchAuthors();
-  }, []);
+  }, [language]);
 
   return {
     authors,

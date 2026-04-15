@@ -214,6 +214,13 @@ export function tryExtractStorageKey(pathOrUrl: string): string | null {
     const u = new URL(s);
     const path = u.pathname.replace(/^\/+/, '').split('?')[0];
     if (path.startsWith('covers/') || path.startsWith('books/')) return path;
+    const bucketPrefix = `${bucket.replace(/^\/+|\/+$/g, '')}/`;
+    if (bucketPrefix !== '/' && path.startsWith(bucketPrefix)) {
+      const withoutBucket = path.slice(bucketPrefix.length);
+      if (withoutBucket.startsWith('covers/') || withoutBucket.startsWith('books/')) {
+        return withoutBucket;
+      }
+    }
     return null;
   } catch {
     return null;

@@ -2,11 +2,15 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
+import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 
 const UserCategoriesPage = () => {
-  const { categories, loading, error, refetch } = useSupabaseCategories();
+  const { i18n } = useTranslation();
+  const language = resolveAppLanguage(i18n.language);
+  const { categories, loading, error, refetch } = useSupabaseCategories(language);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 

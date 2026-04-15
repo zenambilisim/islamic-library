@@ -14,8 +14,8 @@ type BulkDeleteResponse = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const idsRaw = Array.isArray(body?.ids) ? body.ids : [];
-    const ids = [...new Set(idsRaw.map((id) => String(id ?? '').trim()).filter(Boolean))];
+    const idsRaw: unknown[] = Array.isArray(body?.ids) ? (body.ids as unknown[]) : [];
+    const ids = [...new Set(idsRaw.map((id: unknown) => String(id ?? '').trim()).filter(Boolean))];
 
     if (ids.length === 0) {
       return NextResponse.json({ error: 'ids zorunludur' }, { status: 400 });

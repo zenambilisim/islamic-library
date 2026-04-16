@@ -31,6 +31,8 @@ const Footer = () => {
     );
   }
 
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white relative overflow-hidden">
       {/* Background decoration */}
@@ -77,7 +79,7 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-gray-300">
                 <Mail size={16} />
-                <span>shiaislamicapps@gmail.com</span>
+                <span>islamic.library@yahoo.com</span>
               </div>
             </div>
           </div>
@@ -87,7 +89,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2025 Islamic Library. {t('footer.copyright')}
+              © {currentYear} Islamic Library. {t('footer.copyright')}
             </p>
           </div>
         </div>

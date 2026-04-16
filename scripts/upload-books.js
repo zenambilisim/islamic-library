@@ -475,14 +475,14 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
     const pdfFile = files.find(f => f.endsWith('.pdf'));
     const epubFile = files.find(f => f.endsWith('.epub'));
     const docxFile = files.find(f => f.endsWith('.docx') || f.endsWith('.doc'));
-    const coverFile = files.find(f => f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg'));
+    const coverFile = files.find((f) => f.toLowerCase().endsWith('.png'));
 
     // 3. Gerekli dosyaları kontrol et
     if (!pdfFile) {
       throw new Error('PDF file not found');
     }
     if (!coverFile) {
-      throw new Error('Cover image not found');
+      throw new Error('Cover image not found (PNG required)');
     }
 
     log.debug(`  Files: PDF ✅, EPUB ${epubFile ? '✅' : '❌'}, DOCX ${docxFile ? '✅' : '❌'}, Cover ✅`);

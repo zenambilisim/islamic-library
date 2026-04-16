@@ -135,7 +135,8 @@ const BulkUploadPage = () => {
         <code className="text-xs bg-gray-100 px-1 rounded">tr</code>, <code className="text-xs bg-gray-100 px-1 rounded">ru</code>,{' '}
         <code className="text-xs bg-gray-100 px-1 rounded">az</code>), altında kategoriler, altında &quot;Kitap Adı - Yazar&quot;
         klasörleri. Sadece dil klasörünü seçerseniz tarayıcı üst klasör adını vermez; aşağıdaki &quot;Varsayılan dil&quot; o kitaplar
-        için kullanılır. Eski kök/kategori/kitap yapısında da varsayılan dil geçerlidir.
+        için kullanılır. Eski kök/kategori/kitap yapısında da varsayılan dil geçerlidir. Toplu yüklemede kapak
+        yalnızca <code className="text-xs bg-gray-100 px-1 rounded">.png</code> dosyası olarak tanınır.
       </p>
 
       <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
@@ -164,7 +165,7 @@ const BulkUploadPage = () => {
           directory: "",
         } as InputHTMLAttributes<HTMLInputElement>)}
         multiple
-        accept=".pdf,.epub,.doc,.docx,.txt,.png,.jpg,.jpeg"
+        accept=".pdf,.epub,.doc,.docx,.txt,.png"
         onChange={handleFolderChange}
         className="hidden"
       />
@@ -262,7 +263,7 @@ const BulkUploadPage = () => {
                     <td className="py-2 px-3 font-medium">{entry.title}</td>
                     <td className="py-2 px-3">{entry.author}</td>
                     <td className="py-2 px-3 text-gray-500">
-                      PDF ✓ Kapak ✓
+                      PDF ✓ PNG ✓
                       {entry.files.epub && ' EPUB ✓'}
                       {entry.files.docx && ' Word ✓'}
                       {entry.files.rtf && ' RTF ✓'}

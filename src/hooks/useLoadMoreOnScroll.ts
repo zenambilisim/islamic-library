@@ -38,6 +38,9 @@ export function useLoadMoreOnScroll(
 
   const rootMargin = `0px 0px ${prefetchPx}px 0px`;
 
+  // `loading` bağımlılığı: ilk sayfa yüklenirken sentinel zaten görünür alandaysa IO bir kez
+  // tetiklenir, callback `loading` yüzünden no-op olur; yükleme bitince kesişim değişmediği
+  // için tekrar çağrılmaz. Observer'ı loading bittiğinde yeniden kurunca ilk teslim yeniden çalışır.
   useEffect(() => {
     if (!enabled || !hasMore) return;
     const el = sentinelRef.current;
@@ -56,7 +59,7 @@ export function useLoadMoreOnScroll(
 
     obs.observe(el);
     return () => obs.disconnect();
-  }, [enabled, hasMore, watchKey, rootMargin]);
+  }, [enabled, hasMore, loading, watchKey, rootMargin]);
 
   const wasLoadingMoreRef = useRef(false);
 

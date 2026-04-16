@@ -74,8 +74,6 @@ export function parseBookFolderName(folderName: string): { title: string; author
   };
 }
 
-const COVER_EXT = ['.png', '.jpg', '.jpeg'];
-
 /**
  * Dil/kategori/kitap yolu segmentlerini çıkarır.
  * Yeni: dil/kategori/kitap-klasörü/dosya (dil = en|tr|ru|az veya eşanlamlı).
@@ -183,7 +181,7 @@ export function parseFolderFiles(
     else if (name.endsWith('.doc') && !entry.docx) entry.docx = file;
     else if (name.endsWith('.rtf')) entry.rtf = file;
     else if (name.endsWith('.txt')) entry.txt = file;
-    else if (COVER_EXT.some((ext) => name.endsWith(ext))) entry.cover = file;
+    else if (name.endsWith('.png')) entry.cover = file;
   }
 
   const result: BookEntry[] = [];

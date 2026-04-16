@@ -16,13 +16,15 @@ const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const isSearchMode = searchTerm.trim().length > 0;
   
   const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } =
-    useSupabaseBooks(filters.sortBy ?? 'uploadDate');
+    useSupabaseBooks(filters.sortBy ?? 'uploadDate', { fetchAll: isSearchMode });
   const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
     hasMore,
     loading,
     loadingMore,
+    enabled: !isSearchMode,
     prefetchPx: 1200,
   });
 

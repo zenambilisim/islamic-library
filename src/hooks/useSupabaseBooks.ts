@@ -18,7 +18,13 @@ interface UseSupabaseBooksReturn {
   loadingMore: boolean;
 }
 
+interface UseSupabaseBooksOptions {
+  /** Aramada tüm sonuçları getirmek için tüm sayfaları otomatik çeker. */
+  fetchAll?: boolean;
+}
+
 const ITEMS_PER_PAGE = 10;
+const SEARCH_ITEMS_PER_PAGE = 50;
 
 /** Kategori detay sayfası — bir istekte taşınacak kitap sayısı */
 const CATEGORY_ITEMS_PER_PAGE = 12;
@@ -27,9 +33,13 @@ const CATEGORY_ITEMS_PER_PAGE = 12;
  * Sunucu API'sinden kitapları çeken custom hook
  * GET /api/books – sayfalama; seçili arayüz diline göre filtre (books.language)
  */
-export function useSupabaseBooks(sortBy: SearchFilters['sortBy'] = 'uploadDate'): UseSupabaseBooksReturn {
+export function useSupabaseBooks(
+  sortBy: SearchFilters['sortBy'] = 'uploadDate',
+  options?: UseSupabaseBooksOptions
+): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
+  const fetchAll = options?.fetchAll === true;
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,6 +62,44 @@ export function useSupabaseBooks(sortBy: SearchFilters['sortBy'] = 'uploadDate')
         setPage(0);
       }
       setError(null);
+
+      if (!isLoadMore && fetchAll) {
+        let nextPage = 0;
+        const collected: Book[] = [];
+
+        while (true) {
+          const params = new URLSearchParams({
+            page: String(nextPage),
+            limit: String(SEARCH_ITEMS_PER_PAGE),
+            language,
+            sortBy: sortBy ?? 'uploadDate',
+          });
+          const res = await fetch(`/api/books?${params}`);
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || res.statusText);
+          }
+
+          const data = await res.json();
+          const { books: pageBooks, hasMore: pageHasMore } = data;
+          if (!Array.isArray(pageBooks)) break;
+
+          collected.push(...pageBooks);
+
+          const shouldLoadNext =
+            typeof pageHasMore === 'boolean'
+              ? pageHasMore
+              : pageBooks.length >= SEARCH_ITEMS_PER_PAGE;
+          if (!shouldLoadNext || pageBooks.length === 0) break;
+          nextPage += 1;
+        }
+
+        setBooks(collected);
+        setPage(0);
+        setHasMore(false);
+        return;
+      }
 
       const currentPage = isLoadMore ? pageRef.current : 0;
       const params = new URLSearchParams({
@@ -99,12 +147,12 @@ export function useSupabaseBooks(sortBy: SearchFilters['sortBy'] = 'uploadDate')
         setLoading(false);
       }
     }
-  }, [language, sortBy]);
+  }, [fetchAll, language, sortBy]);
 
   const loadMore = useCallback(async () => {
-    if (loading || loadingMore || !hasMore) return;
+    if (fetchAll || loading || loadingMore || !hasMore) return;
     await fetchBooks(true);
-  }, [loading, loadingMore, hasMore, fetchBooks]);
+  }, [fetchAll, loading, loadingMore, hasMore, fetchBooks]);
 
   // Dil veya mount: listeyi baştan çek
   useEffect(() => {

@@ -13,9 +13,6 @@ async function resolveOrCreateAuthorId(
   opts: { author_id?: string | null; authorName: string; language_code: string }
 ): Promise<{ id: string } | { error: Error }> {
   const lang = normalizeLanguageCode(opts.language_code, 'tr');
-  const name = opts.authorName.trim();
-  if (!name) return { error: new Error('Yazar zorunludur') };
-
   const idIn = opts.author_id?.trim();
   if (idIn) {
     const { data: byId, error: e1 } = await client
@@ -35,6 +32,9 @@ async function resolveOrCreateAuthorId(
     }
     return { id: row.id };
   }
+
+  const name = opts.authorName.trim();
+  if (!name) return { error: new Error('Yazar zorunludur') };
 
   const { data: existingAuthor, error: existingAuthorError } = await client
     .from('authors')
@@ -71,6 +71,36 @@ async function resolveOrCreateAuthorId(
   if (createdAuthorError) return { error: createdAuthorError as Error };
   if (!createdAuthor?.id) return { error: new Error('Yazar oluşturulamadı') };
   return { id: createdAuthor.id as string };
+}
+
+/** API / form: authors[] veya tek author + author_id */
+export type BookAuthorInput = { name: string; author_id?: string | null };
+
+function normalizeBookAuthorsPayload(payload: {
+  authors?: BookAuthorInput[] | null;
+  author?: string;
+  author_id?: string | null;
+}): BookAuthorInput[] | { error: Error } {
+  if (Array.isArray(payload.authors) && payload.authors.length > 0) {
+    const out: BookAuthorInput[] = [];
+    const seen = new Set<string>();
+    for (const raw of payload.authors) {
+      if (!raw || typeof raw !== 'object') continue;
+      const aid = typeof raw.author_id === 'string' ? raw.author_id.trim() : '';
+      const nm = typeof raw.name === 'string' ? raw.name.trim() : '';
+      if (!aid && !nm) continue;
+      const key = aid ? `id:${aid}` : `n:${nm.toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ name: nm, author_id: aid || undefined });
+    }
+    if (out.length === 0) return { error: new Error('En az bir geçerli yazar gerekir') };
+    return out;
+  }
+  const single = (payload.author ?? '').trim();
+  if (!single) return { error: new Error('Yazar zorunludur') };
+  const aid = payload.author_id?.trim();
+  return [{ name: single, author_id: aid || undefined }];
 }
 
 // ***** BOOK OPERATIONS *****
@@ -748,9 +778,11 @@ async function resolveExistingCategoryId(
 
 export interface CreateBookPayload {
   title: string;
-  author: string;
-  /** Arayüzden seçim: doğrudan bu id ile bağlanır */
+  /** Tek yazar (authors yoksa kullanılır) */
+  author?: string;
   author_id?: string | null;
+  /** Birden fazla yazar; doluysa author / author_id yok sayılır */
+  authors?: BookAuthorInput[];
   /** Liste dışı / toplu yükleme için slug veya tam ad */
   category?: string;
   /** Arayüzden seçim: doğrudan bu id ile bağlanır, yeni kategori oluşturulmaz */
@@ -762,6 +794,9 @@ export interface CreateBookPayload {
 
 /** Yeni kitap kaydı oluşturur (dosya/kapak yok). */
 export async function createBook(payload: CreateBookPayload) {
+  const authorsNorm = normalizeBookAuthorsPayload(payload);
+  if ('error' in authorsNorm) return { book: null, error: authorsNorm.error };
+
   const row = {
     title: payload.title,
     description: payload.description ?? '',
@@ -779,31 +814,42 @@ export async function createBook(payload: CreateBookPayload) {
   if (error) return { book: null, error };
   const bookId = data.id as string;
 
-  const authorRes = await resolveOrCreateAuthorId(db(), {
-    author_id: payload.author_id,
-    authorName: payload.author,
-    language_code: payload.language_code,
-  });
-  if ('error' in authorRes) return { book: null, error: authorRes.error };
-  const authorId = authorRes.id;
-
   const catRes = await resolveExistingCategoryId(db(), {
     category_id: payload.category_id,
     category: payload.category ?? '',
     language_code: payload.language_code,
   });
-  if ('error' in catRes) return { book: null, error: catRes.error };
+  if ('error' in catRes) {
+    await db().from('books').delete().eq('id', bookId);
+    return { book: null, error: catRes.error };
+  }
   const categoryIdToLink = catRes.id;
 
-  const { error: relAuthorError } = await db()
-    .from('book_authors')
-    .insert({
+  const authorRows: { book_id: string; author_id: string; author_order: number; role: string }[] = [];
+  for (let i = 0; i < authorsNorm.length; i++) {
+    const a = authorsNorm[i];
+    const authorRes = await resolveOrCreateAuthorId(db(), {
+      author_id: a.author_id,
+      authorName: a.name,
+      language_code: payload.language_code,
+    });
+    if ('error' in authorRes) {
+      await db().from('books').delete().eq('id', bookId);
+      return { book: null, error: authorRes.error };
+    }
+    authorRows.push({
       book_id: bookId,
-      author_id: authorId,
-      author_order: 1,
+      author_id: authorRes.id,
+      author_order: i + 1,
       role: 'author',
     });
-  if (relAuthorError) return { book: null, error: relAuthorError };
+  }
+
+  const { error: relAuthorError } = await db().from('book_authors').insert(authorRows);
+  if (relAuthorError) {
+    await db().from('books').delete().eq('id', bookId);
+    return { book: null, error: relAuthorError };
+  }
 
   const { error: relCategoryError } = await db()
     .from('book_categories')
@@ -812,15 +858,22 @@ export async function createBook(payload: CreateBookPayload) {
       category_id: categoryIdToLink,
       is_primary: true,
     });
-  if (relCategoryError) return { book: null, error: relCategoryError };
+  if (relCategoryError) {
+    await db().from('book_authors').delete().eq('book_id', bookId);
+    await db().from('books').delete().eq('id', bookId);
+    return { book: null, error: relCategoryError };
+  }
 
-  return { book: data, error: null };
+  const { book: fullBook, error: fetchErr } = await getBookById(bookId);
+  if (fetchErr || !fullBook) return { book: data, error: null };
+  return { book: fullBook, error: null };
 }
 
 export interface UpdateBookPayload {
   title: string;
-  author: string;
+  author?: string;
   author_id?: string | null;
+  authors?: BookAuthorInput[];
   category?: string;
   category_id?: string | null;
   description?: string;
@@ -832,10 +885,11 @@ export interface UpdateBookPayload {
 export async function updateBook(bookId: string, payload: UpdateBookPayload) {
   const client = db();
   const title = payload.title.trim();
-  const author = payload.author.trim();
-  if (!title || !author) {
-    return { book: null, error: new Error('Başlık ve yazar zorunludur') };
+  if (!title) {
+    return { book: null, error: new Error('Başlık zorunludur') };
   }
+  const authorsNorm = normalizeBookAuthorsPayload(payload);
+  if ('error' in authorsNorm) return { book: null, error: authorsNorm.error };
   const hasCategory = Boolean(payload.category_id?.trim() || payload.category?.trim());
   if (!hasCategory) {
     return { book: null, error: new Error('Kategori zorunludur') };
@@ -855,23 +909,27 @@ export async function updateBook(bookId: string, payload: UpdateBookPayload) {
 
   if (updateErr) return { book: null, error: updateErr };
 
-  const authorRes = await resolveOrCreateAuthorId(client, {
-    author_id: payload.author_id,
-    authorName: author,
-    language_code: payload.language_code,
-  });
-  if ('error' in authorRes) return { book: null, error: authorRes.error };
-  const authorId = authorRes.id;
-
   const { error: delAuthRel } = await client.from('book_authors').delete().eq('book_id', bookId);
   if (delAuthRel) return { book: null, error: delAuthRel };
 
-  const { error: relAuthorError } = await client.from('book_authors').insert({
-    book_id: bookId,
-    author_id: authorId,
-    author_order: 1,
-    role: 'author',
-  });
+  const authorRows: { book_id: string; author_id: string; author_order: number; role: string }[] = [];
+  for (let i = 0; i < authorsNorm.length; i++) {
+    const a = authorsNorm[i];
+    const authorRes = await resolveOrCreateAuthorId(client, {
+      author_id: a.author_id,
+      authorName: a.name,
+      language_code: payload.language_code,
+    });
+    if ('error' in authorRes) return { book: null, error: authorRes.error };
+    authorRows.push({
+      book_id: bookId,
+      author_id: authorRes.id,
+      author_order: i + 1,
+      role: 'author',
+    });
+  }
+
+  const { error: relAuthorError } = await client.from('book_authors').insert(authorRows);
   if (relAuthorError) return { book: null, error: relAuthorError };
 
   const catRes = await resolveExistingCategoryId(client, {

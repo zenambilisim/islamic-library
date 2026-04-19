@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Category } from '@/types';
@@ -27,8 +27,10 @@ const AddBookPage = () => {
     useSupabaseAuthors();
 
   const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [authorId, setAuthorId] = useState('');
+  const authorRowIdRef = useRef(1);
+  const [authorRows, setAuthorRows] = useState<{ id: number; authorId: string }[]>([
+    { id: 0, authorId: '' },
+  ]);
   /** Seçilen satırın categories.id — book_categories ile DB’ye bağlanır */
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
@@ -54,8 +56,8 @@ const AddBookPage = () => {
   );
 
   useEffect(() => {
-    setAuthorId('');
-    setAuthor('');
+    authorRowIdRef.current = 1;
+    setAuthorRows([{ id: 0, authorId: '' }]);
     setCategoryId('');
   }, [language]);
 
@@ -104,8 +106,21 @@ const AddBookPage = () => {
       setError('Lütfen önce dil seçin.');
       return;
     }
-    if (!title.trim() || !author.trim()) {
-      setError('Başlık ve yazar zorunludur.');
+    if (!title.trim()) {
+      setError('Başlık zorunludur.');
+      return;
+    }
+    const authorsPayload = authorRows
+      .map((row) => {
+        const aid = row.authorId.trim();
+        if (!aid) return null;
+        const a = authorsForLanguage.find((x) => x.id === aid);
+        if (!a) return null;
+        return { name: a.name, author_id: aid };
+      })
+      .filter((x): x is { name: string; author_id: string } => x != null);
+    if (authorsPayload.length === 0) {
+      setError('En az bir yazar seçin.');
       return;
     }
     if (categoriesLoading) {
@@ -129,8 +144,7 @@ const AddBookPage = () => {
 
     const payload: Record<string, unknown> = {
       title: title.trim(),
-      author: author.trim(),
-      author_id: authorId.trim() || undefined,
+      authors: authorsPayload,
       description: description.trim() || undefined,
       language,
       pages: pages ? parseInt(pages, 10) : undefined,
@@ -227,9 +241,25 @@ const AddBookPage = () => {
           </div>
 
           <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label htmlFor="author" className="block text-sm font-semibold text-gray-800 mb-2">
-              Yazar *
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <label className="block text-sm font-semibold text-gray-800">Yazarlar *</label>
+              <button
+                type="button"
+                disabled={authorsLoading || authorsForLanguage.length === 0}
+                onClick={() =>
+                  setAuthorRows((rows) => [
+                    ...rows,
+                    { id: authorRowIdRef.current++, authorId: '' },
+                  ])
+                }
+                className="text-sm font-medium text-primary-700 hover:text-primary-800 disabled:opacity-40"
+              >
+                + Yazar ekle
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Sıra kitapta yazar listesinde korunur. Aynı yazarı iki kez seçmeyin.
+            </p>
             {authorsError && (
               <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 <p>{authorsError}</p>
@@ -244,7 +274,6 @@ const AddBookPage = () => {
             )}
             {authorsLoading ? (
               <select
-                id="author"
                 disabled
                 className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-500"
               >
@@ -261,24 +290,44 @@ const AddBookPage = () => {
                 </Link>
               </div>
             ) : (
-              <select
-                id="author"
-                value={authorId}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  setAuthorId(id);
-                  const a = authorsForLanguage.find((x) => x.id === id);
-                  if (a) setAuthor(a.name);
-                }}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Yazar seçin</option>
-                {authorsForLanguage.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
+              <ul className="space-y-2">
+                {authorRows.map((row, idx) => (
+                  <li key={row.id} className="flex gap-2 items-center">
+                    <span className="text-xs text-gray-500 w-6 shrink-0">{idx + 1}.</span>
+                    <select
+                      aria-label={`Yazar ${idx + 1}`}
+                      value={row.authorId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setAuthorRows((rows) =>
+                          rows.map((r) => (r.id === row.id ? { ...r, authorId: id } : r))
+                        );
+                      }}
+                      className="flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Yazar seçin</option>
+                      {authorsForLanguage.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                    {authorRows.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAuthorRows((rows) =>
+                            rows.length <= 1 ? rows : rows.filter((r) => r.id !== row.id)
+                          )
+                        }
+                        className="shrink-0 text-sm text-red-600 hover:text-red-800 px-2"
+                      >
+                        Kaldır
+                      </button>
+                    )}
+                  </li>
                 ))}
-              </select>
+              </ul>
             )}
           </div>
 

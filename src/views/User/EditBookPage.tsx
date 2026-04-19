@@ -33,8 +33,10 @@ const EditBookPage = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [authorId, setAuthorId] = useState('');
+  const authorRowIdRef = useRef(1);
+  const [authorRows, setAuthorRows] = useState<{ id: number; authorId: string }[]>([
+    { id: 0, authorId: '' },
+  ]);
   const [categoryId, setCategoryId] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -63,18 +65,6 @@ const EditBookPage = () => {
   const authorsSorted = [...authors].sort((a, b) =>
     a.name.localeCompare(b.name, 'tr', { sensitivity: 'base' })
   );
-
-  const authorsForLanguage = useMemo(
-    () => authorsSorted.filter((a) => a.language === language),
-    [authorsSorted, language]
-  );
-
-  useEffect(() => {
-    if (bookLoading || !language.trim() || !author.trim()) return;
-    if (authorId) return;
-    const m = authorsForLanguage.find((a) => a.name === author);
-    if (m) setAuthorId(m.id);
-  }, [bookLoading, language, author, authorId, authorsForLanguage]);
 
   const categoriesForLanguage = useMemo(
     () => categories.filter((c) => c.language === language),
@@ -109,8 +99,21 @@ const EditBookPage = () => {
         if (cancelled) return;
         const b = data as Book;
         setTitle(b.title);
-        setAuthor(b.author);
-        setAuthorId(b.authorId ?? '');
+        if (b.authorIds?.length) {
+          authorRowIdRef.current = 1;
+          setAuthorRows(
+            b.authorIds.map((authorId) => ({
+              id: authorRowIdRef.current++,
+              authorId,
+            }))
+          );
+        } else if (b.authorId) {
+          authorRowIdRef.current = 1;
+          setAuthorRows([{ id: 0, authorId: b.authorId }]);
+        } else {
+          authorRowIdRef.current = 1;
+          setAuthorRows([{ id: 0, authorId: '' }]);
+        }
         setCategory(b.category);
         setCategoryId(b.categoryId ?? '');
         setDescription(b.description || '');
@@ -169,8 +172,21 @@ const EditBookPage = () => {
       setError('Lütfen dil seçin.');
       return;
     }
-    if (!title.trim() || !author.trim()) {
-      setError('Başlık ve yazar zorunludur.');
+    if (!title.trim()) {
+      setError('Başlık zorunludur.');
+      return;
+    }
+    const authorsPayload = authorRows
+      .map((row) => {
+        const aid = row.authorId.trim();
+        if (!aid) return null;
+        const a = authorsSorted.find((x) => x.id === aid);
+        if (!a) return null;
+        return { name: a.name, author_id: aid };
+      })
+      .filter((x): x is { name: string; author_id: string } => x != null);
+    if (authorsPayload.length === 0) {
+      setError('En az bir yazar seçin.');
       return;
     }
     if (categoriesLoading) {
@@ -194,8 +210,7 @@ const EditBookPage = () => {
 
     const payload: Record<string, unknown> = {
       title: title.trim(),
-      author: author.trim(),
-      author_id: authorId.trim() || undefined,
+      authors: authorsPayload,
       description: description.trim() || undefined,
       language,
       pages: pages ? parseInt(pages, 10) : undefined,
@@ -290,8 +305,8 @@ const EditBookPage = () => {
               value={language}
               onChange={(e) => {
                 setLanguage(e.target.value);
-                setAuthorId('');
-                setAuthor('');
+                authorRowIdRef.current = 1;
+                setAuthorRows([{ id: 0, authorId: '' }]);
                 if (error) setError(null);
               }}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
@@ -318,9 +333,25 @@ const EditBookPage = () => {
               </div>
 
               <div className="p-4 rounded-xl border border-gray-200 bg-white">
-                <label htmlFor="author" className="block text-sm font-semibold text-gray-800 mb-2">
-                  Yazar *
-                </label>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <label className="block text-sm font-semibold text-gray-800">Yazarlar *</label>
+                  <button
+                    type="button"
+                    disabled={authorsLoading || authorsSorted.length === 0}
+                    onClick={() =>
+                      setAuthorRows((rows) => [
+                        ...rows,
+                        { id: authorRowIdRef.current++, authorId: '' },
+                      ])
+                    }
+                    className="text-sm font-medium text-primary-700 hover:text-primary-800 disabled:opacity-40"
+                  >
+                    + Yazar ekle
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Liste tüm dillerdeki yazarları gösterir. Sıra kayıtta korunur.
+                </p>
                 {authorsError && (
                   <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                     <p>{authorsError}</p>
@@ -335,13 +366,12 @@ const EditBookPage = () => {
                 )}
                 {authorsLoading ? (
                   <select
-                    id="author"
                     disabled
                     className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-500"
                   >
                     <option>Yazarlar yükleniyor...</option>
                   </select>
-                ) : authorsForLanguage.length === 0 ? (
+                ) : authorsSorted.length === 0 ? (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
                     <p className="mb-2">Veritabanında henüz yazar yok.</p>
                     <Link
@@ -352,22 +382,44 @@ const EditBookPage = () => {
                     </Link>
                   </div>
                 ) : (
-                  <select
-                    id="author"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Yazar seçin</option>
-                    {author && !authorsSorted.some((a) => a.name === author) && (
-                      <option value={author}>{author}</option>
-                    )}
-                    {authorsSorted.map((a) => (
-                      <option key={a.id} value={a.name}>
-                        {a.name}
-                      </option>
+                  <ul className="space-y-2">
+                    {authorRows.map((row, idx) => (
+                      <li key={row.id} className="flex gap-2 items-center">
+                        <span className="text-xs text-gray-500 w-6 shrink-0">{idx + 1}.</span>
+                        <select
+                          aria-label={`Yazar ${idx + 1}`}
+                          value={row.authorId}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            setAuthorRows((rows) =>
+                              rows.map((r) => (r.id === row.id ? { ...r, authorId: id } : r))
+                            );
+                          }}
+                          className="flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="">Yazar seçin</option>
+                          {authorsSorted.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name} ({a.language})
+                            </option>
+                          ))}
+                        </select>
+                        {authorRows.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAuthorRows((rows) =>
+                                rows.length <= 1 ? rows : rows.filter((r) => r.id !== row.id)
+                              )
+                            }
+                            className="shrink-0 text-sm text-red-600 hover:text-red-800 px-2"
+                          >
+                            Kaldır
+                          </button>
+                        )}
+                      </li>
                     ))}
-                  </select>
+                  </ul>
                 )}
               </div>
 
@@ -494,7 +546,7 @@ const EditBookPage = () => {
                     submitting ||
                     authorsLoading ||
                     !!authorsError ||
-                    authorsForLanguage.length === 0
+                    authorsSorted.length === 0
                   }
                   className="px-5 py-2.5 rounded-lg font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

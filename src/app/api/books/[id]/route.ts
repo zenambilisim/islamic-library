@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBookById, deleteBook, updateBook } from '@/lib/books';
+import { getBookById, deleteBook, updateBook, type BookAuthorInput } from '@/lib/books';
 import { convertSupabaseBookToBook } from '@/lib/converters-server';
+
+function parseAuthorsBody(body: Record<string, unknown>): BookAuthorInput[] | undefined {
+  const raw = body.authors;
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+  const out: BookAuthorInput[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    const name = typeof o.name === 'string' ? o.name : '';
+    const author_id = typeof o.author_id === 'string' ? o.author_id : undefined;
+    if (!name.trim() && !author_id?.trim()) continue;
+    out.push({ name, author_id });
+  }
+  return out.length ? out : undefined;
+}
 
 /**
  * DELETE /api/books/[id]
@@ -40,15 +55,17 @@ export async function PATCH(
     if (!id) {
       return NextResponse.json({ error: 'Missing book id' }, { status: 400 });
     }
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
+    const authorsParsed = parseAuthorsBody(body);
     const { error } = await updateBook(id, {
-      title: body.title ?? '',
-      author: body.author ?? '',
+      title: (body.title as string) ?? '',
+      author: typeof body.author === 'string' ? body.author : '',
       author_id: typeof body.author_id === 'string' ? body.author_id : undefined,
+      authors: authorsParsed,
       category: typeof body.category === 'string' ? body.category : undefined,
       category_id: typeof body.category_id === 'string' ? body.category_id : undefined,
-      language_code: body.language ?? body.language_code ?? 'tr',
-      description: body.description,
+      language_code: (body.language as string) ?? (body.language_code as string) ?? 'tr',
+      description: body.description as string | undefined,
       pages: body.pages != null ? Number(body.pages) : undefined,
     });
     if (error) {

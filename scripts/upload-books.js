@@ -58,6 +58,16 @@ async function countPdfPagesFromFile(filePath) {
   }
 }
 
+/** Klasör adından gelen "A, B ve C" / "A & B" gibi metinleri ayırır */
+function splitAuthorNames(s) {
+  const t = (s || '').trim();
+  if (!t) return [];
+  return t
+    .split(/\s*(?:,|\||\/|\s+ve\s+|\s+&\s+)\s*/i)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
 async function resolveOrCreateAuthorId(authorName, languageCode) {
   const name = authorName.trim();
   if (!name) throw new Error('Yazar adı gerekli');
@@ -381,7 +391,11 @@ async function insertBookToDatabase(bookData, languageCode) {
   }
 
   const lang = languageCode || CONFIG.language;
-  const authorId = await resolveOrCreateAuthorId(bookData.author, lang);
+  const authorNames =
+    Array.isArray(bookData.authors) && bookData.authors.length > 0
+      ? bookData.authors.map((a) => String(a).trim()).filter(Boolean)
+      : splitAuthorNames(bookData.author || '');
+  if (authorNames.length === 0) throw new Error('Yazar gerekli');
 
   const { data: newBook, error: bookError } = await supabase
     .from('books')
@@ -400,12 +414,23 @@ async function insertBookToDatabase(bookData, languageCode) {
     throw new Error(`Database insert failed: ${bookError.message}`);
   }
 
-  const { error: relAuthorError } = await supabase.from('book_authors').insert({
-    book_id: newBook.id,
-    author_id: authorId,
-    author_order: 1,
-    role: 'author',
-  });
+  const seenAuthorIds = new Set();
+  const authorRelRows = [];
+  let authorOrder = 1;
+  for (const nm of authorNames) {
+    const aid = await resolveOrCreateAuthorId(nm, lang);
+    if (seenAuthorIds.has(aid)) continue;
+    seenAuthorIds.add(aid);
+    authorRelRows.push({
+      book_id: newBook.id,
+      author_id: aid,
+      author_order: authorOrder++,
+      role: 'author',
+    });
+  }
+  if (authorRelRows.length === 0) throw new Error('Yazar gerekli');
+
+  const { error: relAuthorError } = await supabase.from('book_authors').insert(authorRelRows);
   if (relAuthorError) {
     await supabase.from('books').delete().eq('id', newBook.id);
     throw relAuthorError;

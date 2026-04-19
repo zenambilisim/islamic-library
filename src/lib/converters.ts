@@ -8,10 +8,13 @@ import { getBookCoverUrl, getBookFileUrl } from './supabase'
  * @returns Frontend Book objesi
  */
 export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
-  const primaryAuthorRel = (supabaseBook.book_authors || [])
+  const authorRels = (supabaseBook.book_authors || [])
     .slice()
-    .sort((a, b) => (a.author_order || 9999) - (b.author_order || 9999))[0];
-  const authorName = primaryAuthorRel?.authors?.name || '';
+    .sort((a, b) => (a.author_order || 9999) - (b.author_order || 9999));
+  const names = authorRels.map((r) => r.authors?.name).filter((n): n is string => Boolean(n));
+  const ids = authorRels.map((r) => r.authors?.id).filter((id): id is string => Boolean(id));
+  const authorName = names.length ? names.join(', ') : '';
+  const primaryAuthorRel = authorRels[0];
 
   const primaryCategoryRel =
     (supabaseBook.book_categories || []).find((c) => c.is_primary) ||
@@ -45,6 +48,8 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
     title: supabaseBook.title,
     author: authorName,
     authorId: primaryAuthorRel?.authors?.id,
+    authors: names.length ? names : undefined,
+    authorIds: ids.length ? ids : undefined,
     category: categoryName,
     categoryId,
     categorySlug,

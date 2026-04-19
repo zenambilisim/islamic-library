@@ -1,9 +1,14 @@
 export interface Book {
   id: string;
   title: string;
+  /** Tüm yazarların virgülle birleşik gösterimi */
   author: string;
-  /** book_authors üzerinden birincil yazarın authors.id değeri */
+  /** Birincil yazar (author_order en küçük) */
   authorId?: string;
+  /** author_order sırasıyla yazar adları */
+  authors?: string[];
+  /** authors ile aynı sırada authors.id değerleri */
+  authorIds?: string[];
   description: string;
   coverImage: string;
   /** Birincil kategori adı (book_categories → categories) */

@@ -4,31 +4,52 @@ import {
   getBooksByCategory,
   createBook,
   type CreateBookPayload,
+  type BookAuthorInput,
   type BookSortBy,
 } from '@/lib/books';
 import { convertSupabaseBookToBook } from '@/lib/converters-server';
 
+function parseAuthorsBody(body: Record<string, unknown>): BookAuthorInput[] | undefined {
+  const raw = body.authors;
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+  const out: BookAuthorInput[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    const name = typeof o.name === 'string' ? o.name : '';
+    const author_id = typeof o.author_id === 'string' ? o.author_id : undefined;
+    if (!name.trim() && !author_id?.trim()) continue;
+    out.push({ name, author_id });
+  }
+  return out.length ? out : undefined;
+}
+
 /**
  * POST /api/books – Yeni kitap oluşturur (metadata, kapak/dosya ayrı endpoint'lerden).
- * Body: CreateBookPayload (title, author, category, language_code, ...)
+ * Body: title, kategori; yazar: `authors: [{ name, author_id? }, ...]` veya tek `author` (+ author_id).
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
+    const authorsParsed = parseAuthorsBody(body);
     const payload: CreateBookPayload = {
-      title: body.title ?? '',
-      author: body.author ?? '',
+      title: (body.title as string) ?? '',
+      author: typeof body.author === 'string' ? body.author : '',
       author_id: typeof body.author_id === 'string' ? body.author_id : undefined,
+      authors: authorsParsed,
       category: typeof body.category === 'string' ? body.category : '',
       category_id: typeof body.category_id === 'string' ? body.category_id : undefined,
-      language_code: body.language ?? body.language_code ?? 'tr',
-      description: body.description,
+      language_code: (body.language as string) ?? (body.language_code as string) ?? 'tr',
+      description: body.description as string | undefined,
       pages: body.pages != null ? Number(body.pages) : undefined,
     };
     const hasCat = Boolean(payload.category_id?.trim() || payload.category?.trim());
-    if (!payload.title.trim() || !payload.author.trim() || !hasCat) {
+    const hasAuthors =
+      Boolean(authorsParsed?.length) ||
+      (typeof body.author === 'string' && body.author.trim().length > 0);
+    if (!payload.title.trim() || !hasAuthors || !hasCat) {
       return NextResponse.json(
-        { error: 'title, author ve kategori (category_id veya category) zorunludur' },
+        { error: 'title, en az bir yazar ve kategori (category_id veya category) zorunludur' },
         { status: 400 }
       );
     }

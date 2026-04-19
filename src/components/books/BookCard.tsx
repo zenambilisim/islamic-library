@@ -11,16 +11,27 @@ interface BookCardProps {
   book: Book;
 }
 
+/** Boş veya bilinmeyen yazar placeholder’ları — kartta gösterilmez */
+function shouldShowBookAuthor(author?: string): boolean {
+  const t = author?.trim();
+  if (!t) return false;
+  const lower = t.toLowerCase();
+  if (lower === 'unknown author') return false;
+  if (lower === 'unknown') return false;
+  if (lower === 'bilinmeyen yazar' || lower === 'bilinmeyen') return false;
+  return true;
+}
+
 const BookCard: React.FC<BookCardProps> = ({ book }) => {
   const { openDetails, openReader } = useBookModal();
   const { t } = useTranslation();
   const [downloadLoading, setDownloadLoading] = useState<Record<string, boolean>>({});
-  const hasAuthor = Boolean(book.author?.trim());
+  const hasAuthor = shouldShowBookAuthor(book.author);
 
   const handleFormatDownload = async (e: React.MouseEvent, format: string, url: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const base = safeDownloadBasename(book.title, book.author);
+    const base = safeDownloadBasename(book.title, hasAuthor ? book.author : undefined);
     const fileName = `${base}.${format.toLowerCase()}`;
     setDownloadLoading((s) => ({ ...s, [format]: true }));
     try {

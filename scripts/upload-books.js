@@ -14,6 +14,7 @@
 
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const { PDFDocument } = require('pdf-lib');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -38,6 +39,23 @@ function slugifyAuthorName(name) {
   s = s.normalize('NFD').replace(/\p{M}/gu, '');
   s = s.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return s || 'yazar';
+}
+
+/**
+ * PDF sayfa sayısını okumayı dener; şifreli/bozuk dosyalarda null döner.
+ */
+async function countPdfPagesFromFile(filePath) {
+  try {
+    const buffer = fs.readFileSync(filePath);
+    const doc = await PDFDocument.load(buffer, {
+      ignoreEncryption: true,
+      capNumbers: true,
+    });
+    const n = doc.getPageCount();
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
 }
 
 async function resolveOrCreateAuthorId(authorName, languageCode) {
@@ -372,7 +390,7 @@ async function insertBookToDatabase(bookData, languageCode) {
       description: bookData.description || '',
       language_code: lang,
       cover_image_url: bookData.coverPath,
-      pages: 0,
+      pages: bookData.pages ?? 0,
       download_count: 0,
     })
     .select()
@@ -508,6 +526,13 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
       path.join(bookFolderPath, pdfFile),
       `books/${bookSlug}/${bookSlug}.pdf`
     );
+    const pdfFullPath = path.join(bookFolderPath, pdfFile);
+    const pageCount = await countPdfPagesFromFile(pdfFullPath);
+    if (pageCount == null) {
+      log.warn(`  Page count could not be read from PDF: ${pdfFile}`);
+    } else {
+      log.debug(`  Pages: ${pageCount}`);
+    }
 
     let epubPath = null;
     if (epubFile) {
@@ -533,6 +558,7 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
         description,
         categoryId,
         coverPath,
+        pages: pageCount ?? 0,
         pdfPath,
         epubPath,
         docxPath,

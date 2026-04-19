@@ -671,6 +671,8 @@ export async function uploadBookFile(
       } else {
         pagesFromPdf = n;
       }
+    } else {
+      console.warn('Could not determine PDF page count:', { bookId, filename: name });
     }
   }
 

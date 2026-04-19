@@ -58,14 +58,31 @@ async function countPdfPagesFromFile(filePath) {
   }
 }
 
-/** Klasör adından gelen "A, B ve C" / "A & B" gibi metinleri ayırır */
-function splitAuthorNames(s) {
+/**
+ * Toplu yüklemede çoklu yazar: yalnızca & ile ayrılır (boşluk isteğe bağlı).
+ * Örnek: "Ali Veli & Hasan Hüseyin" veya "Ali&Hasan"
+ */
+function splitBulkAuthorNames(s) {
   const t = (s || '').trim();
   if (!t) return [];
   return t
-    .split(/\s*(?:,|\||\/|\s+ve\s+|\s+&\s+)\s*/i)
+    .split(/\s*&\s*/)
     .map((x) => x.trim())
     .filter(Boolean);
+}
+
+/** Kitap klasöründe author.txt varsa UTF-8 içerik (çok satır tek satıra indirgenir). */
+function readAuthorTxtFile(bookFolderPath) {
+  const p = path.join(bookFolderPath, 'author.txt');
+  if (!fs.existsSync(p)) return null;
+  try {
+    const raw = fs.readFileSync(p, 'utf-8').trim();
+    if (!raw) return null;
+    return raw.replace(/\s+/g, ' ').trim();
+  } catch (e) {
+    log.warn(`author.txt okunamadı: ${e.message}`);
+    return null;
+  }
 }
 
 async function resolveOrCreateAuthorId(authorName, languageCode) {
@@ -393,9 +410,12 @@ async function insertBookToDatabase(bookData, languageCode) {
   const lang = languageCode || CONFIG.language;
   const authorNames =
     Array.isArray(bookData.authors) && bookData.authors.length > 0
-      ? bookData.authors.map((a) => String(a).trim()).filter(Boolean)
-      : splitAuthorNames(bookData.author || '');
+      ? bookData.authors.flatMap((a) => splitBulkAuthorNames(String(a)))
+      : splitBulkAuthorNames(bookData.author || '');
   if (authorNames.length === 0) throw new Error('Yazar gerekli');
+  if (authorNames.length > 1) {
+    log.info(`  Çoklu yazar (${authorNames.length}): ${authorNames.join(' | ')}`);
+  }
 
   const { data: newBook, error: bookError } = await supabase
     .from('books')
@@ -506,10 +526,12 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
   try {
     log.info(`Processing: ${bookFolderName}`);
 
-    // 1. Klasör isminden kitap adı ve yazar adını parse et
+    // 1. Klasör isminden kitap adı ve yazar; varsa author.txt ile üzerine yaz (& = çoklu yazar)
     const { bookTitle, authorName } = parseBookFolderName(bookFolderName);
+    const fromAuthorFile = readAuthorTxtFile(bookFolderPath);
+    const resolvedAuthor = fromAuthorFile ?? authorName;
     log.debug(`  Title: ${bookTitle}`);
-    log.debug(`  Author: ${authorName}`);
+    log.debug(`  Author: ${resolvedAuthor}${fromAuthorFile ? ' (author.txt)' : ''}`);
 
     // 2. Dosyaları bul
     const files = fs.readdirSync(bookFolderPath);
@@ -579,7 +601,7 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
     const newBook = await insertBookToDatabase(
       {
         title: bookTitle,
-        author: authorName,
+        author: resolvedAuthor,
         description,
         categoryId,
         coverPath,
@@ -597,7 +619,7 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
     stats.successful++;
     writeLog('success', {
       bookTitle,
-      authorName,
+      authorName: resolvedAuthor,
       category: categoryName,
       bookId: newBook.id,
       duration

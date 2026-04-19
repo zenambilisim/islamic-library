@@ -56,12 +56,45 @@ export interface BookEntry {
     epub: File | null;
     docx: File | null;
     rtf: File | null;
+    /** Açıklama vb. (author.txt hariç) */
     txt: File | null;
+    /** Yazar satırı: klasör adını & ile geçersiz kılar; içerikte & = çoklu yazar */
+    authorTxt: File | null;
   };
 }
 
 /**
+ * Toplu yüklemede çoklu yazar: yalnızca & ile ayrılır (boşluk isteğe bağlı).
+ * Örnek: "Ali Veli & Hasan" veya "Ali&Hasan"
+ */
+export function splitBulkAuthorNames(s: string): string[] {
+  const t = (s || '').trim();
+  if (!t) return [];
+  return t
+    .split(/\s*&\s*/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/** `author.txt` varsa UTF-8 metin `entry.author` üzerine yazar (klasör adındaki yazar yerine). */
+export async function applyAuthorTxtOverrides(entries: BookEntry[]): Promise<void> {
+  await Promise.all(
+    entries.map(async (e) => {
+      const f = e.files.authorTxt;
+      if (!f) return;
+      try {
+        const t = (await f.text()).trim().replace(/\s+/g, ' ');
+        if (t) e.author = t;
+      } catch {
+        /* yok say */
+      }
+    })
+  );
+}
+
+/**
  * "Kitap Adı - Yazar Adı" formatındaki klasör adından başlık ve yazar çıkarır.
+ * Yazar kısmında & varsa metin olduğu gibi kalır; API’ye göndermeden önce {@link splitBulkAuthorNames} ile ayrılır.
  */
 export function parseBookFolderName(folderName: string): { title: string; author: string } {
   const lastDash = folderName.lastIndexOf(' - ');
@@ -127,6 +160,7 @@ type BookFileBucket = {
   docx: File | null;
   rtf: File | null;
   txt: File | null;
+  authorTxt: File | null;
 };
 
 /**
@@ -171,6 +205,7 @@ export function parseFolderFiles(
         docx: null,
         rtf: null,
         txt: null,
+        authorTxt: null,
       });
     }
     const entry = books.get(bookFolder)!;
@@ -180,6 +215,7 @@ export function parseFolderFiles(
     else if (name.endsWith('.docx')) entry.docx = file;
     else if (name.endsWith('.doc') && !entry.docx) entry.docx = file;
     else if (name.endsWith('.rtf')) entry.rtf = file;
+    else if (name === 'author.txt') entry.authorTxt = file;
     else if (name.endsWith('.txt')) entry.txt = file;
     else if (name.endsWith('.png')) entry.cover = file;
   }

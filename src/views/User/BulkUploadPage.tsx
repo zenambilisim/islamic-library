@@ -3,7 +3,13 @@
 import { useState, useRef, useEffect, type InputHTMLAttributes } from 'react';
 import Link from 'next/link';
 import { Upload, FolderOpen, CheckCircle, XCircle } from 'lucide-react';
-import { parseFolderFiles, type BookBulkLanguage, type BookEntry } from '@/lib/bulkUploadUtils';
+import {
+  parseFolderFiles,
+  applyAuthorTxtOverrides,
+  splitBulkAuthorNames,
+  type BookBulkLanguage,
+  type BookEntry,
+} from '@/lib/bulkUploadUtils';
 
 const BulkUploadPage = () => {
   const [entries, setEntries] = useState<BookEntry[]>([]);
@@ -23,8 +29,12 @@ const BulkUploadPage = () => {
   useEffect(() => {
     const list = lastFolderFilesRef.current;
     if (!list?.length) return;
-    applyParsed(parseFolderFiles(list, { defaultLanguage }));
-    setResult(null);
+    void (async () => {
+      const parsed = parseFolderFiles(list, { defaultLanguage });
+      await applyAuthorTxtOverrides(parsed);
+      applyParsed(parsed);
+      setResult(null);
+    })();
   }, [defaultLanguage]);
 
   const handleFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,10 +42,13 @@ const BulkUploadPage = () => {
     if (!files || files.length === 0) return;
     const list = Array.from(files);
     lastFolderFilesRef.current = list;
-    const parsed = parseFolderFiles(list, { defaultLanguage });
-    applyParsed(parsed);
-    setSelected(new Set(parsed.map((_, i) => i)));
-    setResult(null);
+    void (async () => {
+      const parsed = parseFolderFiles(list, { defaultLanguage });
+      await applyAuthorTxtOverrides(parsed);
+      applyParsed(parsed);
+      setSelected(new Set(parsed.map((_, i) => i)));
+      setResult(null);
+    })();
     e.target.value = '';
   };
 
@@ -61,12 +74,17 @@ const BulkUploadPage = () => {
       }
     }
 
+    const authorNames = splitBulkAuthorNames(entry.author);
+    if (authorNames.length === 0) {
+      throw new Error('Yazar bilgisi yok (klasör adı veya author.txt)');
+    }
+
     const res = await fetch('/api/books', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: entry.title,
-        author: entry.author,
+        authors: authorNames.map((name) => ({ name })),
         category: entry.categorySlug,
         description: description || undefined,
         language: entry.language,
@@ -133,8 +151,11 @@ const BulkUploadPage = () => {
       <p className="text-gray-600 mb-6">
         Önerilen yapı: kök altında dil klasörleri (<code className="text-xs bg-gray-100 px-1 rounded">en</code>,{' '}
         <code className="text-xs bg-gray-100 px-1 rounded">tr</code>, <code className="text-xs bg-gray-100 px-1 rounded">ru</code>,{' '}
-        <code className="text-xs bg-gray-100 px-1 rounded">az</code>), altında kategoriler, altında &quot;Kitap Adı - Yazar&quot;
-        klasörleri. Sadece dil klasörünü seçerseniz tarayıcı üst klasör adını vermez; aşağıdaki &quot;Varsayılan dil&quot; o kitaplar
+        <code className="text-xs bg-gray-100 px-1 rounded">az</code>),         altında kategoriler, altında &quot;Kitap Adı - Yazar&quot;
+        klasörleri. Birden fazla yazar için yazar kısmında <code className="text-xs bg-gray-100 px-1 rounded">&amp;</code> kullanın
+        (ör. <code className="text-xs bg-gray-100 px-1 rounded">Kitap - Ali &amp; Veli</code>). İsteğe bağlı{' '}
+        <code className="text-xs bg-gray-100 px-1 rounded">author.txt</code> dosyası aynı kuralı uygular ve klasör adındaki yazarı geçersiz kılar.
+        Sadece dil klasörünü seçerseniz tarayıcı üst klasör adını vermez; aşağıdaki &quot;Varsayılan dil&quot; o kitaplar
         için kullanılır. Eski kök/kategori/kitap yapısında da varsayılan dil geçerlidir. Toplu yüklemede kapak
         yalnızca <code className="text-xs bg-gray-100 px-1 rounded">.png</code> dosyası olarak tanınır.
       </p>
@@ -268,6 +289,7 @@ const BulkUploadPage = () => {
                       {entry.files.docx && ' Word ✓'}
                       {entry.files.rtf && ' RTF ✓'}
                       {entry.files.txt && ' TXT ✓'}
+                      {entry.files.authorTxt && ' author.txt ✓'}
                     </td>
                   </tr>
                 ))}

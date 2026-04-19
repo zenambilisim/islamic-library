@@ -15,6 +15,7 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
   const { openDetails, openReader } = useBookModal();
   const { t } = useTranslation();
   const [downloadLoading, setDownloadLoading] = useState<Record<string, boolean>>({});
+  const hasAuthor = Boolean(book.author?.trim());
 
   const handleFormatDownload = async (e: React.MouseEvent, format: string, url: string) => {
     e.preventDefault();
@@ -73,14 +74,20 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
           {book.title}
         </h3>
 
-        {/* Author & Category */}
-        <div className="flex min-h-[2.75rem] items-start justify-between gap-3 mb-3">
-          <div className="flex min-w-0 flex-1 items-center text-gray-600">
-            <User size={16} className="mr-2 shrink-0 text-primary-500" />
-            <span className="line-clamp-2 text-sm font-medium">{book.author}</span>
-          </div>
-          <div className="flex max-w-[42%] shrink-0 items-center text-gray-600">
-            <FileText size={14} className="mr-2 shrink-0" />
+        {/* Author & Category — yazar yoksa yazar satırı gösterilmez */}
+        <div
+          className={`flex min-h-[2.75rem] items-start gap-3 mb-3 ${hasAuthor ? 'justify-between' : 'justify-end'}`}
+        >
+          {hasAuthor && (
+            <div className="flex min-w-0 flex-1 items-center text-gray-600">
+              <User size={16} className="mr-2 shrink-0 text-primary-500" aria-hidden />
+              <span className="line-clamp-2 text-sm font-medium">{book.author}</span>
+            </div>
+          )}
+          <div
+            className={`flex shrink-0 items-center text-gray-600 ${hasAuthor ? 'max-w-[42%]' : 'max-w-full justify-end'}`}
+          >
+            <FileText size={14} className="mr-2 shrink-0" aria-hidden />
             <span className="line-clamp-2 text-right text-xs">{book.category}</span>
           </div>
         </div>

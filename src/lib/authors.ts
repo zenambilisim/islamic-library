@@ -6,18 +6,26 @@ import type { Author } from '@/types';
 import type { Book } from '@/types';
 import type { SupabaseAuthor, SupabaseBook } from './supabase';
 import { normalizeLanguageCode, slugifyAuthorName } from './author-db';
+import { sanitizeIlikeFragment } from './books';
 
 /**
- * Yazarları getirir (authors_view veya authors tablosu), opsiyonel dil filtresi ile.
+ * Yazarları getirir (authors_view veya authors tablosu), opsiyonel dil ve ada göre arama.
  */
-export async function getAuthors(language?: string): Promise<{ authors: Author[]; error: Error | null }> {
+export async function getAuthors(
+  language?: string,
+  nameSearch?: string
+): Promise<{ authors: Author[]; error: Error | null }> {
   try {
+    const safeName = nameSearch != null ? sanitizeIlikeFragment(nameSearch) : '';
     let query = supabase
       .from('authors_view')
       .select('*')
       .order('book_count', { ascending: false });
     if (language?.trim()) {
       query = query.eq('language_code', language.trim().toLowerCase());
+    }
+    if (safeName) {
+      query = query.ilike('name', `%${safeName}%`);
     }
     let { data, error: supabaseError } = await query;
 
@@ -28,6 +36,9 @@ export async function getAuthors(language?: string): Promise<{ authors: Author[]
         .order('name');
       if (language?.trim()) {
         fallbackQuery = fallbackQuery.eq('language_code', language.trim().toLowerCase());
+      }
+      if (safeName) {
+        fallbackQuery = fallbackQuery.ilike('name', `%${safeName}%`);
       }
       const { data: tableAuthors, error: tableAuthorsError } = await fallbackQuery;
 

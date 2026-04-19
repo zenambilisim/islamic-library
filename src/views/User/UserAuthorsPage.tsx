@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Pencil, Search, Trash2, UserPlus } from 'lucide-react';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 
@@ -14,7 +14,8 @@ function canEditAuthorInDb(id: string): boolean {
 const UserAuthorsPage = () => {
   const { t, i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
-  const { authors, loading, error, refetch } = useSupabaseAuthors(language);
+  const { authors, loading, error, refetch, searchQuery, setSearchQuery, debouncedSearch } =
+    useSupabaseAuthors(language);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -68,13 +69,37 @@ const UserAuthorsPage = () => {
         </div>
       )}
 
+      <div className="mb-4">
+        <label htmlFor="admin-authors-search" className="sr-only">
+          {t('user.authors.searchLabel')}
+        </label>
+        <div className="relative max-w-md">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            size={18}
+            aria-hidden
+          />
+          <input
+            id="admin-authors-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('user.authors.searchPlaceholder')}
+            autoComplete="off"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+      </div>
+
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16 text-gray-500">
             <span>{t('user.authors.loading')}</span>
           </div>
         ) : authors.length === 0 ? (
-          <div className="py-16 text-center text-gray-500">{t('user.authors.noAuthors')}</div>
+          <div className="py-16 text-center text-gray-500">
+            {debouncedSearch ? t('user.authors.noAuthorsMatch') : t('user.authors.noAuthors')}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px]">

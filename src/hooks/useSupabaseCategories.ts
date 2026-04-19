@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Category } from '../types';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 interface UseSupabaseCategoriesReturn {
   categories: Category[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  debouncedSearch: string;
 }
 
 function normalizeQueryLanguage(language?: string): string | null {
@@ -21,14 +26,24 @@ export function useSupabaseCategories(language?: string): UseSupabaseCategoriesR
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const fetchCategories = async () => {
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const lang = normalizeQueryLanguage(language);
-      const qs = lang ? `?language=${encodeURIComponent(lang)}` : '';
-      const res = await fetch(`/api/categories${qs}`);
+      const params = new URLSearchParams();
+      if (lang) params.set('language', lang);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      const qs = params.toString();
+      const res = await fetch(`/api/categories${qs ? `?${qs}` : ''}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || res.statusText);
@@ -41,17 +56,20 @@ export function useSupabaseCategories(language?: string): UseSupabaseCategoriesR
     } finally {
       setLoading(false);
     }
-  };
+  }, [language, debouncedSearch]);
 
   useEffect(() => {
-    fetchCategories();
-  }, [language]);
+    void fetchCategories();
+  }, [fetchCategories]);
 
   return {
     categories,
     loading,
     error,
     refetch: fetchCategories,
+    searchQuery,
+    setSearchQuery,
+    debouncedSearch,
   };
 }
 

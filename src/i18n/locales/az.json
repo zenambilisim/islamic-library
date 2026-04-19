@@ -231,6 +231,9 @@
       "title": "Bütün kitablar",
       "loading": "Kitablar yüklənir...",
       "noBooks": "Hələ kitab yoxdur.",
+      "noBooksMatch": "Bu axtarışa uyğun kitab yoxdur.",
+      "searchLabel": "Kitab adına görə axtar",
+      "searchPlaceholder": "Kitab adı axtar…",
       "table": {
         "cover": "Üzlük",
         "title": "Başlıq",
@@ -264,6 +267,9 @@
       "title": "Müəlliflər",
       "loading": "Müəlliflər yüklənir...",
       "noAuthors": "Hələ müəllif yoxdur.",
+      "noAuthorsMatch": "Bu axtarışa uyğun müəllif yoxdur.",
+      "searchLabel": "Müəllif adına görə axtar",
+      "searchPlaceholder": "Müəllif adı axtar…",
       "addNew": "Yeni müəllif əlavə et",
       "deleteConfirm": "«{{name}}» silinsin? Bu əməli geri qaytarmaq olmaz. Bağlı kitabı olan müəllif silinə bilməz.",
       "deleteError": "Müəllif silinərkən xəta baş verdi.",
@@ -272,6 +278,26 @@
         "bio": "Bioqrafiya",
         "books": "Kitab",
         "actions": "Əməliyyatlar"
+      }
+    },
+    "categories": {
+      "title": "Kateqoriyalar",
+      "loading": "Kateqoriyalar yüklənir...",
+      "noCategories": "Hələ kateqoriya yoxdur.",
+      "noCategoriesMatch": "Bu axtarışa uyğun kateqoriya yoxdur.",
+      "searchLabel": "Kateqoriya adına görə axtar",
+      "searchPlaceholder": "Kateqoriya adı axtar…",
+      "addNew": "Yeni kateqoriya əlavə et",
+      "deleteConfirm": "«{{name}}» kateqoriyası silinsin?",
+      "deleteError": "Kateqoriya silinə bilmədi.",
+      "deleting": "Silinir...",
+      "table": {
+        "name": "Ad",
+        "description": "Təsvir",
+        "books": "Kitab",
+        "actions": "Əməliyyat",
+        "edit": "Redaktə et",
+        "delete": "Sil"
       }
     },
     "addBook": {

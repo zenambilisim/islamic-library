@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Author } from '../types';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 interface UseSupabaseAuthorsReturn {
   authors: Author[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  debouncedSearch: string;
 }
 
 function normalizeQueryLanguage(language?: string): string | null {
@@ -22,14 +27,24 @@ export function useSupabaseAuthors(language?: string): UseSupabaseAuthorsReturn 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const fetchAuthors = async () => {
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  const fetchAuthors = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const lang = normalizeQueryLanguage(language);
-      const qs = lang ? `?language=${encodeURIComponent(lang)}` : '';
-      const res = await fetch(`/api/authors${qs}`);
+      const params = new URLSearchParams();
+      if (lang) params.set('language', lang);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      const qs = params.toString();
+      const res = await fetch(`/api/authors${qs ? `?${qs}` : ''}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || res.statusText);
@@ -42,17 +57,20 @@ export function useSupabaseAuthors(language?: string): UseSupabaseAuthorsReturn 
     } finally {
       setLoading(false);
     }
-  };
+  }, [language, debouncedSearch]);
 
   useEffect(() => {
-    fetchAuthors();
-  }, [language]);
+    void fetchAuthors();
+  }, [fetchAuthors]);
 
   return {
     authors,
     loading,
     error,
     refetch: fetchAuthors,
+    searchQuery,
+    setSearchQuery,
+    debouncedSearch,
   };
 }
 

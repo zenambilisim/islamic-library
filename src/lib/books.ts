@@ -143,7 +143,23 @@ export type GetBooksOptions = {
   /** true: tam total için COUNT (yavaş); admin sayfalama için /api/books?withTotal=1 */
   includeTotal?: boolean;
   sortBy?: BookSortBy;
+  /** Başlıkta büyük/küçük harf duyarsız kısmi eşleşme (ILIKE) */
+  titleSearch?: string;
 };
+
+/** ILIKE içinde % ve _ jokerlerini devre dışı bırakır */
+export function sanitizeIlikeFragment(raw: string): string {
+  return raw.trim().replace(/[%_\\]/g, '').slice(0, 200);
+}
+
+function applyTitleSearchFilter<T extends { ilike: (col: string, pattern: string) => T }>(
+  query: T,
+  titleSearch?: string
+): T {
+  const safe = titleSearch != null ? sanitizeIlikeFragment(titleSearch) : '';
+  if (!safe) return query;
+  return query.ilike('title', `%${safe}%`);
+}
 
 export type BookSortBy = 'uploadDate' | 'alphabetical' | 'mostDownloaded';
 
@@ -180,6 +196,7 @@ export async function getBooks(
     );
 
     if (language) query = query.eq('language_code', language);
+    query = applyTitleSearchFilter(query, options?.titleSearch);
 
     const { data, error, count } = await query;
 
@@ -211,6 +228,7 @@ export async function getBooks(
   );
 
   if (language) query = query.eq('language_code', language);
+  query = applyTitleSearchFilter(query, options?.titleSearch);
 
   const { data, error } = await query;
 
@@ -314,6 +332,7 @@ export async function searchBooks(query: string) {
 export type GetBooksByCategoryOptions = {
   includeTotal?: boolean;
   sortBy?: BookSortBy;
+  titleSearch?: string;
 };
 
 /**
@@ -339,6 +358,7 @@ export async function getBooksByCategory(
   if (language) {
     base = base.eq('language_code', language).eq('book_categories.categories.language_code', language);
   }
+  base = applyTitleSearchFilter(base, options?.titleSearch);
 
   if (options?.includeTotal) {
     let qCount = applyBookSort(
@@ -352,6 +372,7 @@ export async function getBooksByCategory(
     if (language) {
       qCount = qCount.eq('language_code', language).eq('book_categories.categories.language_code', language);
     }
+    qCount = applyTitleSearchFilter(qCount, options?.titleSearch);
 
     const { data, error, count } = await qCount.range(page * limit, (page + 1) * limit - 1);
 
@@ -392,13 +413,17 @@ export async function getBooksByCategory(
 // ***** CATEGORY OPERATIONS *****
 
 // Tüm kategorileri getir
-export async function getCategories(language?: string) {
+export async function getCategories(language?: string, nameSearch?: string) {
   let query = supabase
     .from('categories')
     .select('*')
     .order('name');
   if (language?.trim()) {
     query = query.eq('language_code', language.trim().toLowerCase());
+  }
+  const safeName = nameSearch != null ? sanitizeIlikeFragment(nameSearch) : '';
+  if (safeName) {
+    query = query.ilike('name', `%${safeName}%`);
   }
   const { data, error } = await query
 

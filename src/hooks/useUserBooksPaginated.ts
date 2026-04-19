@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Book } from '@/types';
 
 const DEFAULT_PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 300;
 
 export interface UseUserBooksPaginatedReturn {
   books: Book[];
@@ -13,6 +14,11 @@ export interface UseUserBooksPaginatedReturn {
   totalPages: number;
   setPage: (page: number) => void;
   setPageSize: (size: number) => void;
+  /** Başlık araması (sunucuya gecikmeli gider) */
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  /** API’ye giden gecikmeli arama metni */
+  debouncedSearch: string;
   refetch: () => Promise<void>;
 }
 
@@ -29,6 +35,20 @@ export function useUserBooksPaginated(
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSizeState] = useState(initialPageSize);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const prevDebouncedRef = useRef('');
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (prevDebouncedRef.current === debouncedSearch) return;
+    prevDebouncedRef.current = debouncedSearch;
+    setPage(0);
+  }, [debouncedSearch]);
 
   const fetchPage = useCallback(async () => {
     try {
@@ -39,6 +59,7 @@ export function useUserBooksPaginated(
         limit: String(pageSize),
         withTotal: '1',
       });
+      if (debouncedSearch) params.set('search', debouncedSearch);
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -55,7 +76,7 @@ export function useUserBooksPaginated(
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, debouncedSearch]);
 
   useEffect(() => {
     fetchPage();
@@ -79,6 +100,9 @@ export function useUserBooksPaginated(
     totalPages,
     setPage,
     setPageSize,
+    searchQuery,
+    setSearchQuery,
+    debouncedSearch,
     refetch: fetchPage,
   };
 }

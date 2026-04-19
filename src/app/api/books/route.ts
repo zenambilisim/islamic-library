@@ -85,7 +85,8 @@ function parseSortByParam(raw: string | null): BookSortBy {
 /**
  * GET /api/books
  * Query: page, limit, category (slug; sayfalı), language (tr|en|ru|az),
- * withTotal (kategori + dil için toplam sayım), sortBy (uploadDate|alphabetical|mostDownloaded).
+ * withTotal (kategori + dil için toplam sayım), sortBy (uploadDate|alphabetical|mostDownloaded),
+ * search (başlıkta ILIKE kısmi arama).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -96,6 +97,7 @@ export async function GET(request: NextRequest) {
     const language = parseLanguageParam(searchParams.get('language'));
     const withTotal = searchParams.get('withTotal') === '1';
     const sortBy = parseSortByParam(searchParams.get('sortBy'));
+    const titleSearch = searchParams.get('search')?.trim() || undefined;
 
     let rawBooks: any[];
     let total = 0;
@@ -105,6 +107,7 @@ export async function GET(request: NextRequest) {
       const result = await getBooksByCategory(category, language, page, limit, {
         includeTotal: withTotal,
         sortBy,
+        titleSearch,
       });
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });
@@ -116,6 +119,7 @@ export async function GET(request: NextRequest) {
       const result = await getBooks(page, limit, language, {
         includeTotal: withTotal,
         sortBy,
+        titleSearch,
       });
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 500 });

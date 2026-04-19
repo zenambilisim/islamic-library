@@ -231,6 +231,9 @@
       "title": "All Books",
       "loading": "Loading books...",
       "noBooks": "No books yet.",
+      "noBooksMatch": "No books match your search.",
+      "searchLabel": "Search by book title",
+      "searchPlaceholder": "Search title…",
       "table": {
         "cover": "Cover",
         "title": "Title",
@@ -264,6 +267,9 @@
       "title": "Authors",
       "loading": "Loading authors...",
       "noAuthors": "No authors yet.",
+      "noAuthorsMatch": "No authors match your search.",
+      "searchLabel": "Search by author name",
+      "searchPlaceholder": "Search author name…",
       "addNew": "Add New Author",
       "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone. Authors with linked books cannot be deleted.",
       "deleteError": "Error deleting author.",
@@ -272,6 +278,26 @@
         "bio": "Biography",
         "books": "Books",
         "actions": "Actions"
+      }
+    },
+    "categories": {
+      "title": "Categories",
+      "loading": "Loading categories...",
+      "noCategories": "No categories yet.",
+      "noCategoriesMatch": "No categories match your search.",
+      "searchLabel": "Search by category name",
+      "searchPlaceholder": "Search category name…",
+      "addNew": "Add New Category",
+      "deleteConfirm": "Delete category “{{name}}”?",
+      "deleteError": "Could not delete category.",
+      "deleting": "Deleting...",
+      "table": {
+        "name": "Name",
+        "description": "Description",
+        "books": "Books",
+        "actions": "Actions",
+        "edit": "Edit",
+        "delete": "Delete"
       }
     },
     "addBook": {

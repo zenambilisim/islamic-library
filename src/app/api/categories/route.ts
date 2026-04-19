@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const language = languageRaw?.trim()
       ? normalizeLanguageCode(languageRaw, 'tr')
       : undefined;
-    const { categories: rawCategories, error } = await getCategories(language);
+    const nameSearch = searchParams.get('search')?.trim() || undefined;
+    const { categories: rawCategories, error } = await getCategories(language, nameSearch);
 
     if (error) {
       return NextResponse.json(

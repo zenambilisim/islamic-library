@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
-import { BookPlus, FolderUp, Pencil, Trash2 } from 'lucide-react';
+import { BookPlus, FolderUp, Pencil, Search, Trash2 } from 'lucide-react';
 import type { Book } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
 import { useBookModal } from '@/contexts/BookModalContext';
@@ -23,6 +23,9 @@ const UserBooksPage = () => {
     totalPages,
     setPage,
     setPageSize,
+    searchQuery,
+    setSearchQuery,
+    debouncedSearch,
     refetch,
   } = useUserBooksPaginated(20);
 
@@ -166,13 +169,37 @@ const UserBooksPage = () => {
         </div>
       )}
 
+      <div className="mb-4">
+        <label htmlFor="admin-books-search" className="sr-only">
+          {t('user.books.searchLabel')}
+        </label>
+        <div className="relative max-w-md">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            size={18}
+            aria-hidden
+          />
+          <input
+            id="admin-books-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('user.books.searchPlaceholder')}
+            autoComplete="off"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+      </div>
+
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16 text-gray-500">
             <span>{t('user.books.loading')}</span>
           </div>
         ) : books.length === 0 ? (
-          <div className="py-16 text-center text-gray-500">{t('user.books.noBooks')}</div>
+          <div className="py-16 text-center text-gray-500">
+            {debouncedSearch ? t('user.books.noBooksMatch') : t('user.books.noBooks')}
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">

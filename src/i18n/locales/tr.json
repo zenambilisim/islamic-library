@@ -232,6 +232,9 @@
       "title": "Tüm Kitaplar",
       "loading": "Kitaplar yükleniyor...",
       "noBooks": "Henüz kitap yok.",
+      "noBooksMatch": "Bu aramayla eşleşen kitap yok.",
+      "searchLabel": "Kitap adına göre ara",
+      "searchPlaceholder": "Kitap adı ara…",
       "table": {
         "cover": "Kapak",
         "title": "Başlık",
@@ -265,6 +268,9 @@
       "title": "Yazarlar",
       "loading": "Yazarlar yükleniyor...",
       "noAuthors": "Henüz yazar yok.",
+      "noAuthorsMatch": "Bu aramayla eşleşen yazar yok.",
+      "searchLabel": "Yazar adına göre ara",
+      "searchPlaceholder": "Yazar adı ara…",
       "addNew": "Yeni Yazar Ekle",
       "deleteConfirm": "“{{name}}” yazarı silinsin mi? Bu işlem geri alınamaz. Yazara bağlı kitap varsa silme yapılmaz.",
       "deleteError": "Yazar silinirken hata oluştu.",
@@ -273,6 +279,26 @@
         "bio": "Biyografi",
         "books": "Kitap",
         "actions": "İşlem"
+      }
+    },
+    "categories": {
+      "title": "Kategoriler",
+      "loading": "Kategoriler yükleniyor...",
+      "noCategories": "Henüz kategori yok.",
+      "noCategoriesMatch": "Bu aramayla eşleşen kategori yok.",
+      "searchLabel": "Kategori adına göre ara",
+      "searchPlaceholder": "Kategori adı ara…",
+      "addNew": "Yeni Kategori Ekle",
+      "deleteConfirm": "“{{name}}” kategorisi silinsin mi?",
+      "deleteError": "Kategori silinemedi.",
+      "deleting": "Siliniyor...",
+      "table": {
+        "name": "Ad",
+        "description": "Açıklama",
+        "books": "Kitap",
+        "actions": "İşlem",
+        "edit": "Düzenle",
+        "delete": "Sil"
       }
     },
     "addBook": {

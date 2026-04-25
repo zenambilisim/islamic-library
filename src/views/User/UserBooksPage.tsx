@@ -151,6 +151,8 @@ const UserBooksPage = () => {
           )}
           <Link
             href="/user/books/new"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
           >
             <BookPlus size={18} />
@@ -311,6 +313,8 @@ const UserBooksPage = () => {
                         <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/user/books/${book.id}/edit`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 inline-flex"
                             title={t('user.books.table.edit')}
                           >

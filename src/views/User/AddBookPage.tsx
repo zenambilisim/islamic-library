@@ -284,6 +284,8 @@ const AddBookPage = () => {
                 <p className="mb-2">Veritabanında henüz yazar yok. Kitap eklemek için önce yazar ekleyin.</p>
                 <Link
                   href="/user/authors/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="font-medium text-primary-700 underline hover:no-underline"
                 >
                   Yeni yazar ekle →
@@ -347,6 +349,8 @@ const AddBookPage = () => {
                 </p>
                 <Link
                   href="/user/categories/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="font-medium text-primary-700 underline hover:no-underline"
                 >
                   Yeni kategori ekle →

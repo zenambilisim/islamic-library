@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { Category } from '@/types';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
+import { uploadBookCoverDirect, uploadBookFileDirect } from '@/lib/direct-upload';
 
 function categoryDisplayName(cat: Category): string {
   return cat.name;
@@ -166,24 +167,15 @@ const AddBookPage = () => {
       if (!bookId) throw new Error('Kitap oluşturuldu ama id alınamadı.');
 
       if (coverFile) {
-        const coverForm = new FormData();
-        coverForm.append('file', coverFile);
-        const coverRes = await fetch(`/api/books/${bookId}/cover`, { method: 'POST', body: coverForm });
-        if (!coverRes.ok) {
-          const errData = await coverRes.json().catch(() => ({}));
-          console.warn('Kapak yüklenemedi:', errData.error);
-        }
+        await uploadBookCoverDirect(bookId, coverFile).catch((err) => {
+          console.warn('Kapak yüklenemedi:', err instanceof Error ? err.message : err);
+        });
       }
 
       const uploadFile = async (file: File, format: string) => {
-        const form = new FormData();
-        form.append('file', file);
-        form.append('format', format);
-        const r = await fetch(`/api/books/${bookId}/files`, { method: 'POST', body: form });
-        if (!r.ok) {
-          const d = await r.json().catch(() => ({}));
-          console.warn(`${format} yüklenemedi:`, d.error);
-        }
+        await uploadBookFileDirect(bookId, file, format as 'pdf' | 'epub' | 'docx').catch((err) => {
+          console.warn(`${format} yüklenemedi:`, err instanceof Error ? err.message : err);
+        });
       };
       if (pdfFile) await uploadFile(pdfFile, 'pdf');
       if (epubFile) await uploadFile(epubFile, 'epub');

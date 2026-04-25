@@ -11,6 +11,7 @@ import {
   splitBulkAuthorNames,
   type BookEntry,
 } from '@/lib/bulkUploadUtils';
+import { uploadBookCoverDirect, uploadBookFileDirect } from '@/lib/direct-upload';
 
 const LANGUAGES: Language[] = ['en', 'tr', 'ru', 'az'];
 
@@ -130,25 +131,10 @@ const BulkUploadPage = () => {
     if (!bookId) throw new Error('Kitap oluşturuldu ama id alınamadı');
 
     const coverFile = entry.files.cover!;
-    const coverForm = new FormData();
-    coverForm.append('file', coverFile);
-    coverForm.append('filename', coverFile.name);
-    const coverRes = await fetch(`/api/books/${bookId}/cover`, { method: 'POST', body: coverForm });
-    if (!coverRes.ok) {
-      const coverData = await coverRes.json().catch(() => ({}));
-      throw new Error(coverData.error || 'Kapak yüklenemedi');
-    }
+    await uploadBookCoverDirect(bookId, coverFile);
 
     const uploadFile = async (file: File, format: string) => {
-      const form = new FormData();
-      form.append('file', file);
-      form.append('format', format);
-      form.append('filename', file.name);
-      const r = await fetch(`/api/books/${bookId}/files`, { method: 'POST', body: form });
-      if (!r.ok) {
-        const data = await r.json().catch(() => ({}));
-        throw new Error(data.error || `${format} yüklenemedi`);
-      }
+      await uploadBookFileDirect(bookId, file, format as 'pdf' | 'epub' | 'docx');
     };
     await uploadFile(entry.files.pdf!, 'pdf');
     if (entry.files.epub) await uploadFile(entry.files.epub, 'epub');

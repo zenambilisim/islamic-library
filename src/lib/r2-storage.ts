@@ -178,6 +178,22 @@ export async function r2GetSignedUrl(key: string, expiresInSeconds: number): Pro
   return getSignedUrl(getClient(), cmd, { expiresIn: expiresInSeconds });
 }
 
+/** PutObject için süreli upload URL (direct upload). */
+export async function r2CreatePresignedUploadUrl(
+  key: string,
+  expiresInSeconds: number,
+  opts?: { contentType?: string; cacheControl?: string }
+): Promise<string> {
+  const k = key.replace(/^\/+/, '');
+  const cmd = new PutObjectCommand({
+    Bucket: bucket,
+    Key: k,
+    ...(opts?.contentType && { ContentType: opts.contentType }),
+    ...(opts?.cacheControl && { CacheControl: opts.cacheControl }),
+  });
+  return getSignedUrl(getClient(), cmd, { expiresIn: expiresInSeconds });
+}
+
 /** Proxy route için nesneyi oku (stream + içerik tipi) */
 export async function r2GetObjectForProxy(key: string) {
   const k = key.replace(/^\/+/, '');

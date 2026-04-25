@@ -42,8 +42,6 @@ export function folderNameToLanguage(name: string): BookBulkLanguage | null {
 }
 
 export interface BookEntry {
-  /** Yeni yapıda webkitRelativePath’in dil segmenti; eski yapıda boş (dil alanına bakın). */
-  languageFolder: string;
   language: BookBulkLanguage;
   categoryFolder: string;
   categorySlug: string;
@@ -61,6 +59,75 @@ export interface BookEntry {
     /** Yazar satırı: klasör adını & ile geçersiz kılar; içerikte & = çoklu yazar */
     authorTxt: File | null;
   };
+}
+
+/**
+ * Seçilen klasör altındaki kitap klasörlerini (kitap/dosya) parse eder.
+ * Dil ve kategori kullanıcı seçimiyle gelir; dosya yolundan okunmaz.
+ */
+export function parseFolderFilesWithSelection(
+  fileList: File[],
+  selection: { language: BookBulkLanguage; categoryName: string; categoryIdOrSlug: string }
+): BookEntry[] {
+  const map = new Map<string, BookFileBucket>();
+
+  for (const file of fileList) {
+    const path = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+    const parts = path.split('/').filter(Boolean);
+    if (parts.length < 2) continue;
+
+    const fileName = (parts[parts.length - 1] || '').toLowerCase();
+    const bookFolderPath = parts.slice(0, -1).join('/');
+    if (!bookFolderPath) continue;
+
+    if (!map.has(bookFolderPath)) {
+      map.set(bookFolderPath, {
+        languageFolder: '',
+        cover: null,
+        pdf: null,
+        epub: null,
+        docx: null,
+        rtf: null,
+        txt: null,
+        authorTxt: null,
+      });
+    }
+    const entry = map.get(bookFolderPath)!;
+
+    if (fileName.endsWith('.pdf')) entry.pdf = file;
+    else if (fileName.endsWith('.epub')) entry.epub = file;
+    else if (fileName.endsWith('.docx')) entry.docx = file;
+    else if (fileName.endsWith('.doc') && !entry.docx) entry.docx = file;
+    else if (fileName.endsWith('.rtf')) entry.rtf = file;
+    else if (fileName === 'author.txt') entry.authorTxt = file;
+    else if (fileName.endsWith('.txt')) entry.txt = file;
+    else if (fileName.endsWith('.png')) entry.cover = file;
+  }
+
+  const result: BookEntry[] = [];
+  for (const [bookFolderPath, files] of map) {
+    if (!files.pdf || !files.cover) continue;
+    const folderName = bookFolderPath.split('/').filter(Boolean).pop() || bookFolderPath;
+    const { title, author } = parseBookFolderName(folderName);
+    result.push({
+      language: selection.language,
+      categoryFolder: selection.categoryName,
+      categorySlug: selection.categoryIdOrSlug,
+      bookFolder: bookFolderPath,
+      title,
+      author,
+      files: {
+        cover: files.cover,
+        pdf: files.pdf,
+        epub: files.epub,
+        docx: files.docx,
+        rtf: files.rtf,
+        txt: files.txt,
+        authorTxt: files.authorTxt,
+      },
+    });
+  }
+  return result;
 }
 
 /**
@@ -228,16 +295,22 @@ export function parseFolderFiles(
       for (const [bookFolder, bucket] of books) {
         if (!bucket.pdf || !bucket.cover) continue;
         const { title, author } = parseBookFolderName(bookFolder);
-        const { languageFolder, ...files } = bucket;
         result.push({
-          languageFolder,
           language,
           categoryFolder,
           categorySlug,
           bookFolder,
           title,
           author,
-          files,
+          files: {
+            cover: bucket.cover,
+            pdf: bucket.pdf,
+            epub: bucket.epub,
+            docx: bucket.docx,
+            rtf: bucket.rtf,
+            txt: bucket.txt,
+            authorTxt: bucket.authorTxt,
+          },
         });
       }
     }

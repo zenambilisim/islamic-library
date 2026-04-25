@@ -36,6 +36,7 @@ const BookDetailModal = () => {
   if (!isOpen || !book) return null;
 
   const locale = i18n.language;
+  const hasKnownAuthor = book.author.trim().toLowerCase() !== 'unknown author';
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -151,10 +152,12 @@ const BookDetailModal = () => {
                   {book.title}
                 </h1>
                 
-                <div className="flex items-center text-lg text-gray-600 mb-4">
-                  <User size={20} className="mr-2" />
-                  <span>{book.author}</span>
-                </div>
+                {hasKnownAuthor && (
+                  <div className="flex items-center text-lg text-gray-600 mb-4">
+                    <User size={20} className="mr-2" />
+                    <span>{book.author}</span>
+                  </div>
+                )}
                 <div className="flex items-center text-lg text-gray-600 mb-4">
                   <FileText size={20} className="mr-2" />
                   <span>{t('book.category')}: {book.category}</span>

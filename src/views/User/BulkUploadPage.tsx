@@ -3,13 +3,16 @@
 import { useState, useRef, useEffect, type InputHTMLAttributes } from 'react';
 import Link from 'next/link';
 import { Upload, FolderOpen, CheckCircle, XCircle } from 'lucide-react';
+import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
+import type { Category, Language } from '@/types';
 import {
-  parseFolderFiles,
+  parseFolderFilesWithSelection,
   applyAuthorTxtOverrides,
   splitBulkAuthorNames,
-  type BookBulkLanguage,
   type BookEntry,
 } from '@/lib/bulkUploadUtils';
+
+const LANGUAGES: Language[] = ['en', 'tr', 'ru', 'az'];
 
 const BulkUploadPage = () => {
   const [entries, setEntries] = useState<BookEntry[]>([]);
@@ -17,9 +20,13 @@ const BulkUploadPage = () => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [result, setResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
-  const [defaultLanguage, setDefaultLanguage] = useState<BookBulkLanguage>('en');
+  const [language, setLanguage] = useState<Language | ''>('');
+  const [categoryId, setCategoryId] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const lastFolderFilesRef = useRef<File[] | null>(null);
+  const { categories, loading: categoriesLoading } = useSupabaseCategories(language || undefined);
+
+  const selectedCategory = categories.find((c) => c.id === categoryId) ?? null;
 
   const applyParsed = (parsed: BookEntry[]) => {
     setEntries(parsed);
@@ -28,22 +35,49 @@ const BulkUploadPage = () => {
 
   useEffect(() => {
     const list = lastFolderFilesRef.current;
-    if (!list?.length) return;
+    if (!list?.length || !language || !selectedCategory) return;
     void (async () => {
-      const parsed = parseFolderFiles(list, { defaultLanguage });
+      const parsed = parseFolderFilesWithSelection(list, {
+        language,
+        categoryName: selectedCategory.name,
+        categoryIdOrSlug: selectedCategory.id,
+      });
       await applyAuthorTxtOverrides(parsed);
       applyParsed(parsed);
       setResult(null);
     })();
-  }, [defaultLanguage]);
+  }, [language, selectedCategory]);
+
+  useEffect(() => {
+    setCategoryId('');
+    setEntries([]);
+    setSelected(new Set());
+    lastFolderFilesRef.current = null;
+    setResult(null);
+  }, [language]);
+
+  useEffect(() => {
+    setEntries([]);
+    setSelected(new Set());
+    lastFolderFilesRef.current = null;
+    setResult(null);
+  }, [categoryId]);
 
   const handleFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!language || !selectedCategory) {
+      e.target.value = '';
+      return;
+    }
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const list = Array.from(files);
     lastFolderFilesRef.current = list;
     void (async () => {
-      const parsed = parseFolderFiles(list, { defaultLanguage });
+      const parsed = parseFolderFilesWithSelection(list, {
+        language,
+        categoryName: selectedCategory.name,
+        categoryIdOrSlug: selectedCategory.id,
+      });
       await applyAuthorTxtOverrides(parsed);
       applyParsed(parsed);
       setSelected(new Set(parsed.map((_, i) => i)));
@@ -85,9 +119,9 @@ const BulkUploadPage = () => {
       body: JSON.stringify({
         title: entry.title,
         authors: authorNames.map((name) => ({ name })),
-        category: entry.categorySlug,
+        category_id: categoryId,
         description: description || undefined,
-        language: entry.language,
+        language,
       }),
     });
     const data = await res.json();
@@ -124,6 +158,7 @@ const BulkUploadPage = () => {
   };
 
   const handleUpload = async () => {
+    if (!language || !categoryId) return;
     const toUpload = entries.filter((_, i) => selected.has(i));
     if (toUpload.length === 0) return;
     setUploading(true);
@@ -148,33 +183,57 @@ const BulkUploadPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Klasörden toplu kitap yükle</h1>
-      <p className="text-gray-600 mb-6">
-        Önerilen yapı: kök altında dil klasörleri (<code className="text-xs bg-gray-100 px-1 rounded">en</code>,{' '}
-        <code className="text-xs bg-gray-100 px-1 rounded">tr</code>, <code className="text-xs bg-gray-100 px-1 rounded">ru</code>,{' '}
-        <code className="text-xs bg-gray-100 px-1 rounded">az</code>),         altında kategoriler, altında &quot;Kitap Adı - Yazar&quot;
-        klasörleri. Birden fazla yazar için yazar kısmında <code className="text-xs bg-gray-100 px-1 rounded">&amp;</code> kullanın
-        (ör. <code className="text-xs bg-gray-100 px-1 rounded">Kitap - Ali &amp; Veli</code>). İsteğe bağlı{' '}
-        <code className="text-xs bg-gray-100 px-1 rounded">author.txt</code> dosyası aynı kuralı uygular ve klasör adındaki yazarı geçersiz kılar.
-        Sadece dil klasörünü seçerseniz tarayıcı üst klasör adını vermez; aşağıdaki &quot;Varsayılan dil&quot; o kitaplar
-        için kullanılır. Eski kök/kategori/kitap yapısında da varsayılan dil geçerlidir. Toplu yüklemede kapak
-        yalnızca <code className="text-xs bg-gray-100 px-1 rounded">.png</code> dosyası olarak tanınır.
-      </p>
+      <div className="text-gray-600 mb-6">
+        <ul className="list-disc list-inside space-y-1">
+          <li>Dili seçin.</li>
+          <li>Kategoriyi seçin.</li>
+          <li>Kitap klasörünü seçin.</li>
+          <li>
+            Her kitap klasörü <code className="text-xs bg-gray-100 px-1 rounded">Kitap Adı - Yazar</code> formatında
+            olmalı ve içinde en az <code className="text-xs bg-gray-100 px-1 rounded">.pdf</code> ile{' '}
+            <code className="text-xs bg-gray-100 px-1 rounded">.png</code> bulunmalı.
+          </li>
+        </ul>
+      </div>
 
-      <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
-        <label htmlFor="bulk-default-lang" className="text-gray-700">
-          Varsayılan dil (tek dil kökü veya eski yapı):
+      <div className="mb-3 text-sm">
+        <label htmlFor="bulk-lang" className="block text-gray-700 mb-1">
+          Dil:
         </label>
         <select
-          id="bulk-default-lang"
-          value={defaultLanguage}
-          onChange={(e) => setDefaultLanguage(e.target.value as BookBulkLanguage)}
+          id="bulk-lang"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as Language)}
           disabled={uploading}
           className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-900"
         >
-          <option value="en">English (en)</option>
-          <option value="tr">Türkçe (tr)</option>
-          <option value="ru">Русский (ru)</option>
-          <option value="az">Azərbaycan (az)</option>
+          <option value="">Dil seçin</option>
+          {LANGUAGES.map((lang) => (
+            <option key={lang} value={lang}>
+              {lang.toUpperCase()}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="mb-4 text-sm">
+        <label htmlFor="bulk-category" className="block text-gray-700 mb-1">
+          Kategori:
+        </label>
+        <select
+          id="bulk-category"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          disabled={uploading || !language || categoriesLoading}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-900 min-w-52"
+        >
+          <option value="">
+            {!language ? 'Önce dil seçin' : categoriesLoading ? 'Kategoriler yükleniyor...' : 'Kategori seçin'}
+          </option>
+          {categories.map((c: Category) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -195,7 +254,7 @@ const BulkUploadPage = () => {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || !language || !categoryId}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
         >
           <FolderOpen size={20} />
@@ -277,10 +336,8 @@ const BulkUploadPage = () => {
                         disabled={uploading}
                       />
                     </td>
-                    <td className="py-2 px-3 text-gray-600 font-mono text-xs">
-                      {entry.languageFolder || entry.language}
-                    </td>
-                    <td className="py-2 px-3 text-gray-600">{entry.categoryFolder}</td>
+                    <td className="py-2 px-3 text-gray-600 font-mono text-xs">{language.toUpperCase()}</td>
+                    <td className="py-2 px-3 text-gray-600">{selectedCategory?.name || entry.categoryFolder}</td>
                     <td className="py-2 px-3 font-medium">{entry.title}</td>
                     <td className="py-2 px-3">{entry.author}</td>
                     <td className="py-2 px-3 text-gray-500">

@@ -5,17 +5,17 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Search, Trash2, UserPlus } from 'lucide-react';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
-import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
+import type { Language } from '@/types';
 
 function canEditAuthorInDb(id: string): boolean {
   return Boolean(id) && !id.startsWith('author-');
 }
 
 const UserAuthorsPage = () => {
-  const { t, i18n } = useTranslation();
-  const language = resolveAppLanguage(i18n.language);
+  const { t } = useTranslation();
+  const [dataLanguage, setDataLanguage] = useState<Language>('tr');
   const { authors, loading, error, refetch, searchQuery, setSearchQuery, debouncedSearch } =
-    useSupabaseAuthors(language);
+    useSupabaseAuthors(dataLanguage);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -69,7 +69,7 @@ const UserAuthorsPage = () => {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <label htmlFor="admin-authors-search" className="sr-only">
           {t('user.authors.searchLabel')}
         </label>
@@ -88,6 +88,22 @@ const UserAuthorsPage = () => {
             autoComplete="off"
             className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
           />
+        </div>
+        <div className="min-w-[120px]">
+          <label htmlFor="admin-authors-data-language" className="sr-only">
+            {t('common.language')}
+          </label>
+          <select
+            id="admin-authors-data-language"
+            value={dataLanguage}
+            onChange={(e) => setDataLanguage(e.target.value as Language)}
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            <option value="tr">TR</option>
+            <option value="en">EN</option>
+            <option value="ru">RU</option>
+            <option value="az">AZ</option>
+          </select>
         </div>
       </div>
 

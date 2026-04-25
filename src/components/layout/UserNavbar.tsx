@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, Home, LogOut, Menu, X, KeyRound } from 'lucide-react';
+import type { Language } from '@/types';
 
 const UserNavbar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const currentLanguage = ((i18n.resolvedLanguage || i18n.language || 'tr').split('-')[0] as Language) || 'tr';
 
   const handleLogout = async () => {
     setIsMenuOpen(false);
@@ -32,6 +34,13 @@ const UserNavbar = () => {
     },
   ];
 
+  const languageOptions: { code: Language; label: string }[] = [
+    { code: 'tr', label: 'TR' },
+    { code: 'en', label: 'EN' },
+    { code: 'ru', label: 'RU' },
+    { code: 'az', label: 'AZ' },
+  ];
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
@@ -47,6 +56,21 @@ const UserNavbar = () => {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
+            <label className="sr-only" htmlFor="user-navbar-language">
+              {t('common.language')}
+            </label>
+            <select
+              id="user-navbar-language"
+              value={currentLanguage}
+              onChange={(e) => i18n.changeLanguage(e.target.value as Language)}
+              className="h-9 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              {languageOptions.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
             {navItems.map(({ key, href, label, icon: Icon }) => (
               <Link
                 key={key}
@@ -104,6 +128,23 @@ const UserNavbar = () => {
         {isMenuOpen && (
           <nav className="md:hidden py-3 border-t border-gray-100">
             <div className="flex flex-col gap-1">
+              <div className="px-4 py-2">
+                <label className="block text-xs text-gray-500 mb-1" htmlFor="user-navbar-language-mobile">
+                  {t('common.language')}
+                </label>
+                <select
+                  id="user-navbar-language-mobile"
+                  value={currentLanguage}
+                  onChange={(e) => i18n.changeLanguage(e.target.value as Language)}
+                  className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  {languageOptions.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {navItems.map(({ key, href, label, icon: Icon }) => (
                 <Link
                   key={key}

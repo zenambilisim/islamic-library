@@ -27,7 +27,8 @@ export interface UseUserBooksPaginatedReturn {
  * API: GET /api/books?page=&limit= (dil filtresi yok)
  */
 export function useUserBooksPaginated(
-  initialPageSize: number = DEFAULT_PAGE_SIZE
+  initialPageSize: number = DEFAULT_PAGE_SIZE,
+  language?: string
 ): UseUserBooksPaginatedReturn {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +60,10 @@ export function useUserBooksPaginated(
         limit: String(pageSize),
         withTotal: '1',
       });
+      const lang = (language || '').trim().toLowerCase().split('-')[0];
+      if (lang === 'tr' || lang === 'en' || lang === 'ru' || lang === 'az') {
+        params.set('language', lang);
+      }
       if (debouncedSearch) params.set('search', debouncedSearch);
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {
@@ -76,7 +81,7 @@ export function useUserBooksPaginated(
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearch]);
+  }, [page, pageSize, debouncedSearch, language]);
 
   useEffect(() => {
     fetchPage();

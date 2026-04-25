@@ -5,13 +5,16 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
 import { BookPlus, FolderUp, Pencil, Search, Trash2 } from 'lucide-react';
-import type { Book } from '@/types';
+import type { Book, Language } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
 import { useBookModal } from '@/contexts/BookModalContext';
+
+const DATA_LANGUAGES: Language[] = ['tr', 'en', 'ru', 'az'];
 
 const UserBooksPage = () => {
   const { t } = useTranslation();
   const { openDetails } = useBookModal();
+  const [dataLanguage, setDataLanguage] = useState<Language>('tr');
 
   const {
     books,
@@ -27,7 +30,7 @@ const UserBooksPage = () => {
     setSearchQuery,
     debouncedSearch,
     refetch,
-  } = useUserBooksPaginated(20);
+  } = useUserBooksPaginated(20, dataLanguage);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -169,7 +172,7 @@ const UserBooksPage = () => {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <label htmlFor="admin-books-search" className="sr-only">
           {t('user.books.searchLabel')}
         </label>
@@ -188,6 +191,23 @@ const UserBooksPage = () => {
             autoComplete="off"
             className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
           />
+        </div>
+        <div className="min-w-[120px]">
+          <label htmlFor="admin-books-data-language" className="sr-only">
+            {t('common.language')}
+          </label>
+          <select
+            id="admin-books-data-language"
+            value={dataLanguage}
+            onChange={(e) => setDataLanguage(e.target.value as Language)}
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            {DATA_LANGUAGES.map((lang) => (
+              <option key={lang} value={lang}>
+                {lang.toUpperCase()}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -60,6 +60,7 @@ export function useSupabaseBooks(
       } else {
         setLoading(true);
         setPage(0);
+        pageRef.current = 0;
       }
       setError(null);
 
@@ -97,6 +98,7 @@ export function useSupabaseBooks(
 
         setBooks(collected);
         setPage(0);
+        pageRef.current = 0;
         setHasMore(false);
         return;
       }
@@ -124,11 +126,14 @@ export function useSupabaseBooks(
       }
 
       if (isLoadMore) {
+        const nextPage = currentPage + 1;
         setBooks(prev => [...prev, ...nextBooks]);
-        setPage(currentPage + 1);
+        setPage(nextPage);
+        pageRef.current = nextPage;
       } else {
         setBooks(nextBooks);
         setPage(1);
+        pageRef.current = 1;
       }
       setHasMore(
         typeof nextHasMore === 'boolean'
@@ -198,6 +203,7 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
         } else {
           setLoading(true);
           setPage(0);
+          pageRef.current = 0;
         }
         setError(null);
 
@@ -224,11 +230,14 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
         }
 
         if (isLoadMore) {
+          const nextPage = currentPage + 1;
           setBooks((prev) => [...prev, ...nextBooks]);
-          setPage(currentPage + 1);
+          setPage(nextPage);
+          pageRef.current = nextPage;
         } else {
           setBooks(nextBooks);
           setPage(1);
+          pageRef.current = 1;
         }
         setHasMore(
           typeof nextHasMore === 'boolean'

@@ -175,8 +175,7 @@ const AuthorsPage = () => {
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {author.name}{' '}
-                  <span className="text-lg font-normal text-gray-500">({author.language.toUpperCase()})</span>
+                  {author.name}
                 </h1>
                 <p className="text-gray-600 mt-2">{author.biography}</p>
                 <div className="flex items-center space-x-4 mt-4 text-sm text-gray-600">
@@ -308,8 +307,7 @@ const AuthorsPage = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-                        {author.name}{' '}
-                        <span className="text-sm font-normal text-gray-500">({author.language.toUpperCase()})</span>
+                        {author.name}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
                         {author.bookCount} {t('authors.booksCount')}

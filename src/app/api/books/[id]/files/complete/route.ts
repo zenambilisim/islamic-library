@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-server';
+import { countPdfPages } from '@/lib/pdf-page-count';
 
 const ALLOWED_FORMATS = ['pdf', 'epub', 'docx', 'doc'] as const;
 
@@ -56,7 +57,30 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, filePath, fileUrl });
+    let pages: number | null = null;
+    if (formatNorm === 'pdf') {
+      try {
+        const { data: pdfFile, error: downloadError } = await supabase.storage
+          .from('book-assets')
+          .download(filePath);
+        if (downloadError) {
+          console.error('PDF download failed while counting pages:', downloadError);
+        } else {
+          const arr = await pdfFile.arrayBuffer();
+          pages = await countPdfPages(Buffer.from(arr));
+          if (pages != null) {
+            const { error: pageErr } = await supabase.from('books').update({ pages }).eq('id', id);
+            if (pageErr) {
+              console.error('Error updating book pages from PDF:', pageErr);
+            }
+          }
+        }
+      } catch (pageCountErr) {
+        console.error('Unexpected page count error:', pageCountErr);
+      }
+    }
+
+    return NextResponse.json({ ok: true, filePath, fileUrl, ...(pages != null ? { pages } : {}) });
   } catch (err) {
     console.error('POST /api/books/[id]/files/complete error:', err);
     return NextResponse.json(

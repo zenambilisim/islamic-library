@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, BookOpen, Calendar, Grid3X3, List } from 'lucide-react';
+import { User, BookOpen, Calendar } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import {
   useSupabaseAuthors,
@@ -17,7 +17,6 @@ const AuthorsPage = () => {
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
   const [loadingBooks, setLoadingBooks] = useState(false);
   
@@ -196,27 +195,9 @@ const AuthorsPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <p className="text-gray-600">
-                {authorBooks.length} {t('authors.booksFound')}
-              </p>
-              
-              {/* View Mode Toggle */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <Grid3X3 size={20} />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <List size={20} />
-                </button>
-              </div>
-            </div>
+            <p className="text-gray-600">
+              {authorBooks.length} {t('authors.booksFound')}
+            </p>
           </div>
 
           {/* Author Books */}
@@ -226,10 +207,7 @@ const AuthorsPage = () => {
               <p className="text-gray-600">{t('authors.loadingBooks')}</p>
             </div>
           ) : authorBooks.length > 0 ? (
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
-              : "space-y-4"
-            }>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
               {authorBooks.map((book) => (
                 <div key={book.id} className="h-full min-h-0">
                   <BookCard book={book} />

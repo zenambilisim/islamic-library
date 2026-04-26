@@ -2,7 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useMemo } from 'react';
-import { Grid3X3, List, BookOpen, Folder } from 'lucide-react';
+import { Grid3X3, BookOpen, Folder } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { resolveAppLanguage, useSupabaseBooksByCategory } from '@/hooks/useSupabaseBooks';
@@ -14,13 +14,9 @@ import type { Category } from '@/types';
 /** Tek kategori görünümü: kitaplar sayfalı yüklenir (kaydırınca devam). */
 function CategoryDetailSection({
   category,
-  viewMode,
-  setViewMode,
   onBack,
 }: {
   category: Category;
-  viewMode: 'grid' | 'list';
-  setViewMode: (m: 'grid' | 'list') => void;
   onBack: () => void;
 }) {
   const { t } = useTranslation();
@@ -71,22 +67,6 @@ function CategoryDetailSection({
               )}
             </p>
 
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                <Grid3X3 size={20} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                <List size={20} />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -96,13 +76,7 @@ function CategoryDetailSection({
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
           />
         ) : books.length > 0 ? (
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch'
-                : 'space-y-4'
-            }
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {books.map((book) => (
               <div key={book.id} className="h-full min-h-0">
                 <BookCard book={book} />
@@ -139,7 +113,6 @@ const CategoriesPage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const activeLanguage = resolveAppLanguage(i18n.language);
   const { categories: supabaseCategories, loading: categoriesLoading, error: categoriesError } =
@@ -234,8 +207,6 @@ const CategoriesPage = () => {
     return (
       <CategoryDetailSection
         category={category}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
         onBack={() => setSelectedCategory(null)}
       />
     );

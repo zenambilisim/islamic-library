@@ -58,7 +58,7 @@ const HomePage = () => {
 
   useEffect(() => {
     setSearchMode('books');
-    setPlaceholder(t('search.placeholder'));
+    setPlaceholder(t('search.booksPlaceholder'));
   }, [setSearchMode, setPlaceholder, t]);
 
   // Scroll to books section with smooth animation
@@ -77,15 +77,10 @@ const HomePage = () => {
   const filteredBooks = useMemo(() => {
     let books = supabaseBooks;
 
-    // Apply search term filter
+    // Home sayfasinda arama yalnizca kitap adinda yapilir.
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      books = books.filter(book => 
-        book.title.toLowerCase().includes(term) ||
-        book.author.toLowerCase().includes(term) ||
-        book.category.toLowerCase().includes(term) ||
-        book.description.toLowerCase().includes(term)
-      );
+      books = books.filter((book) => book.title.toLowerCase().includes(term));
     }
 
     // Apply category filter

@@ -30,6 +30,7 @@
   },
   "search": {
     "placeholder": "Kitap, yazar veya kategori ara...",
+    "booksPlaceholder": "Kitap ara...",
     "authorsPlaceholder": "Yazar ara...",
     "categoriesPlaceholder": "Kategori ara...",
     "noResults": "Arama kriterlerinize uygun kitap bulunamadı",

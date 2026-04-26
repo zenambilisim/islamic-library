@@ -28,6 +28,7 @@
   },
   "search": {
     "placeholder": "Поиск книг, авторов или категорий...",
+    "booksPlaceholder": "Поиск книг...",
     "authorsPlaceholder": "Поиск авторов...",
     "categoriesPlaceholder": "Поиск категорий...",
     "noResults": "Не найдено книг, соответствующих вашим критериям поиска",

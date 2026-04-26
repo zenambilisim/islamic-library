@@ -29,6 +29,7 @@
   },
   "search": {
     "placeholder": "Search for books, authors or categories...",
+    "booksPlaceholder": "Search books...",
     "authorsPlaceholder": "Search authors...",
     "categoriesPlaceholder": "Search categories...",
     "noResults": "No books found matching your search criteria",

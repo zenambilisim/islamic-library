@@ -17,6 +17,14 @@ function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
+async function fetchPdfBufferFromPublicUrl(url: string): Promise<Buffer | null> {
+  // Storage provider R2 veya Supabase olabilir; public URL her iki durumda da calisir.
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) return null;
+  const arr = await res.arrayBuffer();
+  return Buffer.from(arr);
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -60,19 +68,27 @@ export async function POST(
     let pages: number | null = null;
     if (formatNorm === 'pdf') {
       try {
-        const { data: pdfFile, error: downloadError } = await supabase.storage
-          .from('book-assets')
-          .download(filePath);
-        if (downloadError) {
-          console.error('PDF download failed while counting pages:', downloadError);
+        // Yükleme sonrası obje kısa bir süre gecikmeli erişilebilir olabilir; birkaç kez deneriz.
+        let pdfBuffer: Buffer | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          pdfBuffer = await fetchPdfBufferFromPublicUrl(fileUrl);
+          if (pdfBuffer) break;
+          await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+        }
+
+        if (!pdfBuffer) {
+          console.error('PDF download failed while counting pages from public URL:', {
+            bookId: id,
+            filePath,
+          });
         } else {
-          const arr = await pdfFile.arrayBuffer();
-          pages = await countPdfPages(Buffer.from(arr));
-          if (pages != null) {
-            const { error: pageErr } = await supabase.from('books').update({ pages }).eq('id', id);
-            if (pageErr) {
-              console.error('Error updating book pages from PDF:', pageErr);
-            }
+          pages = await countPdfPages(pdfBuffer);
+        }
+
+        if (pages != null) {
+          const { error: pageErr } = await supabase.from('books').update({ pages }).eq('id', id);
+          if (pageErr) {
+            console.error('Error updating book pages from PDF:', pageErr);
           }
         }
       } catch (pageCountErr) {

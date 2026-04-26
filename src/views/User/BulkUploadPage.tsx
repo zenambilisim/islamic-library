@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type InputHTMLAttributes } from 'react';
 import Link from 'next/link';
 import { Upload, FolderOpen, CheckCircle, XCircle } from 'lucide-react';
+import { PDFDocument } from 'pdf-lib';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import type { Category, Language } from '@/types';
 import {
@@ -14,6 +15,20 @@ import {
 import { uploadBookCoverDirect, uploadBookFileDirect } from '@/lib/direct-upload';
 
 const LANGUAGES: Language[] = ['en', 'tr', 'ru', 'az'];
+
+async function countPdfPagesFromFile(file: File): Promise<number | null> {
+  try {
+    const buffer = await file.arrayBuffer();
+    const doc = await PDFDocument.load(buffer, {
+      ignoreEncryption: true,
+      capNumbers: true,
+    });
+    const n = doc.getPageCount();
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
 
 const BulkUploadPage = () => {
   const [entries, setEntries] = useState<BookEntry[]>([]);
@@ -97,6 +112,10 @@ const BulkUploadPage = () => {
   };
 
   const uploadOne = async (entry: BookEntry): Promise<string | null> => {
+    if (!language) {
+      throw new Error('Dil seçilmedi');
+    }
+
     let description = '';
     const descFile = entry.files.txt;
     if (descFile) {
@@ -114,16 +133,32 @@ const BulkUploadPage = () => {
       throw new Error('Yazar bilgisi yok (klasör adı veya author.txt)');
     }
 
+    const pages = await countPdfPagesFromFile(entry.files.pdf!);
+
+    const createBookPayload: {
+      title: string;
+      authors: { name: string }[];
+      category_id: string;
+      description?: string;
+      language: Language;
+      pages?: number;
+    } = {
+      title: entry.title,
+      authors: authorNames.map((name) => ({ name })),
+      category_id: categoryId,
+      description: description || undefined,
+      language,
+    };
+    if (pages != null) {
+      createBookPayload.pages = pages;
+    }
+
+    console.log('[BulkUpload] create book payload (with pages):', createBookPayload);
+
     const res = await fetch('/api/books', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: entry.title,
-        authors: authorNames.map((name) => ({ name })),
-        category_id: categoryId,
-        description: description || undefined,
-        language,
-      }),
+      body: JSON.stringify(createBookPayload),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.statusText);

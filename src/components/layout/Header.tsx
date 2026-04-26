@@ -12,6 +12,7 @@ const Header = () => {
   const { t, i18n } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isCondensed, setIsCondensed] = useState(false);
   const { searchTerm, setSearchTerm, placeholder } = useSearch();
 
   const languages: { code: Language; name: string; flag: string }[] = [
@@ -25,6 +26,16 @@ const Header = () => {
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsCondensed(window.scrollY > 80);
+    };
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const currentLangCode =
@@ -62,7 +73,11 @@ const Header = () => {
     <header className="bg-white/80 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-white/20">
       <div className="container mx-auto px-4">
         {/* Top bar with language selector - Desktop Only */}
-        <div className="hidden md:flex justify-end py-2 border-b border-gradient-to-r from-primary-100 to-purple-100">
+        <div
+          className={`hidden md:flex justify-end overflow-hidden border-gradient-to-r from-primary-100 to-purple-100 transition-all duration-300 ${
+            isCondensed ? 'max-h-0 opacity-0 py-0 border-b-0' : 'max-h-16 opacity-100 py-2 border-b'
+          }`}
+        >
           <div className="relative group">
             <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 transform hover:scale-105 shadow-sm">
               <Globe size={16} className="text-primary-600" />
@@ -90,7 +105,7 @@ const Header = () => {
         </div>
 
         {/* Main header */}
-        <div className="py-4 md:py-6">
+        <div className="py-3 md:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3 hover:scale-105 transition-all duration-300">

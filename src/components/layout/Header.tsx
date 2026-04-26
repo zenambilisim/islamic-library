@@ -29,8 +29,16 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
+    const HIDE_THRESHOLD = 100;
+    const SHOW_THRESHOLD = 40;
+
     const onScroll = () => {
-      setIsCondensed(window.scrollY > 80);
+      const y = window.scrollY;
+      setIsCondensed((prev) => {
+        if (!prev && y > HIDE_THRESHOLD) return true;
+        if (prev && y < SHOW_THRESHOLD) return false;
+        return prev;
+      });
     };
 
     onScroll();

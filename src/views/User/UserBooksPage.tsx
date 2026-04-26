@@ -8,6 +8,7 @@ import { BookPlus, FolderUp, Pencil, Search, Trash2 } from 'lucide-react';
 import type { Book, Language } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
 import { useBookModal } from '@/contexts/BookModalContext';
+import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 
 const DATA_LANGUAGES: Language[] = ['tr', 'en', 'ru', 'az'];
 
@@ -29,8 +30,11 @@ const UserBooksPage = () => {
     searchQuery,
     setSearchQuery,
     debouncedSearch,
+    selectedCategory,
+    setSelectedCategory,
     refetch,
   } = useUserBooksPaginated(20, dataLanguage);
+  const { categories } = useSupabaseCategories(dataLanguage);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -47,6 +51,12 @@ const UserBooksPage = () => {
       return next;
     });
   }, [books]);
+
+  useEffect(() => {
+    if (selectedCategory && !categories.some((category) => category.slug === selectedCategory)) {
+      setSelectedCategory('');
+    }
+  }, [categories, selectedCategory, setSelectedCategory]);
 
   const deleteMany = async (ids: string[]): Promise<void> => {
     if (ids.length === 0) return;
@@ -207,6 +217,24 @@ const UserBooksPage = () => {
             {DATA_LANGUAGES.map((lang) => (
               <option key={lang} value={lang}>
                 {lang.toUpperCase()}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[220px]">
+          <label htmlFor="admin-books-category" className="sr-only">
+            {t('user.books.categoryFilterLabel')}
+          </label>
+          <select
+            id="admin-books-category"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            <option value="">{t('user.books.allCategories')}</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.slug}>
+                {category.name}
               </option>
             ))}
           </select>

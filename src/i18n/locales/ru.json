@@ -234,6 +234,8 @@
       "noBooksMatch": "Нет книг, соответствующих запросу.",
       "searchLabel": "Поиск по названию книги",
       "searchPlaceholder": "Название…",
+      "categoryFilterLabel": "Фильтр по категории",
+      "allCategories": "Все категории",
       "table": {
         "cover": "Обложка",
         "title": "Название",

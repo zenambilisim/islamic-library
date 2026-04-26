@@ -234,6 +234,8 @@
       "noBooksMatch": "No books match your search.",
       "searchLabel": "Search by book title",
       "searchPlaceholder": "Search title…",
+      "categoryFilterLabel": "Filter by category",
+      "allCategories": "All categories",
       "table": {
         "cover": "Cover",
         "title": "Title",

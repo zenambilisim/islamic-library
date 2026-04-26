@@ -235,6 +235,8 @@
       "noBooksMatch": "Bu aramayla eşleşen kitap yok.",
       "searchLabel": "Kitap adına göre ara",
       "searchPlaceholder": "Kitap adı ara…",
+      "categoryFilterLabel": "Kategoriye göre filtrele",
+      "allCategories": "Tüm kategoriler",
       "table": {
         "cover": "Kapak",
         "title": "Başlık",

@@ -234,6 +234,8 @@
       "noBooksMatch": "Bu axtarışa uyğun kitab yoxdur.",
       "searchLabel": "Kitab adına görə axtar",
       "searchPlaceholder": "Kitab adı axtar…",
+      "categoryFilterLabel": "Kateqoriyaya görə filtrlə",
+      "allCategories": "Bütün kateqoriyalar",
       "table": {
         "cover": "Üzlük",
         "title": "Başlıq",

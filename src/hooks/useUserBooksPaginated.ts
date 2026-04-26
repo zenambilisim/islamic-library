@@ -19,6 +19,8 @@ export interface UseUserBooksPaginatedReturn {
   setSearchQuery: (q: string) => void;
   /** API’ye giden gecikmeli arama metni */
   debouncedSearch: string;
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
   refetch: () => Promise<void>;
 }
 
@@ -28,7 +30,8 @@ export interface UseUserBooksPaginatedReturn {
  */
 export function useUserBooksPaginated(
   initialPageSize: number = DEFAULT_PAGE_SIZE,
-  language?: string
+  language?: string,
+  category?: string
 ): UseUserBooksPaginatedReturn {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +41,7 @@ export function useUserBooksPaginated(
   const [pageSize, setPageSizeState] = useState(initialPageSize);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(category?.trim() || '');
   const prevDebouncedRef = useRef('');
 
   useEffect(() => {
@@ -50,6 +54,10 @@ export function useUserBooksPaginated(
     prevDebouncedRef.current = debouncedSearch;
     setPage(0);
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [selectedCategory]);
 
   const fetchPage = useCallback(async () => {
     try {
@@ -64,6 +72,7 @@ export function useUserBooksPaginated(
       if (lang === 'tr' || lang === 'en' || lang === 'ru' || lang === 'az') {
         params.set('language', lang);
       }
+      if (selectedCategory) params.set('category', selectedCategory);
       if (debouncedSearch) params.set('search', debouncedSearch);
       const res = await fetch(`/api/books?${params}`);
       if (!res.ok) {
@@ -81,7 +90,7 @@ export function useUserBooksPaginated(
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, language]);
+  }, [page, pageSize, debouncedSearch, language, selectedCategory]);
 
   useEffect(() => {
     fetchPage();
@@ -108,6 +117,8 @@ export function useUserBooksPaginated(
     searchQuery,
     setSearchQuery,
     debouncedSearch,
+    selectedCategory,
+    setSelectedCategory,
     refetch: fetchPage,
   };
 }

@@ -82,8 +82,10 @@ const Header = () => {
       <div className="container mx-auto px-4">
         {/* Top bar with language selector - Desktop Only */}
         <div
-          className={`hidden md:flex justify-end overflow-hidden border-gradient-to-r from-primary-100 to-purple-100 transition-all duration-300 ${
-            isCondensed ? 'max-h-0 opacity-0 py-0 border-b-0' : 'max-h-16 opacity-100 py-2 border-b'
+          className={`hidden md:flex justify-end border-gradient-to-r from-primary-100 to-purple-100 transition-all duration-300 ${
+            isCondensed
+              ? 'max-h-0 opacity-0 py-0 border-b-0 overflow-hidden'
+              : 'max-h-16 opacity-100 py-2 border-b overflow-visible'
           }`}
         >
           <div className="relative group">
@@ -93,7 +95,7 @@ const Header = () => {
             </button>
             
             {/* Language dropdown */}
-            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               {languages.map((lang) => (
                 <button
                   key={lang.code}

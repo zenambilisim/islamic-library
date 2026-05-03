@@ -33,7 +33,7 @@
     "authorsPlaceholder": "Müəllif axtarın...",
     "categoriesPlaceholder": "Kateqoriya axtarın...",
     "noResults": "Axtarış kriteriyalarınıza uyğun kitab tapılmadı",
-    "resultsFor": "üçün nəticələr",
+    "resultsFor": "\"{{word}}\" üçün {{count}} nəticə tapıldı",
     "tryDifferentKeywords": "Fərqli açar sözlər sınayın",
     "filters": "Filtrlər",
     "sortBy": "Sıralama",

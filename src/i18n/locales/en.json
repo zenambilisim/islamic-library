@@ -33,7 +33,7 @@
     "authorsPlaceholder": "Search authors...",
     "categoriesPlaceholder": "Search categories...",
     "noResults": "No books found matching your search criteria",
-    "resultsFor": "results for",
+    "resultsFor": "{{count}} results for \"{{word}}\"",
     "tryDifferentKeywords": "Try different keywords",
     "filters": "Filters",
     "sortBy": "Sort by",

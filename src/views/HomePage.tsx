@@ -204,10 +204,10 @@ const HomePage = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                     {searchTerm ? (
-                      <>
-                        <span className="text-primary-600">{filteredBooks.length}</span> {t('search.resultsFor')} 
-                        <span className="text-purple-600">&quot;{searchTerm}&quot;</span>
-                      </>
+                      t('search.resultsFor', {
+                        count: filteredBooks.length,
+                        word: searchTerm,
+                      })
                     ) : (
                       t('common.allBooks')
                     )}

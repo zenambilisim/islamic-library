@@ -32,7 +32,7 @@
     "authorsPlaceholder": "Поиск авторов...",
     "categoriesPlaceholder": "Поиск категорий...",
     "noResults": "Не найдено книг, соответствующих вашим критериям поиска",
-    "resultsFor": "результатов для",
+    "resultsFor": "Для запроса «{{word}}» найдено результатов: {{count}}",
     "tryDifferentKeywords": "Попробуйте другие ключевые слова",
     "filters": "Фильтры",
     "filterByCategory": "Фильтр по категории",

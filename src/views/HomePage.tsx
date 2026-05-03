@@ -224,12 +224,6 @@ const HomePage = () => {
                     <span className="text-sm font-medium">{t('search.filters')}</span>
                   </button>
                 </div>
-                
-                {(searchTerm || Object.keys(filters).length > 0) && filteredBooks.length === 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <p className="text-red-600 font-medium">{t('search.noResults')}</p>
-                  </div>
-                )}
               </div>
             </div>
 

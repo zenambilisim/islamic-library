@@ -20,6 +20,9 @@
     "close": "Kapat",
     "logoAlt": "Islamic Library Logo"
   },
+  "errors": {
+    "downloadFailed": "İndirme başarısız oldu. Lütfen tekrar deneyin."
+  },
   "navigation": {
     "home": "Ana Sayfa",
     "categories": "Kategoriler", 
@@ -57,7 +60,12 @@
     "formats": "Formatlar",
     "description": "Açıklama",
     "tags": "Etiketler",
-    "relatedBooks": "İlgili Kitaplar"
+    "relatedBooks": "İlgili Kitaplar",
+    "openingReader": "Açılıyor...",
+    "preparingDownload": "Hazırlanıyor...",
+    "publicationInfo": "Yayın Bilgileri",
+    "dateAdded": "Eklenme Tarihi",
+    "lastUpdated": "Son Güncelleme"
   },
   "formats": {
     "epub": "EPUB",

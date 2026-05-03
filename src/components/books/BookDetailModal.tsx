@@ -54,7 +54,7 @@ const BookDetailModal = () => {
       });
     } catch (error) {
       console.error('Download error:', error);
-      alert(t('errors.downloadFailed') || 'İndirme başarısız oldu. Lütfen tekrar deneyin.');
+      alert(t('errors.downloadFailed'));
     } finally {
       setLoadingUrls((prev) => ({ ...prev, [format]: false }));
     }
@@ -104,7 +104,7 @@ const BookDetailModal = () => {
                     {readOnlineLoading ? (
                       <>
                         <Loader2 size={20} className="animate-spin" />
-                        <span>Açılıyor...</span>
+                        <span>{t('book.openingReader')}</span>
                       </>
                     ) : (
                       <>
@@ -128,7 +128,7 @@ const BookDetailModal = () => {
                           {loadingUrls[format] ? (
                             <>
                               <Loader2 size={16} className="animate-spin" />
-                              <span>Hazırlanıyor...</span>
+                              <span>{t('book.preparingDownload')}</span>
                             </>
                           ) : (
                             <>
@@ -173,10 +173,10 @@ const BookDetailModal = () => {
               </div>
               {/* Publication Info */}
               <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Yayın Bilgileri</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('book.publicationInfo')}</h3>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><span className="font-medium">Eklenme Tarihi:</span> {new Date(book.createdAt).toLocaleDateString(locale)}</p>
-                  <p><span className="font-medium">Son Güncelleme:</span> {new Date(book.updatedAt).toLocaleDateString(locale)}</p>
+                  <p><span className="font-medium">{t('book.dateAdded')}:</span> {new Date(book.createdAt).toLocaleDateString(locale)}</p>
+                  <p><span className="font-medium">{t('book.lastUpdated')}:</span> {new Date(book.updatedAt).toLocaleDateString(locale)}</p>
                 </div>
               </div>
             </div>

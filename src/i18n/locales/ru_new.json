@@ -18,6 +18,9 @@
     "showMore": "Показать больше",
     "close": "Закрыть"
   },
+  "errors": {
+    "downloadFailed": "Не удалось скачать. Попробуйте ещё раз."
+  },
   "navigation": {
     "home": "Главная",
     "categories": "Категории",
@@ -51,7 +54,12 @@
     "formats": "Форматы",
     "description": "Описание",
     "tags": "Теги",
-    "relatedBooks": "Связанные книги"
+    "relatedBooks": "Связанные книги",
+    "openingReader": "Открытие…",
+    "preparingDownload": "Подготовка…",
+    "publicationInfo": "Сведения о публикации",
+    "dateAdded": "Дата добавления",
+    "lastUpdated": "Последнее обновление"
   },
   "formats": {
     "epub": "EPUB",

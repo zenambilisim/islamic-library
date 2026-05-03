@@ -17,11 +17,11 @@ const UsefulInfoPage = () => {
       icon: <Eye className="text-green-600" size={24} />,
       steps: ['guide2Step1', 'guide2Step2', 'guide2Step3', 'guide2Step4']
     },
-    // {
-    //   id: 3,
-    //   icon: <Search className="text-purple-600" size={24} />,
-    //   steps: ['guide3Step1', 'guide3Step2', 'guide3Step3', 'guide3Step4']
-    // },
+    {
+      id: 3,
+      icon: <Search className="text-purple-600" size={24} />,
+      steps: ['guide3Step1', 'guide3Step2', 'guide3Step3']
+    },
     {
       id: 4,
       icon: <Smartphone className="text-orange-600" size={24} />,

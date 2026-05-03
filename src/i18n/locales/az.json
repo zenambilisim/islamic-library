@@ -19,6 +19,9 @@
     "showMore": "Daha çox",
     "close": "Bağla"
   },
+  "errors": {
+    "downloadFailed": "Yükləmə alınmadı. Zəhmət olmasa yenidən cəhd edin."
+  },
   "navigation": {
     "home": "Əsas səhifə",
     "categories": "Kateqoriyalar",
@@ -33,14 +36,14 @@
     "authorsPlaceholder": "Müəllif axtarın...",
     "categoriesPlaceholder": "Kateqoriya axtarın...",
     "noResults": "Axtarış kriteriyalarınıza uyğun kitab tapılmadı",
-    "resultsFor": "\"{{word}}\" üçün {{count}} nəticə tapıldı",
+    "resultsFor": "\"{{word}}\" üçün {{count}} nəticə",
     "tryDifferentKeywords": "Fərqli açar sözlər sınayın",
     "filters": "Filtrlər",
     "sortBy": "Sıralama",
     "sortAlphabetical": "Əlifba üzrə",
     "sortMostDownloaded": "Ən çox yüklənənlər",
     "sortUploadDate": "Yüklənmə tarixinə görə",
-    "filterByCategory": "Kateqoriyaya görə filtr",
+    "filterByCategory": "Kateqoriya",
     "filterByAuthor": "Müəllifə görə filtr",
     "filterByFormat": "Formata görə filtr",
     "clearFilters": "Filtrləri Təmizlə"
@@ -56,7 +59,12 @@
     "formats": "Formatlar",
     "description": "Təsvir",
     "tags": "Etiketlər",
-    "relatedBooks": "Əlaqəli Kitablar"
+    "relatedBooks": "Əlaqəli Kitablar",
+    "openingReader": "Açılır...",
+    "preparingDownload": "Hazırlanır...",
+    "publicationInfo": "Nəşr Məlumatları",
+    "dateAdded": "Əlavə edilmə tarixi",
+    "lastUpdated": "Son yenilənmə"
   },
   "formats": {
     "epub": "EPUB",
@@ -65,7 +73,7 @@
   },
   "authors": {
     "pageTitle": "Müəlliflər",
-    "pageDescription": "İslam əsərlərinin dəyərli müəlliflərini kəşf edin",
+    "pageDescription": "Əsərlərin dəyərli müəlliflərini kəşf edin",
     "alphabetSort": "Əlifba sıralaması",
     "browseByLetter": "Hərflərə görə gəzin",
     "all": "Hamısı",
@@ -90,7 +98,7 @@
   },
   "categories": {
     "pageTitle": "Kateqoriyalar",
-    "pageDescription": "İslam kitablarını kateqoriyalara görə kəşf edin",
+    "pageDescription": "Kitabları kateqoriyalara görə kəşf edin",
     "noCategories": "Hələ kateqoriya yoxdur",
     "browseByCategory": "Kateqoriyaya görə gəzin",
     "booksInCategory": "kitab",
@@ -112,7 +120,7 @@
   },
   "hero": {
     "title": "Geniş Rəqəmsal İslam Kitabxanası",
-    "subtitle": "Hər hansı bir cihazda onlayn və ya oflayn oxumaq üçün 500-dən çox kitab mövcuddur",
+    "subtitle": "Hər hansı bir cihazda onlayn və ya oflayn oxumaq üçün kitablar mövcuddur",
     "booksCount": "Kitab",
     "languagesCount": "Dil",
     "knowledgeCount": "Bilik",
@@ -124,8 +132,8 @@
     "pageTitle": "Əlaqə",
     "pageDescription": "Suallarınız, təklifləriniz və ya töhfələriniz üçün bizimlə əlaqə saxlayın. Sizə kömək etməkdən məmnunuq.",
     "formTitle": "Bizə Mesaj Göndərin",
-    "nameLabel": "Adınız Soyadınız *",
-    "namePlaceholder": "Tam adınızı daxil edin",
+    "nameLabel": "Adınız *",
+    "namePlaceholder": "adınızı daxil edin",
     "emailLabel": "E-poçt Ünvanınız *",
     "emailPlaceholder": "numune@email.com",
     "subjectLabel": "Mövzu *",
@@ -176,7 +184,7 @@
     "pageDescription": "Islamic Library dini kitabları rəqəmsal formatda əlçatan etmək məqsədi ilə yaradılmış pulsuz elektron kitabxana platformasıdır.",
     "missionTitle": "Missiyamız",
     "missionText1": "Əsas missiyamız İslam elmləri sahəsindəki dəyərli əsərləri rəqəmsal formatda cəmiyyətin xidmətinə təqdim etmək, İslam mədəniyyəti və elminin yayılmasına töhfə verməkdir.",
-    "missionText2": "Qurani-Kərim, hədis, təfsir, təsəvvüf və digər İslami mövzularda keyfiyyətli mənbələri pulsuz əlçatan edirik.",
+    "missionText2": "Qurani-Kərim, hədis, təfsir, irfan və digər İslami mövzularda keyfiyyətli mənbələri pulsuz əlçatan edirik.",
     "visionTitle": "Vizyonumuz",
     "visionText1": "Dünyanın hər yerindən müsəlmanların İslami bilgiyə asanlıqla çata biləcəyi ən geniş rəqəmsal İslam kitabxanası olmağı hədəfləyirik.",
     "visionText2": "Texnologiyanı İslam elmi ilə birləşdirərək, gələcək nəsillərə dəyərli mirası çatdırmaq üçün çalışırıq.",
@@ -397,7 +405,7 @@
     "pdfAdv3": "Çap üçün uyğundur",
     "pdfRecommended": "Kompüter və planşet istifadəsi üçün tövsiyə olunur",
     "epubDesc": "Electronic Publication",
-    "epubAdv1": "Responsive tərtibat",
+    "epubAdv1": "Adaptiv dizayn",
     "epubAdv2": "Tənzimlənən mətn ölçüsü",
     "epubAdv3": "E-reader uyğunluğu",
     "epubRecommended": "E-kitab oxuyucuları və mobil cihazlar üçün idealdır",

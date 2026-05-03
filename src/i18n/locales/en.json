@@ -19,6 +19,9 @@
     "showMore": "Show More",
     "close": "Close"
   },
+  "errors": {
+    "downloadFailed": "Download failed. Please try again."
+  },
   "navigation": {
     "home": "Home",
     "categories": "Categories",
@@ -56,7 +59,12 @@
     "formats": "Formats",
     "description": "Description",
     "tags": "Tags",
-    "relatedBooks": "Related Books"
+    "relatedBooks": "Related Books",
+    "openingReader": "Opening…",
+    "preparingDownload": "Preparing…",
+    "publicationInfo": "Publication information",
+    "dateAdded": "Date added",
+    "lastUpdated": "Last updated"
   },
   "formats": {
     "epub": "EPUB",

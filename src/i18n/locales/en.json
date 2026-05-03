@@ -43,9 +43,9 @@
     "sortAlphabetical": "Alphabetical",
     "sortMostDownloaded": "Most downloaded",
     "sortUploadDate": "By upload date",
-    "filterByCategory": "Filter by category",
-    "filterByAuthor": "Filter by author",
-    "filterByFormat": "Filter by format",
+    "filterByCategory": "Category",
+    "filterByAuthor": "Author",
+    "filterByFormat": "Format",
     "clearFilters": "Clear Filters"
   },
   "book": {
@@ -73,7 +73,7 @@
   },
   "authors": {
     "pageTitle": "Authors",
-    "pageDescription": "Discover the valuable authors of Islamic works",
+    "pageDescription": "Discover the valuable authors",
     "alphabetSort": "Alphabetical Sorting",
     "browseByLetter": "Browse by Letter",
     "all": "All",
@@ -98,7 +98,7 @@
   },
   "categories": {
     "pageTitle": "Categories",
-    "pageDescription": "Discover Islamic books by categories",
+    "pageDescription": "Discover books by categories",
     "noCategories": "No categories available yet",
     "browseByCategory": "Browse by category",
     "booksInCategory": "books",

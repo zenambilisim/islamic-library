@@ -305,6 +305,7 @@ const HomePage = () => {
             onFiltersChange={setFilters}
             isOpen={isFilterOpen}
             onToggle={() => setIsFilterOpen(!isFilterOpen)}
+            onCategoryNavigate={() => setIsFilterOpen(false)}
           />
         </div>
       </div>

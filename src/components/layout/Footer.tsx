@@ -8,6 +8,7 @@ import { BookOpen, Mail } from 'lucide-react';
 const Footer = () => {
   const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -43,9 +44,18 @@ const Footer = () => {
           {/* Logo & Description */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-4 mb-6">
-              <div className="bg-gradient-to-r from-primary-600 to-purple-600 p-4 rounded-2xl shadow-lg">
-                <BookOpen className="text-white" size={40} />
-              </div>
+              {logoFailed ? (
+                <BookOpen className="shrink-0 text-primary-300" size={40} strokeWidth={1.75} />
+              ) : (
+                <img
+                  src="/images/logo/islamic-lib-logo.png"
+                  alt={t('common.logoAlt', 'Islamic Library')}
+                  width={180}
+                  height={180}
+                  className="h-14 w-auto shrink-0 object-contain drop-shadow-md sm:h-16 md:h-[4.5rem]"
+                  onError={() => setLogoFailed(true)}
+                />
+              )}
               <div>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Islamic Library</h3>
                 <p className="text-blue-200 text-sm font-medium">{t('footer.description')}</p>

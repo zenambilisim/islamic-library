@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Filter, Folder, X, Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
@@ -9,19 +10,20 @@ interface FilterSidebarProps {
   onFiltersChange: (filters: SearchFilters) => void;
   isOpen: boolean;
   onToggle: () => void;
+  /** Kategori linkine tıklanınca (ör. mobil paneli kapatmak için) */
+  onCategoryNavigate?: () => void;
 }
 
-const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSidebarProps) => {
+const FilterSidebar = ({
+  filters,
+  onFiltersChange,
+  isOpen,
+  onToggle,
+  onCategoryNavigate,
+}: FilterSidebarProps) => {
   const { t, i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
   const { categories, loading, error } = useSupabaseCategories(language);
-
-  const handleCategoryChange = (categorySlug: string) => {
-    onFiltersChange({
-      ...filters,
-      category: filters.category === categorySlug ? undefined : categorySlug,
-    });
-  };
 
   const clearAllFilters = () => {
     onFiltersChange({});
@@ -34,7 +36,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSid
     });
   };
 
-  const hasActiveFilters = filters.category || (filters.sortBy && filters.sortBy !== 'uploadDate');
+  const hasActiveFilters = filters.sortBy && filters.sortBy !== 'uploadDate';
 
   return (
     <>
@@ -136,28 +138,20 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onToggle }: FilterSid
           {!loading && !error && categories.length > 0 && (
             <div className="space-y-3">
               {categories.map((category, index) => (
-                <button
+                <Link
                   key={category.id}
-                  onClick={() => handleCategoryChange(category.slug)}
-                  className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 transform hover:scale-[1.02] ${
-                    filters.category === category.slug
-                      ? 'bg-gradient-to-r from-primary-100 to-purple-100 text-primary-800 border-2 border-primary-300 shadow-lg'
-                      : 'bg-white/70 hover:bg-white border-2 border-gray-100 hover:border-primary-200 hover:shadow-md'
-                  }`}
+                  href={`/categories/${encodeURIComponent(category.slug)}`}
+                  onClick={() => onCategoryNavigate?.()}
+                  className="w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 transform hover:scale-[1.02] bg-white/70 hover:bg-white border-2 border-gray-100 hover:border-primary-200 hover:shadow-md"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
                     <Folder size={18} strokeWidth={1.75} aria-hidden />
                   </div>
                   <div className="flex-1">
-                    <span className="font-semibold text-sm">
-                      {category.name}
-                    </span>
+                    <span className="font-semibold text-sm">{category.name}</span>
                   </div>
-                  {filters.category === category.slug && (
-                    <div className="text-primary-600">✓</div>
-                  )}
-                </button>
+                </Link>
               ))}
             </div>
           )}

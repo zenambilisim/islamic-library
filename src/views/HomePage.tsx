@@ -272,7 +272,7 @@ const HomePage = () => {
                   onClick={() => window.location.reload()}
                   className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
                 >
-                  Tüm Kitapları Görüntüle
+                  {t('search.viewAllBooks')}
                 </button>
               </div>
             )}

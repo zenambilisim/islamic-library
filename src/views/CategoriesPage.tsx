@@ -155,7 +155,7 @@ const CategoriesPage = () => {
             <Grid3X3 size={48} className="mx-auto mb-4 text-gray-300" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">{t('categories.categoryNotFound')}</h3>
             <p className="text-gray-600">
-              &quot;{searchTerm}&quot; {t('categories.categoryNotFoundDesc')}
+              {t('categories.categoryNotFoundDesc')}
             </p>
           </div>
         )}

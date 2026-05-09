@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Islamic Library - İslami Dijital Kütüphane',
   description: 'İslami dijital kütüphane',
   icons: {
-    icon: '/images/logo/ISLAMIC.png',
+    icon: '/favicon.ico',
   },
 };
 

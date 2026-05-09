@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, Eye, FileText, User, Loader2 } from 'lucide-react';
 import type { Book } from '@/types';
 import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
+import { isUnknownAuthorDisplayName, resolveAuthorDisplayName } from '@/lib/author-display-name';
 import { useBookModal } from '@/contexts/BookModalContext';
 
 /** Sunucudan gelen serileştirilmiş tarihler için */
@@ -33,7 +34,8 @@ const BookDetailContent = ({ book }: BookDetailContentProps) => {
   }, [book.id]);
 
   const locale = i18n.language;
-  const hasKnownAuthor = book.author.trim().toLowerCase() !== 'unknown author';
+  const authorShown = Boolean(book.author.trim());
+  const useAuthorForDownloads = authorShown && !isUnknownAuthorDisplayName(book.author);
 
   const handleReadOnline = async () => {
     setReadOnlineLoading(true);
@@ -47,7 +49,10 @@ const BookDetailContent = ({ book }: BookDetailContentProps) => {
   const handleDownload = async (format: string, url: string) => {
     try {
       setLoadingUrls((prev) => ({ ...prev, [format]: true }));
-      const base = safeDownloadBasename(book.title, book.author);
+      const base = safeDownloadBasename(
+        book.title,
+        useAuthorForDownloads ? book.author : undefined
+      );
       await downloadBookAsset(url, `${base}.${format.toLowerCase()}`, {
         bookId: book.id,
         format,
@@ -133,10 +138,10 @@ const BookDetailContent = ({ book }: BookDetailContentProps) => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">{book.title}</h1>
 
-          {hasKnownAuthor && (
+          {authorShown && (
             <div className="flex items-center text-lg text-gray-600 mb-4">
               <User size={20} className="mr-2" />
-              <span>{book.author}</span>
+              <span>{resolveAuthorDisplayName(book.author, t)}</span>
             </div>
           )}
           <div className="flex items-center text-lg text-gray-600 mb-4">

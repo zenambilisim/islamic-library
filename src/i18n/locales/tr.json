@@ -53,6 +53,7 @@
   "book": {
     "details": "Kitap Detayları",
     "author": "Yazar",
+    "unknownAuthor": "Bilinmeyen yazar",
     "category": "Kategori",
     "pages": "Sayfa",
     "fileSize": "Dosya Boyutu",
@@ -101,6 +102,7 @@
     "noAuthorsForLetter": "harfi ile başlayan yazar bulunamadı.",
     "noAuthorsForSearch": "için herhangi bir yazar bulunamadı.",
     "noAuthorsYet": "Henüz yazar eklenmemiş.",
+    "unknownAuthors": "Yazar yok",
     "booksFound": "kitap bulundu"
   },
   "categories": {

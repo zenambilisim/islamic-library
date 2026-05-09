@@ -11,6 +11,7 @@ import {
 import BookCard from '@/components/books/BookCard';
 import type { Book } from '@/types';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
+import { resolveAuthorDisplayName } from '@/lib/author-display-name';
 
 const AuthorsPage = () => {
   const { t, i18n } = useTranslation();
@@ -175,7 +176,7 @@ const AuthorsPage = () => {
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {author.name}
+                  {resolveAuthorDisplayName(author.name, t)}
                 </h1>
                 <p className="text-gray-600 mt-2">{author.biography}</p>
                 <div className="flex items-center space-x-4 mt-4 text-sm text-gray-600">
@@ -307,7 +308,7 @@ const AuthorsPage = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-                        {author.name}
+                        {resolveAuthorDisplayName(author.name, t)}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
                         {author.bookCount} {t('authors.booksCount')}
@@ -317,17 +318,6 @@ const AuthorsPage = () => {
 
                   {/* Author Biography */}
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">{author.biography}</p>
-
-                  {/* Author Stats */}
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    {author.birthYear && (
-                      <div className="flex items-center space-x-1">
-                        <Calendar size={14} />
-                        <span>{author.birthYear}</span>
-                        {author.deathYear && <span>- {author.deathYear}</span>}
-                      </div>
-                    )}
-                  </div>
 
                   {/* Action Button */}
                   <div className="mt-4 pt-4 border-t border-gray-100">

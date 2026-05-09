@@ -52,6 +52,7 @@
   "book": {
     "details": "Детали книги",
     "author": "Автор",
+    "unknownAuthor": "Неизвестный автор",
     "category": "Категория",
     "pages": "Страницы",
     "fileSize": "Размер файла",
@@ -100,6 +101,7 @@
     "noAuthorsForLetter": "Не найдено авторов, начинающихся с буквы",
     "noAuthorsForSearch": "Авторы не найдены для",
     "noAuthorsYet": "Авторы еще не добавлены.",
+    "unknownAuthors": "Без автора",
     "booksFound": "книг найдено"
   },
   "categories": {

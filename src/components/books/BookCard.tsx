@@ -6,32 +6,25 @@ import { BookOpen, Download, Eye, FileText, Loader2, User } from 'lucide-react';
 import type { Book } from '@/types';
 import { useBookModal } from '@/contexts/BookModalContext';
 import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
+import { isUnknownAuthorDisplayName, resolveAuthorDisplayName } from '@/lib/author-display-name';
 
 interface BookCardProps {
   book: Book;
-}
-
-/** Boş veya bilinmeyen yazar placeholder’ları — kartta gösterilmez */
-function shouldShowBookAuthor(author?: string): boolean {
-  const t = author?.trim();
-  if (!t) return false;
-  const lower = t.toLowerCase();
-  if (lower === 'unknown author') return false;
-  if (lower === 'unknown') return false;
-  if (lower === 'bilinmeyen yazar' || lower === 'bilinmeyen') return false;
-  return true;
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book }) => {
   const { openDetails, openReader } = useBookModal();
   const { t } = useTranslation();
   const [downloadLoading, setDownloadLoading] = useState<Record<string, boolean>>({});
-  const hasAuthor = shouldShowBookAuthor(book.author);
+  const authorTrimmed = book.author?.trim() ?? '';
+  const showAuthorRow = Boolean(authorTrimmed);
+  /** İndirme dosya adında bilinmeyen yer tutucu kullanılmaz */
+  const useAuthorForDownload = showAuthorRow && !isUnknownAuthorDisplayName(book.author);
 
   const handleFormatDownload = async (e: React.MouseEvent, format: string, url: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const base = safeDownloadBasename(book.title, hasAuthor ? book.author : undefined);
+    const base = safeDownloadBasename(book.title, useAuthorForDownload ? book.author : undefined);
     const fileName = `${base}.${format.toLowerCase()}`;
     setDownloadLoading((s) => ({ ...s, [format]: true }));
     try {
@@ -87,16 +80,18 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
 
         {/* Author & Category — yazar yoksa yazar satırı gösterilmez */}
         <div
-          className={`flex min-h-[2.75rem] items-start gap-3 mb-3 ${hasAuthor ? 'justify-between' : 'justify-end'}`}
+          className={`flex min-h-[2.75rem] items-start gap-3 mb-3 ${showAuthorRow ? 'justify-between' : 'justify-end'}`}
         >
-          {hasAuthor && (
+          {showAuthorRow && (
             <div className="flex min-w-0 flex-1 items-center text-gray-600">
               <User size={16} className="mr-2 shrink-0 text-primary-500" aria-hidden />
-              <span className="line-clamp-2 text-sm font-medium">{book.author}</span>
+              <span className="line-clamp-2 text-sm font-medium">
+                {resolveAuthorDisplayName(book.author, t)}
+              </span>
             </div>
           )}
           <div
-            className={`flex shrink-0 items-center text-gray-600 ${hasAuthor ? 'max-w-[42%]' : 'max-w-full justify-end'}`}
+            className={`flex shrink-0 items-center text-gray-600 ${showAuthorRow ? 'max-w-[42%]' : 'max-w-full justify-end'}`}
           >
             <FileText size={14} className="mr-2 shrink-0" aria-hidden />
             <span className="line-clamp-2 text-right text-xs">{book.category}</span>

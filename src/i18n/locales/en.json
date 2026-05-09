@@ -52,6 +52,7 @@
   "book": {
     "details": "Book Details",
     "author": "Author",
+    "unknownAuthor": "Unknown author",
     "category": "Category",
     "pages": "Pages",
     "fileSize": "File Size",
@@ -100,6 +101,7 @@
     "noAuthorsForLetter": "No authors found starting with letter",
     "noAuthorsForSearch": "No authors found for",
     "noAuthorsYet": "No authors have been added yet.",
+    "unknownAuthors": "Unknown authors",
     "booksFound": "books found"
   },
   "categories": {
@@ -126,7 +128,7 @@
   },
   "hero": {
     "title": "Extensive Digital Islamic Library",
-    "subtitle": "More than 500 books available on any device to read online or offline",
+    "subtitle": "All books available on any device to read online or offline",
     "booksCount": "Books",
     "languagesCount": "Languages",
     "knowledgeCount": "Knowledge",

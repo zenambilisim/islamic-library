@@ -1,18 +1,33 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Heart, Users, Globe, Shield, Award } from 'lucide-react';
 
 const AboutPage = () => {
   const { t } = useTranslation();
+  const [heroLogoFailed, setHeroLogoFailed] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <div className="bg-primary-600 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-            <BookOpen className="text-white" size={40} />
+          <div className="relative mx-auto mb-6 flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-white p-2.5 shadow-lg ring-1 ring-gray-200 sm:h-24 sm:w-24 md:h-32 md:w-32 sm:p-3 md:p-3">
+            {heroLogoFailed ? (
+              <div className="absolute inset-2.5 flex items-center justify-center rounded-full bg-gradient-to-r from-primary-600 to-purple-600 shadow-inner sm:inset-3 md:inset-3">
+                <BookOpen className="text-white" size={30} strokeWidth={1.75} />
+              </div>
+            ) : (
+              <img
+                src="/images/logo/islamic-lib-logo.png"
+                alt={t('common.logoAlt', 'Islamic Library')}
+                width={180}
+                height={180}
+                className="max-h-full max-w-full object-contain drop-shadow-md"
+                onError={() => setHeroLogoFailed(true)}
+              />
+            )}
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             {t('about.pageTitle')}

@@ -52,6 +52,7 @@
   "book": {
     "details": "Kitab Təfərrüatları",
     "author": "Müəllif",
+    "unknownAuthor": "Naməlum müəllif",
     "category": "Kateqoriya",
     "pages": "Səhifə",
     "fileSize": "Fayl Ölçüsü",
@@ -100,6 +101,7 @@
     "noAuthorsForLetter": "hərfi ilə başlayan müəllif tapılmadı",
     "noAuthorsForSearch": "üçün heç bir müəllif tapılmadı",
     "noAuthorsYet": "Hələ müəllif əlavə edilməyib.",
+    "unknownAuthors": "Müəllifsiz",
     "booksFound": "kitab tapıldı"
   },
   "categories": {

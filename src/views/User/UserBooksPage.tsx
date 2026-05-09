@@ -9,6 +9,7 @@ import type { Book, Language } from '@/types';
 import { useUserBooksPaginated } from '@/hooks/useUserBooksPaginated';
 import { useBookModal } from '@/contexts/BookModalContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
+import { resolveAuthorDisplayName } from '@/lib/author-display-name';
 
 const DATA_LANGUAGES: Language[] = ['tr', 'en', 'ru', 'az'];
 
@@ -329,7 +330,7 @@ const UserBooksPage = () => {
                         </button>
                       </td>
                       <td className="py-2 px-4 text-gray-700">
-                        {book.author}
+                        {resolveAuthorDisplayName(book.author, t)}
                       </td>
                       <td className="py-2 px-4 text-gray-600 hidden sm:table-cell">
                         {book.category}

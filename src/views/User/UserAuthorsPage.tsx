@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Pencil, Search, Trash2, UserPlus } from 'lucide-react';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 import type { Language } from '@/types';
+import { resolveAuthorDisplayName } from '@/lib/author-display-name';
 
 function canEditAuthorInDb(id: string): boolean {
   return Boolean(id) && !id.startsWith('author-');
@@ -146,7 +147,9 @@ const UserAuthorsPage = () => {
                     key={author.id}
                     className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                   >
-                    <td className="py-2 px-4 font-medium text-gray-900">{author.name}</td>
+                    <td className="py-2 px-4 font-medium text-gray-900">
+                      {resolveAuthorDisplayName(author.name, t)}
+                    </td>
                     <td className="py-2 px-4 text-gray-600 uppercase text-xs tabular-nums">
                       {author.language}
                     </td>

@@ -30,6 +30,47 @@ const HomePage = () => {
 
   const activeLanguage = (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0];
 
+  /** Tüm dillerdeki toplam kitap sayısı (hero); /api/books COUNT (language filtresiz) */
+  const [heroTotalBooks, setHeroTotalBooks] = useState<number | null>(null);
+
+  const heroBooksLocaleTag =
+    activeLanguage === 'tr'
+      ? 'tr-TR'
+      : activeLanguage === 'ru'
+        ? 'ru-RU'
+        : activeLanguage === 'az'
+          ? 'az-AZ'
+          : 'en-US';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const params = new URLSearchParams({
+          page: '0',
+          limit: '1',
+          sortBy: 'uploadDate',
+          withTotal: '1',
+        });
+        const res = await fetch(`/api/books?${params}`);
+        if (!res.ok) {
+          if (!cancelled) setHeroTotalBooks(0);
+          return;
+        }
+        const data = (await res.json()) as { total?: number };
+        if (cancelled) return;
+        setHeroTotalBooks(typeof data.total === 'number' ? data.total : 0);
+      } catch {
+        if (!cancelled) setHeroTotalBooks(0);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Dil bazlı banner resmi seç
   const getBannerImage = () => {
     const bannerImages: Record<string, string> = {
@@ -154,7 +195,11 @@ const HomePage = () => {
                 {/* Stats Cards */}
                 <div className="flex flex-wrap justify-center lg:justify-start gap-3 md:gap-4 mb-6 md:mb-8">
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
-                    <div className="text-xl md:text-2xl font-bold text-primary-600">500+</div>
+                    <div className="text-xl md:text-2xl font-bold text-primary-600 tabular-nums">
+                      {heroTotalBooks === null
+                        ? '\u2026'
+                        : heroTotalBooks.toLocaleString(heroBooksLocaleTag)}
+                    </div>
                     <div className="text-xs md:text-sm text-gray-600">{t('hero.booksCount')}</div>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">

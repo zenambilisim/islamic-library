@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
 import sharp from 'sharp'
 import { countPdfPages } from './pdf-page-count'
-import { normalizeLanguageCode, slugifyAuthorName } from './author-db'
+import { normalizeLanguageCode, slugifyAuthorName, slugifyBookTitle } from './author-db'
 import { isR2Configured, r2DeleteBookObjects, r2DeleteKeys, r2PutObject, tryExtractStorageKey } from './r2-storage'
 import { supabase, supabaseAdmin } from './supabase-server'
 
@@ -253,41 +253,105 @@ export async function getBooks(
   };
 }
 
+/** Tek kitap detayı (liste ile aynı ilişki ağacı) */
+const BOOK_SINGLE_SELECT = `
+  *,
+  book_files (*),
+  book_authors (
+    author_order,
+    role,
+    authors (
+      id,
+      name,
+      language_code
+    )
+  ),
+  book_categories (
+    is_primary,
+    categories (
+      id,
+      name,
+      slug,
+      language_code
+    )
+  )
+`;
+
+function isLikelyBookUuid(segment: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment.trim());
+}
+
 // Tek kitap getir
 export async function getBookById(id: string) {
   const { data, error } = await supabase
     .from('books')
-    .select(`
-      *,
-      book_files (*),
-      book_authors (
-        author_order,
-        role,
-        authors (
-          id,
-          name,
-          language_code
-        )
-      ),
-      book_categories (
-        is_primary,
-        categories (
-          id,
-          name,
-          slug,
-          language_code
-        )
-      )
-    `)
+    .select(BOOK_SINGLE_SELECT)
     .eq('id', id)
-    .single()
+    .single();
 
   if (error) {
-    console.error('Error fetching book:', error)
-    return { book: null, error }
+    console.error('Error fetching book:', error);
+    return { book: null, error };
   }
 
-  return { book: data, error: null }
+  return { book: data, error: null };
+}
+
+/**
+ * Genel kitap sayfası: segment UUID ise id ile; değilse slug ile.
+ * `lang` sorgu parametresi dil eşleşmesi için (aynı slug farklı dillerde olabilir).
+ * `lang` yoksa ve birden fazla dilde aynı slug varsa öncelik `tr`.
+ */
+export async function getBookForPublicPage(segment: string, langQuery?: string | null) {
+  const raw = segment.trim();
+  if (isLikelyBookUuid(raw)) {
+    return getBookById(raw);
+  }
+
+  let slug = raw;
+  try {
+    slug = decodeURIComponent(raw);
+  } catch {
+    slug = raw;
+  }
+
+  const langFromQuery = langQuery?.trim();
+  if (langFromQuery) {
+    const lang = normalizeLanguageCode(langFromQuery, 'tr');
+    const { data, error } = await supabase
+      .from('books')
+      .select(BOOK_SINGLE_SELECT)
+      .eq('slug', slug)
+      .eq('language_code', lang)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching book by slug:', error);
+      return { book: null, error };
+    }
+    return { book: data ?? null, error: null };
+  }
+
+  const { data: rows, error } = await supabase
+    .from('books')
+    .select(BOOK_SINGLE_SELECT)
+    .eq('slug', slug);
+
+  if (error) {
+    console.error('Error fetching book by slug:', error);
+    return { book: null, error };
+  }
+  if (!rows?.length) {
+    return { book: null, error: null };
+  }
+  if (rows.length === 1) {
+    return { book: rows[0], error: null };
+  }
+
+  const tr = rows.find(
+    (r) => normalizeLanguageCode((r as { language_code?: string }).language_code, 'tr') === 'tr'
+  );
+  return { book: tr ?? rows[0], error: null };
 }
 
 // Kitap arama
@@ -801,6 +865,29 @@ async function resolveExistingCategoryId(
   };
 }
 
+/** Aynı dilde slug çakışmasında kısa hex sonek eklenir. */
+async function ensureUniqueBookSlug(
+  client: ReturnType<typeof db>,
+  title: string,
+  languageCode: string,
+  excludeBookId?: string
+): Promise<{ slug: string; error: Error | null }> {
+  const lang = normalizeLanguageCode(languageCode, 'tr');
+  let base = slugifyBookTitle(title, lang);
+  if (!base) base = 'book';
+
+  let slug = base;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    let q = client.from('books').select('id').eq('slug', slug).eq('language_code', lang);
+    if (excludeBookId) q = q.neq('id', excludeBookId);
+    const { data, error } = await q.maybeSingle();
+    if (error) return { slug: base, error: error as Error };
+    if (!data?.id) return { slug, error: null };
+    slug = `${base}-${randomBytes(3).toString('hex')}`;
+  }
+  return { slug: `${base}-${randomBytes(4).toString('hex')}`, error: null };
+}
+
 export interface CreateBookPayload {
   title: string;
   /** Tek yazar (authors yoksa kullanılır) */
@@ -822,12 +909,16 @@ export async function createBook(payload: CreateBookPayload) {
   const authorsNorm = normalizeBookAuthorsPayload(payload);
   if ('error' in authorsNorm) return { book: null, error: authorsNorm.error };
 
+  const slugRes = await ensureUniqueBookSlug(db(), payload.title, payload.language_code);
+  if (slugRes.error) return { book: null, error: slugRes.error };
+
   const row = {
     title: payload.title,
     description: payload.description ?? '',
     language_code: payload.language_code,
     pages: payload.pages ?? 0,
     download_count: 0,
+    slug: slugRes.slug,
   };
 
   const { data, error } = await db()
@@ -922,6 +1013,9 @@ export async function updateBook(bookId: string, payload: UpdateBookPayload) {
 
   const description = (payload.description ?? '').trim();
 
+  const slugRes = await ensureUniqueBookSlug(client, title, payload.language_code, bookId);
+  if (slugRes.error) return { book: null, error: slugRes.error };
+
   const { error: updateErr } = await client
     .from('books')
     .update({
@@ -929,6 +1023,7 @@ export async function updateBook(bookId: string, payload: UpdateBookPayload) {
       description,
       language_code: payload.language_code,
       pages: payload.pages ?? 0,
+      slug: slugRes.slug,
     })
     .eq('id', bookId);
 

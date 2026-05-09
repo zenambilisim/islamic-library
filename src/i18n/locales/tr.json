@@ -65,7 +65,12 @@
     "preparingDownload": "Hazırlanıyor...",
     "publicationInfo": "Yayın Bilgileri",
     "dateAdded": "Eklenme Tarihi",
-    "lastUpdated": "Son Güncelleme"
+    "lastUpdated": "Son Güncelleme",
+    "shareLink": "Paylaş",
+    "linkCopied": "Bağlantı kopyalandı",
+    "linkCopyFailed": "Bağlantı kopyalanamadı.",
+    "copyLinkHint": "Kitap bağlantısı (manuel kopyalayın)",
+    "backToHome": "Ana sayfaya dön"
   },
   "formats": {
     "epub": "EPUB",

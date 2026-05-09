@@ -60,6 +60,8 @@ export async function getSignedBookFileUrl(
 export interface SupabaseBook {
   id: string
   title: string
+  /** Dil ve başlıktan üretilen URL güvenli slug */
+  slug?: string
   description?: string
   pages?: number
   language_code?: string

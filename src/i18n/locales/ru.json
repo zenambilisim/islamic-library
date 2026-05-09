@@ -64,7 +64,12 @@
     "preparingDownload": "Подготовка…",
     "publicationInfo": "Информация о публикации",
     "dateAdded": "Дата добавления",
-    "lastUpdated": "Последнее обновление"
+    "lastUpdated": "Последнее обновление",
+    "shareLink": "Поделиться",
+    "linkCopied": "Ссылка скопирована",
+    "linkCopyFailed": "Не удалось скопировать ссылку.",
+    "copyLinkHint": "Ссылка на книгу — скопируйте вручную",
+    "backToHome": "На главную"
   },
   "formats": {
     "epub": "EPUB",

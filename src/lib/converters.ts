@@ -45,6 +45,7 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
 
   return {
     id: supabaseBook.id,
+    slug: supabaseBook.slug,
     title: supabaseBook.title,
     author: authorName,
     authorId: primaryAuthorRel?.authors?.id,

@@ -36,6 +36,7 @@ export function convertSupabaseBookToBook(supabaseBook: SupabaseBook): Book {
   const coverImageUrl = getBookCoverUrl(supabaseBook.cover_image_url);
   return {
     id: supabaseBook.id,
+    slug: supabaseBook.slug,
     title: supabaseBook.title,
     author: authorName,
     authorId: primaryAuthorRel?.authors?.id,

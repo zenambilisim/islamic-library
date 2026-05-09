@@ -64,7 +64,12 @@
     "preparingDownload": "Preparing…",
     "publicationInfo": "Publication information",
     "dateAdded": "Date added",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "shareLink": "Share",
+    "linkCopied": "Link copied",
+    "linkCopyFailed": "Could not copy the link.",
+    "copyLinkHint": "Book link — copy manually",
+    "backToHome": "Back to home"
   },
   "formats": {
     "epub": "EPUB",

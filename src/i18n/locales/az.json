@@ -64,7 +64,12 @@
     "preparingDownload": "Hazırlanır...",
     "publicationInfo": "Nəşr Məlumatları",
     "dateAdded": "Əlavə edilmə tarixi",
-    "lastUpdated": "Son yenilənmə"
+    "lastUpdated": "Son yenilənmə",
+    "shareLink": "Paylaş",
+    "linkCopied": "Keçid kopyalandı",
+    "linkCopyFailed": "Keçid kopyalanmadı.",
+    "copyLinkHint": "Kitab keçidi — əl ilə kopyalayın",
+    "backToHome": "Ana səhifəyə qayıt"
   },
   "formats": {
     "epub": "EPUB",

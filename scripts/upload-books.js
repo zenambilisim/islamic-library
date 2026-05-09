@@ -19,6 +19,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
+const VALID_LANG_DIRS = new Set(['en', 'tr', 'ru', 'az']);
+
 function slugifyAuthorName(name) {
   const map = {
     ğ: 'g',
@@ -39,6 +41,112 @@ function slugifyAuthorName(name) {
   s = s.normalize('NFD').replace(/\p{M}/gu, '');
   s = s.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return s || 'yazar';
+}
+
+const CYRILLIC_TO_LATIN = {
+  а: 'a',
+  б: 'b',
+  в: 'v',
+  г: 'g',
+  д: 'd',
+  е: 'e',
+  ё: 'e',
+  ж: 'zh',
+  з: 'z',
+  и: 'i',
+  й: 'y',
+  к: 'k',
+  л: 'l',
+  м: 'm',
+  н: 'n',
+  о: 'o',
+  п: 'p',
+  р: 'r',
+  с: 's',
+  т: 't',
+  у: 'u',
+  ф: 'f',
+  х: 'h',
+  ц: 'ts',
+  ч: 'ch',
+  ш: 'sh',
+  щ: 'sch',
+  ъ: '',
+  ы: 'y',
+  ь: '',
+  э: 'e',
+  ю: 'yu',
+  я: 'ya',
+  і: 'i',
+  ї: 'yi',
+  є: 'e',
+  ґ: 'g',
+  ը: 'e',
+};
+
+function transliterateCyrillic(str) {
+  let out = '';
+  for (const ch of str) {
+    out += CYRILLIC_TO_LATIN[ch] ?? ch;
+  }
+  return out;
+}
+
+function normalizeUploadLanguageCode(code) {
+  const s = String(code || 'en')
+    .trim()
+    .toLowerCase()
+    .split('-')[0];
+  return VALID_LANG_DIRS.has(s) ? s : 'en';
+}
+
+/** Kitap dili ile uyumlu slug (ru: Kiril→Latin; tr/az: Azeri/Türk harfleri; en: ASCII). */
+function slugifyBookTitle(title, languageCode) {
+  const lang = normalizeUploadLanguageCode(languageCode);
+  const raw = (title || '').trim();
+  if (!raw) return 'book';
+
+  let s = lang === 'ru' ? transliterateCyrillic(raw.toLocaleLowerCase('ru')) : raw.toLowerCase();
+
+  if (lang === 'tr' || lang === 'az') {
+    const trAz = {
+      ğ: 'g',
+      ü: 'u',
+      ş: 's',
+      ı: 'i',
+      i: 'i',
+      ö: 'o',
+      ç: 'c',
+      â: 'a',
+      î: 'i',
+      û: 'u',
+      İ: 'i',
+      I: 'i',
+      ə: 'e',
+    };
+    s = s.replace(/[ğüşıöçâîûİIə]/g, (c) => trAz[c] ?? c);
+  }
+
+  s = s.normalize('NFD').replace(/\p{M}/gu, '');
+  s = s.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return s || 'book';
+}
+
+async function resolveUniqueBookSlug(title, languageCode) {
+  const lang = normalizeUploadLanguageCode(languageCode);
+  const base = slugifyBookTitle(title, lang);
+  let slug = base || 'book';
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const { data } = await supabase
+      .from('books')
+      .select('id')
+      .eq('slug', slug)
+      .eq('language_code', lang)
+      .maybeSingle();
+    if (!data) return slug;
+    slug = `${base}-${crypto.randomBytes(3).toString('hex')}`;
+  }
+  return `${base}-${crypto.randomBytes(4).toString('hex')}`;
 }
 
 /**
@@ -135,9 +243,6 @@ const CONFIG = {
   batchSize: parseInt(process.env.BATCH_SIZE || '1'),
   logFolder: './logs'
 };
-
-// Kategori mapping (Klasör adı → Supabase slug)
-const VALID_LANG_DIRS = new Set(['en', 'tr', 'ru', 'az']);
 
 /**
  * Kök altında yalnızca dil klasörleri (en, tr, ru, az) varsa çoklu dil düzeni.
@@ -297,16 +402,6 @@ function getMimeType(filePath) {
 }
 
 /**
- * Slug oluştur (URL-safe string)
- */
-function slugify(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-/**
  * Dosya boyutunu human-readable formata çevir
  */
 function formatFileSize(bytes) {
@@ -426,6 +521,7 @@ async function insertBookToDatabase(bookData, languageCode) {
       cover_image_url: bookData.coverPath,
       pages: bookData.pages ?? 0,
       download_count: 0,
+      slug: bookData.slug,
     })
     .select()
     .single();
@@ -560,8 +656,11 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
       log.debug(`  Description: ${description.substring(0, 50)}...`);
     }
 
-    // 5. Slug oluştur
-    const bookSlug = slugify(bookTitle);
+    // 5. Slug (kitap diline göre; canlı yüklemede aynı dilde çakışmada sonek)
+    const langForSlug = languageCode || CONFIG.language;
+    const bookSlug = CONFIG.dryRun
+      ? slugifyBookTitle(bookTitle, langForSlug)
+      : await resolveUniqueBookSlug(bookTitle, langForSlug);
 
     // 6. Dosyaları yükle
     const coverPath = await uploadToStorage(
@@ -609,6 +708,7 @@ async function processBook(bookFolderPath, categoryId, categoryName, languageCod
         pdfPath,
         epubPath,
         docxPath,
+        slug: bookSlug,
       },
       languageCode
     );

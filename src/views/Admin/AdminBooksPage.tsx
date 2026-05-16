@@ -1,0 +1,427 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
+import Image from 'next/image';
+import { BookPlus, FolderUp, Pencil, Search, Trash2 } from 'lucide-react';
+import type { Book, Language } from '@/types';
+import { useAdminBooksPaginated } from '@/hooks/useAdminBooksPaginated';
+import { useBookModal } from '@/contexts/BookModalContext';
+import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
+import { resolveAuthorDisplayName } from '@/lib/author-display-name';
+
+const DATA_LANGUAGES: Language[] = ['tr', 'en', 'ru', 'az'];
+
+const AdminBooksPage = () => {
+  const { t } = useTranslation();
+  const { openDetails } = useBookModal();
+  const [dataLanguage, setDataLanguage] = useState<Language>('tr');
+
+  const {
+    books,
+    loading,
+    error,
+    total,
+    page,
+    pageSize,
+    totalPages,
+    setPage,
+    setPageSize,
+    searchQuery,
+    setSearchQuery,
+    debouncedSearch,
+    selectedCategory,
+    setSelectedCategory,
+    refetch,
+  } = useAdminBooksPaginated(20, dataLanguage);
+  const { categories } = useSupabaseCategories(dataLanguage);
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  useEffect(() => {
+    const visibleIds = new Set(books.map((book) => book.id));
+    setSelectedIds((prev) => {
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (visibleIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+  }, [books]);
+
+  useEffect(() => {
+    if (selectedCategory && !categories.some((category) => category.slug === selectedCategory)) {
+      setSelectedCategory('');
+    }
+  }, [categories, selectedCategory, setSelectedCategory]);
+
+  const deleteMany = async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    const isBulk = ids.length > 1;
+    setDeleteError(null);
+    setDeletingId(ids.length === 1 ? ids[0] : null);
+    setBulkDeleting(isBulk);
+    try {
+      const res = await fetch('/api/books/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+
+      const failedCount = Array.isArray(data.failed) ? data.failed.length : 0;
+      if (failedCount > 0) {
+        setDeleteError(
+          t('admin.books.bulkDeletePartialError', {
+            deleted: Number(data.deleted) || 0,
+            failed: failedCount,
+          })
+        );
+      }
+
+      await refetch();
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : t('admin.books.bulkDeleteError'));
+    } finally {
+      setDeletingId(null);
+      setBulkDeleting(false);
+    }
+  };
+
+  const handleDelete = async (book: Book) => {
+    if (!window.confirm(t('admin.books.deleteConfirm'))) return;
+    await deleteMany([book.id]);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = books.filter((book) => selectedIds.has(book.id)).map((book) => book.id);
+    if (ids.length === 0) return;
+    if (!window.confirm(t('admin.books.bulkDeleteConfirm', { count: ids.length }))) return;
+    await deleteMany(ids);
+  };
+
+  const allOnPageSelected = books.length > 0 && books.every((book) => selectedIds.has(book.id));
+
+  const toggleSelectAllOnPage = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const book of books) {
+        if (checked) next.add(book.id);
+        else next.delete(book.id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectOne = (bookId: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(bookId);
+      else next.delete(bookId);
+      return next;
+    });
+  };
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.books.title')}</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          {books.length > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting || selectedIds.size === 0 || deletingId !== null}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 size={18} />
+              {bulkDeleting
+                ? t('admin.books.bulkDeleting')
+                : t('admin.books.bulkDeleteButton', { count: selectedIds.size })}
+            </button>
+          )}
+          <Link
+            href="/admin/books/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
+          >
+            <BookPlus size={18} />
+            {t('admin.books.addNew')}
+          </Link>
+          <Link
+            href="/admin/books/bulk"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
+          >
+            <FolderUp size={18} />
+            {t('admin.nav.bulkUpload')}
+          </Link>
+        </div>
+      </div>
+
+      {deleteError && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+          {deleteError}
+        </div>
+      )}
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <label htmlFor="admin-books-search" className="sr-only">
+          {t('admin.books.searchLabel')}
+        </label>
+        <div className="relative max-w-md">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            size={18}
+            aria-hidden
+          />
+          <input
+            id="admin-books-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('admin.books.searchPlaceholder')}
+            autoComplete="off"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+        <div className="min-w-[120px]">
+          <label htmlFor="admin-books-data-language" className="sr-only">
+            {t('common.language')}
+          </label>
+          <select
+            id="admin-books-data-language"
+            value={dataLanguage}
+            onChange={(e) => setDataLanguage(e.target.value as Language)}
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            {DATA_LANGUAGES.map((lang) => (
+              <option key={lang} value={lang}>
+                {lang.toUpperCase()}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[220px]">
+          <label htmlFor="admin-books-category" className="sr-only">
+            {t('admin.books.categoryFilterLabel')}
+          </label>
+          <select
+            id="admin-books-category"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            <option value="">{t('admin.books.allCategories')}</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.slug}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-gray-500">
+            <span>{t('admin.books.loading')}</span>
+          </div>
+        ) : books.length === 0 ? (
+          <div className="py-16 text-center text-gray-500">
+            {debouncedSearch ? t('admin.books.noBooksMatch') : t('admin.books.noBooks')}
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50/80">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-10">
+                      <input
+                        type="checkbox"
+                        checked={allOnPageSelected}
+                        onChange={(e) => toggleSelectAllOnPage(e.target.checked)}
+                        disabled={bulkDeleting || deletingId !== null || books.length === 0}
+                        aria-label={t('admin.books.selectAll')}
+                      />
+                    </th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
+                      {t('admin.books.table.cover')}
+                    </th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      {t('admin.books.table.title')}
+                    </th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      {t('admin.books.table.author')}
+                    </th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
+                      {t('admin.books.table.category')}
+                    </th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
+                      {t('admin.books.table.pages')}
+                    </th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                      {t('admin.books.table.actions')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {books.map((book: Book) => (
+                    <tr
+                      key={book.id}
+                      className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="py-2 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(book.id)}
+                          onChange={(e) => toggleSelectOne(book.id, e.target.checked)}
+                          disabled={bulkDeleting || deletingId !== null}
+                          aria-label={t('admin.books.selectOne', { title: book.title })}
+                        />
+                      </td>
+                      <td className="py-2 px-4">
+                        <button
+                          type="button"
+                          onClick={() => openDetails(book)}
+                          className="block w-10 h-14 relative rounded overflow-hidden bg-gray-100 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          {book.coverImage ? (
+                            <Image
+                              src={book.coverImage}
+                              alt=""
+                              width={40}
+                              height={56}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <span className="flex items-center justify-center w-full h-full text-gray-400 text-xs">—</span>
+                          )}
+                        </button>
+                      </td>
+                      <td className="py-2 px-4">
+                        <button
+                          type="button"
+                          onClick={() => openDetails(book)}
+                          className="font-medium text-primary-600 hover:text-primary-700 hover:underline text-left"
+                        >
+                          {book.title}
+                        </button>
+                      </td>
+                      <td className="py-2 px-4 text-gray-700">
+                        {resolveAuthorDisplayName(book.author, t)}
+                      </td>
+                      <td className="py-2 px-4 text-gray-600 hidden sm:table-cell">
+                        {book.category}
+                      </td>
+                      <td className="py-2 px-4 text-right text-gray-600 tabular-nums">
+                        {book.pages || '—'}
+                      </td>
+                      <td className="py-2 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/admin/books/${book.id}/edit`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 inline-flex"
+                            title={t('admin.books.table.edit')}
+                          >
+                            <Pencil size={18} />
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(book)}
+                            disabled={bulkDeleting || deletingId !== null}
+                            className="p-2 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t('admin.books.table.delete')}
+                          >
+                            {deletingId === book.id ? (
+                              <span className="text-xs">{t('admin.books.deleting')}</span>
+                            ) : (
+                              <Trash2 size={18} />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50">
+              <p className="text-sm text-gray-600">
+                {t('admin.books.pagination.total', { count: total })}
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="per-page" className="text-sm text-gray-600 whitespace-nowrap">
+                    {t('admin.books.pagination.perPage')}
+                  </label>
+                  <select
+                    id="per-page"
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm bg-white"
+                  >
+                    {[10, 20, 30, 50].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {t('admin.books.pagination.pageOf', {
+                    current: page + 1,
+                    total: totalPages,
+                  })}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setPage(Math.max(0, page - 1))}
+                    disabled={page === 0}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t('admin.books.pagination.prev')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                    disabled={page >= totalPages - 1}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t('admin.books.pagination.next')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdminBooksPage;

@@ -210,7 +210,7 @@
     "feature6Title": "Sürekli Güncelleme",
     "feature6Desc": "Düzenli olarak yeni kitaplar ekliyoruz, mevcut içeriği güncel tutuyoruz."
   },
-  "user": {
+  "admin": {
     "nav": {
       "dashboard": "Panel",
       "myBooks": "Kitaplarım",
@@ -218,7 +218,7 @@
       "categories": "Kategoriler",
       "backToSite": "Siteye Dön",
       "logout": "Çıkış",
-      "userArea": "Kullanıcı",
+      "adminArea": "Admin",
       "bulkUpload": "Toplu yükle",
       "changePassword": "Şifre değiştir"
     },

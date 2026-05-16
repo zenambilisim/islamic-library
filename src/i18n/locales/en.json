@@ -209,7 +209,7 @@
     "feature6Title": "Continuous Updates",
     "feature6Desc": "We regularly add new books and keep existing content up to date."
   },
-  "user": {
+  "admin": {
     "nav": {
       "dashboard": "Dashboard",
       "myBooks": "My Books",
@@ -217,7 +217,7 @@
       "categories": "Categories",
       "backToSite": "Back to Site",
       "logout": "Log out",
-      "userArea": "User",
+      "adminArea": "Admin",
       "bulkUpload": "Bulk upload",
       "changePassword": "Change password"
     },

@@ -209,7 +209,7 @@
     "feature6Title": "Davamlı Yeniləmə",
     "feature6Desc": "Müntəzəm olaraq yeni kitablar əlavə edir, mövcud məzmunu aktual saxlayırıq."
   },
-  "user": {
+  "admin": {
     "nav": {
       "dashboard": "Panel",
       "myBooks": "Kitablarım",
@@ -217,7 +217,7 @@
       "categories": "Kateqoriyalar",
       "backToSite": "Sayta qayıt",
       "logout": "Çıxış",
-      "userArea": "İstifadəçi",
+      "adminArea": "Admin",
       "bulkUpload": "Toplu yüklə",
       "changePassword": "Şifrəni dəyiş"
     },

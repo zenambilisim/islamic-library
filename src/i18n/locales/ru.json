@@ -219,7 +219,8 @@
       "logout": "Выйти",
       "adminArea": "Админ",
       "bulkUpload": "Массовая загрузка",
-      "changePassword": "Сменить пароль"
+      "changePassword": "Сменить пароль",
+      "traffic": "Трафик сайта"
     },
     "changePassword": {
       "title": "Сменить пароль",
@@ -242,7 +243,24 @@
       "myBooksDesc": "Сохранённые и загруженные книги",
       "goToBooks": "К книгам",
       "profileCard": "Профиль",
-      "comingSoon": "Скоро..."
+      "comingSoon": "Скоро...",
+      "trafficCard": "Трафик сайта",
+      "trafficDesc": "Статистика посетителей и запросов",
+      "goToTraffic": "К трафику"
+    },
+    "traffic": {
+      "title": "Трафик сайта",
+      "description": "Данные о посетителях и запросах из Cloudflare.",
+      "back": "Вернуться на панель",
+      "loading": "Загрузка статистики…",
+      "error": "Не удалось загрузить статистику.",
+      "today": "Сегодня",
+      "last7Days": "Последние 7 дней",
+      "last30Days": "Последние 30 дней",
+      "visitors": "посетителей",
+      "requests": "запросов",
+      "dailyBreakdown": "Последние 7 дней (по дням)",
+      "sourceNote": "Данные из трафика через Cloudflare proxy. За 7 и 30 дней — сумма дневных уникальных посетителей."
     },
     "books": {
       "title": "Все книги",

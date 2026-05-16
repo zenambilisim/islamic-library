@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Users, FolderTree } from 'lucide-react';
+import { BookOpen, Users, FolderTree, Globe } from 'lucide-react';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -17,7 +17,23 @@ const DashboardPage = () => {
           {t('admin.dashboard.welcome')}. {t('admin.dashboard.welcomeDesc')}
         </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/admin/traffic"
+            className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200">
+                <Globe size={22} />
+              </div>
+              <h2 className="font-semibold text-gray-900">{t('admin.dashboard.trafficCard')}</h2>
+            </div>
+            <p className="text-sm text-gray-500">{t('admin.dashboard.trafficDesc')}</p>
+            <span className="mt-3 text-sm font-medium text-primary-600 group-hover:underline">
+              {t('admin.dashboard.goToTraffic')} →
+            </span>
+          </Link>
+
           <Link
             href="/admin/books"
             className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"

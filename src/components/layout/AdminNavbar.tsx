@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Home, LogOut, Menu, X, KeyRound } from 'lucide-react';
+import { LayoutDashboard, Home, LogOut, Menu, X, KeyRound, Globe } from 'lucide-react';
 import type { Language } from '@/types';
 
 const AdminNavbar = () => {
@@ -26,6 +26,7 @@ const AdminNavbar = () => {
 
   const navItems = [
     { key: 'dashboard', label: t('admin.nav.dashboard'), href: '/admin/dashboard', icon: LayoutDashboard },
+    { key: 'traffic', label: t('admin.nav.traffic'), href: '/admin/traffic', icon: Globe },
     {
       key: 'changePassword',
       label: t('admin.nav.changePassword'),

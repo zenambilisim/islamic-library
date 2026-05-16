@@ -219,7 +219,8 @@
       "logout": "Log out",
       "adminArea": "Admin",
       "bulkUpload": "Bulk upload",
-      "changePassword": "Change password"
+      "changePassword": "Change password",
+      "traffic": "Site traffic"
     },
     "changePassword": {
       "title": "Change password",
@@ -242,7 +243,24 @@
       "myBooksDesc": "Books you saved or downloaded",
       "goToBooks": "Go to Books",
       "profileCard": "Profile",
-      "comingSoon": "Coming soon..."
+      "comingSoon": "Coming soon...",
+      "trafficCard": "Site traffic",
+      "trafficDesc": "Visitor and request statistics",
+      "goToTraffic": "View traffic"
+    },
+    "traffic": {
+      "title": "Site traffic",
+      "description": "Visitor and request data from Cloudflare.",
+      "back": "Back to dashboard",
+      "loading": "Loading statistics…",
+      "error": "Could not load statistics.",
+      "today": "Today",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "visitors": "visitors",
+      "requests": "requests",
+      "dailyBreakdown": "Last 7 days (daily)",
+      "sourceNote": "Data from Cloudflare proxied traffic. 7- and 30-day visitor counts sum daily uniques."
     },
     "books": {
       "title": "All Books",

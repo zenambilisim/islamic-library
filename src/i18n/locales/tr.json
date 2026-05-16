@@ -220,7 +220,8 @@
       "logout": "Çıkış",
       "adminArea": "Admin",
       "bulkUpload": "Toplu yükle",
-      "changePassword": "Şifre değiştir"
+      "changePassword": "Şifre değiştir",
+      "traffic": "Site trafiği"
     },
     "changePassword": {
       "title": "Şifre değiştir",
@@ -243,7 +244,24 @@
       "myBooksDesc": "Kaydettiğiniz ve indirdiğiniz kitaplar",
       "goToBooks": "Kitaplara Git",
       "profileCard": "Profil",
-      "comingSoon": "Yakında..."
+      "comingSoon": "Yakında...",
+      "trafficCard": "Site trafiği",
+      "trafficDesc": "Ziyaretçi ve istek istatistikleri",
+      "goToTraffic": "Trafiğe git"
+    },
+    "traffic": {
+      "title": "Site trafiği",
+      "description": "Cloudflare üzerinden gelen ziyaretçi ve istek verileri.",
+      "back": "Panele dön",
+      "loading": "İstatistikler yükleniyor…",
+      "error": "İstatistikler alınamadı.",
+      "today": "Bugün",
+      "last7Days": "Son 7 gün",
+      "last30Days": "Son 30 gün",
+      "visitors": "ziyaretçi",
+      "requests": "istek",
+      "dailyBreakdown": "Son 7 gün (günlük)",
+      "sourceNote": "Veriler Cloudflare proxy trafiğinden gelir. 7 ve 30 günlük ziyaretçi sayısı günlük toplamdır."
     },
     "books": {
       "title": "Tüm Kitaplar",

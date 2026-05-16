@@ -7,6 +7,7 @@ import { Grid3X3, Folder } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
+import { resolveSearchLocale, textIncludesSearch } from '@/lib/search-utils';
 
 const CategoriesPage = () => {
   const { t, i18n } = useTranslation();
@@ -57,14 +58,14 @@ const CategoriesPage = () => {
       return supabaseCategories;
     }
 
-    const term = searchTerm.toLowerCase();
+    const searchLocale = resolveSearchLocale(activeLanguage);
     return supabaseCategories.filter(
       (category) =>
-        category.name.toLowerCase().includes(term) ||
-        category.slug.toLowerCase().includes(term) ||
-        category.description.toLowerCase().includes(term)
+        textIncludesSearch(category.name, searchTerm, searchLocale) ||
+        textIncludesSearch(category.slug, searchTerm, searchLocale) ||
+        textIncludesSearch(category.description, searchTerm, searchLocale)
     );
-  }, [searchTerm, supabaseCategories]);
+  }, [searchTerm, supabaseCategories, activeLanguage]);
 
   const totalCategoryCount = supabaseCategories.length;
 

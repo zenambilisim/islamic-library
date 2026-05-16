@@ -9,6 +9,7 @@ import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
 import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
 import type { SearchFilters } from '@/types';
+import { resolveSearchLocale, textIncludesSearch, normalizeForSearch } from '@/lib/search-utils';
 
 const HomePage = () => {
   const { t, i18n } = useTranslation();
@@ -118,23 +119,25 @@ const HomePage = () => {
   const filteredBooks = useMemo(() => {
     let books = supabaseBooks;
 
+    const searchLocale = resolveSearchLocale(activeLanguage);
+
     // Home sayfasinda arama yalnizca kitap adinda yapilir.
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      books = books.filter((book) => book.title.toLowerCase().includes(term));
+      books = books.filter((book) => textIncludesSearch(book.title, searchTerm, searchLocale));
     }
 
     // Apply category filter
     if (filters.category) {
-      const fc = filters.category.toLowerCase();
+      const fc = normalizeForSearch(filters.category, searchLocale);
       books = books.filter(
         (book) =>
-          book.categorySlug?.toLowerCase() === fc || book.category.toLowerCase() === fc
+          normalizeForSearch(book.categorySlug ?? '', searchLocale) === fc ||
+          normalizeForSearch(book.category, searchLocale) === fc
       );
     }
 
     return books;
-  }, [supabaseBooks, searchTerm, filters]);
+  }, [supabaseBooks, searchTerm, filters, activeLanguage]);
 
   const awaitingFirstBooks = loading && supabaseBooks.length === 0;
 

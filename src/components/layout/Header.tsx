@@ -13,7 +13,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isCondensed, setIsCondensed] = useState(false);
-  const { searchTerm, setSearchTerm, placeholder } = useSearch();
+  const { searchInput, setSearchInput, submitSearch, clearSearch, placeholder } = useSearch();
 
   const languages: { code: Language; name: string; flag: string }[] = [
     { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
@@ -62,9 +62,15 @@ const Header = () => {
     i18n.changeLanguage(langCode);
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    submitSearch();
+    setIsMenuOpen(false);
+  };
+
+  const handleLogoClick = () => {
+    clearSearch();
+    setIsMenuOpen(false);
   };
 
   if (!isMounted) {
@@ -118,7 +124,11 @@ const Header = () => {
         <div className="py-3 md:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3 hover:scale-105 transition-all duration-300">
+            <Link
+              href="/"
+              onClick={handleLogoClick}
+              className="flex items-center space-x-3 hover:scale-105 transition-all duration-300"
+            >
               <div className="flex items-center">
                 <img 
                   src="/images/logo/ISLAMIC.png" 
@@ -141,21 +151,36 @@ const Header = () => {
             </Link>
             
             {/* Search bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-lg mx-8">
+            <form
+              className="hidden md:flex flex-1 max-w-lg mx-8"
+              onSubmit={handleSearchSubmit}
+              role="search"
+            >
               <div className="relative w-full">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-purple-100 rounded-2xl blur opacity-30"></div>
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary-500" size={20} />
-                  <input
-                    type="text"
-                    placeholder={placeholder}
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="w-full pl-12 pr-4 py-4 bg-transparent border-none outline-none text-gray-700 placeholder-gray-500 font-medium"
+                <div className="relative flex items-center bg-white/90 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg">
+                  <Search
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-500 pointer-events-none"
+                    size={20}
+                    aria-hidden
                   />
+                  <input
+                    type="search"
+                    placeholder={placeholder}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full pl-12 pr-28 py-4 bg-transparent border-none outline-none text-gray-700 placeholder-gray-500 font-medium"
+                    aria-label={placeholder}
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary-600 to-purple-600 text-white text-sm font-medium shadow-md hover:opacity-90 transition-opacity"
+                  >
+                    {t('common.search')}
+                  </button>
                 </div>
               </div>
-            </div>
+            </form>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-2">
@@ -215,18 +240,29 @@ const Header = () => {
           </div>
 
           {/* Mobile search bar */}
-          <div className="md:hidden mt-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder={placeholder}
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="search-input pl-10"
+          <form className="md:hidden mt-4" onSubmit={handleSearchSubmit} role="search">
+            <div className="relative flex items-center">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={20}
+                aria-hidden
               />
+              <input
+                type="search"
+                placeholder={placeholder}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="search-input pl-10 pr-20 flex-1"
+                aria-label={placeholder}
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium"
+              >
+                {t('common.search')}
+              </button>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Mobile Navigation */}

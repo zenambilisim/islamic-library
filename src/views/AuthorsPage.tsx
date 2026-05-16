@@ -12,6 +12,7 @@ import BookCard from '@/components/books/BookCard';
 import type { Book } from '@/types';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 import { resolveAuthorDisplayName } from '@/lib/author-display-name';
+import { resolveSearchLocale, textIncludesSearch } from '@/lib/search-utils';
 
 const AuthorsPage = () => {
   const { t, i18n } = useTranslation();
@@ -83,12 +84,12 @@ const AuthorsPage = () => {
     
     // Filter by search term
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
+      const searchLocale = resolveSearchLocale(currentLang);
       authors = authors.filter(
         (author) =>
-          author.name.toLowerCase().includes(term) ||
-          author.biography.toLowerCase().includes(term) ||
-          author.language.toLowerCase().includes(term)
+          textIncludesSearch(author.name, searchTerm, searchLocale) ||
+          textIncludesSearch(author.biography, searchTerm, searchLocale) ||
+          textIncludesSearch(author.language, searchTerm, searchLocale)
       );
     }
     
@@ -101,7 +102,7 @@ const AuthorsPage = () => {
     }
     
     return authors;
-  }, [searchTerm, selectedLetter, supabaseAuthors]);
+  }, [searchTerm, selectedLetter, supabaseAuthors, currentLang]);
 
   // Calculate total stats
   const totalStats = useMemo(() => {
@@ -184,13 +185,13 @@ const AuthorsPage = () => {
                     <BookOpen size={16} />
                     <span>{author.bookCount} {t('authors.booksCount')}</span>
                   </div>
-                  {author.birthYear && (
+                  {/* {author.birthYear && (
                     <div className="flex items-center space-x-2">
                       <Calendar size={16} />
                       <span>{author.birthYear}</span>
                       {author.deathYear && <span>- {author.deathYear}</span>}
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>

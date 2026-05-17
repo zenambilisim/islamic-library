@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { LogIn, Mail, Lock, AlertCircle, CheckCircle, ArrowLeft, UserPlus, User } from 'lucide-react';
 import { useUserAuth } from '@/contexts/UserAuthContext';
+import { LanguageSelector } from '@/components/layout/LanguageSelector';
 
 type Mode = 'login' | 'signup';
 
@@ -74,7 +75,10 @@ const UserLoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="container mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
+      <header className="container mx-auto px-4 py-4 flex justify-end">
+        <LanguageSelector />
+      </header>
+      <div className="container mx-auto px-4 pb-8 flex-1 flex flex-col items-center justify-center">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900">
             {mode === 'login' ? t('userAuth.loginTitle') : t('userAuth.signupTitle')}

@@ -56,6 +56,26 @@ export interface Author {
 
 export type Language = 'tr' | 'en' | 'ru' | 'az';
 
+/** public.users — okuyucu profili (auth.users ile aynı id) */
+export interface AppUser {
+  id: string;
+  email: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Kullanıcı okuma listesi durumu */
+export type ReadingStatus = 'want_to_read' | 'reading' | 'read';
+
+export interface UserBookEntry {
+  bookId: string;
+  status: ReadingStatus;
+  updatedAt: string;
+}
+
 export interface SearchFilters {
   category?: string;
   author?: string;

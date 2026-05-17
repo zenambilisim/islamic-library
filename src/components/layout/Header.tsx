@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { Search, Globe, Menu, X, BookOpen } from 'lucide-react';
+import { Search, Globe, Menu, X, BookOpen, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
+import { useUserAuth } from '@/contexts/UserAuthContext';
 import type { Language } from '../../types';
 
 const Header = () => {
   const { t, i18n } = useTranslation();
+  const { user, isLoading: authLoading } = useUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isCondensed, setIsCondensed] = useState(false);
@@ -86,14 +88,37 @@ const Header = () => {
   return (
     <header className="bg-white/80 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-white/20">
       <div className="container mx-auto px-4">
-        {/* Top bar with language selector - Desktop Only */}
+        {/* Top bar: auth + language selector - Desktop Only */}
         <div
-          className={`hidden md:flex justify-end border-gradient-to-r from-primary-100 to-purple-100 transition-all duration-300 ${
+          className={`hidden md:flex justify-end items-center gap-2 border-gradient-to-r from-primary-100 to-purple-100 transition-all duration-300 ${
             isCondensed
               ? 'max-h-0 opacity-0 py-0 border-b-0 overflow-hidden'
               : 'max-h-16 opacity-100 py-2 border-b overflow-visible'
           }`}
         >
+          {!authLoading && (
+            user ? (
+              <Link
+                href="/library"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-sm ${
+                  isMounted && pathname === '/library'
+                    ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
+                    : 'bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 hover:from-primary-50 hover:to-purple-50'
+                }`}
+              >
+                <Library size={16} className={pathname === '/library' ? 'text-white' : 'text-primary-600'} />
+                {t('readingList.myLibrary')}
+              </Link>
+            ) : (
+              <Link
+                href="/user/login"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 text-sm font-medium text-gray-700 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm"
+              >
+                <LogIn size={16} className="text-primary-600" />
+                {t('userAuth.loginShort')}
+              </Link>
+            )
+          )}
           <div className="relative group">
             <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 transform hover:scale-105 shadow-sm">
               <Globe size={16} className="text-primary-600" />
@@ -199,8 +224,31 @@ const Header = () => {
               ))}
             </nav>
 
-            {/* Mobile menu button & Language selector */}
+            {/* Mobile: auth, language selector, menu */}
             <div className="lg:hidden flex items-center space-x-2">
+              {!authLoading && (
+                user ? (
+                  <Link
+                    href="/library"
+                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 shadow-sm ${
+                      isMounted && pathname === '/library'
+                        ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
+                        : 'bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 hover:from-primary-50 hover:to-purple-50'
+                    }`}
+                  >
+                    <Library size={16} className={pathname === '/library' ? 'text-white' : 'text-primary-600'} />
+                    <span className="hidden sm:inline">{t('readingList.myLibrary')}</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/user/login"
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 text-xs font-medium text-gray-700 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm"
+                  >
+                    <LogIn size={16} className="text-primary-600" />
+                    <span className="hidden sm:inline">{t('userAuth.loginShort')}</span>
+                  </Link>
+                )
+              )}
               {/* Language selector - Mobile */}
               <div className="relative group">
                 <button className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm">

@@ -373,6 +373,41 @@
       "fillSample": "Nümunə məlumatla doldur"
     }
   },
+  "userAuth": {
+    "loginTitle": "Daxil ol",
+    "signupTitle": "Qeydiyyat",
+    "subtitle": "Kitabları siyahılarınıza əlavə edin",
+    "tabLogin": "Giriş",
+    "tabSignup": "Qeydiyyat",
+    "emailLabel": "E-poçt",
+    "emailPlaceholder": "ornek@email.com",
+    "passwordLabel": "Şifrə",
+    "passwordPlaceholder": "Ən azı 6 simvol",
+    "displayNameLabel": "Ad (istəyə bağlı)",
+    "displayNamePlaceholder": "Adınız",
+    "submitLogin": "Daxil ol",
+    "submitSignup": "Hesab yarat",
+    "submitting": "Gözləyin...",
+    "loginSuccess": "Uğurla daxil oldunuz.",
+    "signupSuccess": "Hesabınız yaradıldı.",
+    "confirmEmail": "Təsdiq linki e-poçtunuza göndərildi.",
+    "errorDefault": "Əməliyyat uğursuz oldu.",
+    "backToHome": "Ana səhifəyə qayıt",
+    "loginShort": "Giriş",
+    "logout": "Çıxış"
+  },
+  "readingList": {
+    "myLibrary": "Kitabxanam",
+    "addToList": "Siyahıma əlavə et",
+    "loginPrompt": "Siyahıya əlavə etmək üçün",
+    "loginLink": "daxil olun",
+    "emptyList": "Bu siyahıda hələ kitab yoxdur.",
+    "status": {
+      "want_to_read": "Oxuyacağam",
+      "reading": "Oxuyuram",
+      "read": "Oxudum"
+    }
+  },
   "login": {
     "pageTitle": "Daxil ol",
     "formTitle": "Hesabınıza daxil olun",

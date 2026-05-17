@@ -281,6 +281,24 @@ function isLikelyBookUuid(segment: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment.trim());
 }
 
+/** Birden fazla kitabı id listesiyle getir (kullanıcı kütüphanesi vb.) */
+export async function getBooksByIds(ids: string[]) {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) {
+    return { books: [], error: null };
+  }
+  const { data, error } = await supabase
+    .from('books')
+    .select(BOOK_LIST_SELECT)
+    .in('id', unique);
+
+  if (error) {
+    console.error('Error fetching books by ids:', error);
+    return { books: [], error };
+  }
+  return { books: data ?? [], error: null };
+}
+
 // Tek kitap getir
 export async function getBookById(id: string) {
   const { data, error } = await supabase

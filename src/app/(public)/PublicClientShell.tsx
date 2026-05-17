@@ -2,6 +2,7 @@
 
 import { SearchProvider } from '@/contexts/SearchContext';
 import { BookModalProvider } from '@/contexts/BookModalContext';
+import { UserAuthProvider } from '@/contexts/UserAuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BookDetailModal from '@/components/books/BookDetailModal';
@@ -24,10 +25,12 @@ function ShellInner({ children }: { children: React.ReactNode }) {
  */
 export default function PublicClientShell({ children }: { children: React.ReactNode }) {
   return (
-    <SearchProvider>
-      <BookModalProvider>
-        <ShellInner>{children}</ShellInner>
-      </BookModalProvider>
-    </SearchProvider>
+    <UserAuthProvider>
+      <SearchProvider>
+        <BookModalProvider>
+          <ShellInner>{children}</ShellInner>
+        </BookModalProvider>
+      </SearchProvider>
+    </UserAuthProvider>
   );
 }

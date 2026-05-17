@@ -1,4 +1,21 @@
 import nodemailer from 'nodemailer';
+import {
+  buildContactEmailHtml,
+  buildContactEmailSubject,
+  buildContactEmailText,
+  type ContactEmailPayload,
+} from './contact-email-template';
+
+export type { ContactEmailPayload };
+
+type SmtpTransportOptions = {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth?: { user: string; pass: string };
+  name?: string;
+  tls?: { minVersion: 'TLSv1.2' };
+};
 
 function envTrim(name: string): string {
   const v = process.env[name];
@@ -12,23 +29,44 @@ export function isContactEmailConfigured(): boolean {
   const user = envTrim('SMTP_USER');
   const pass = envTrim('SMTP_PASS');
   if (!host || !from || !to) return false;
-  // Yahoo/Gmail vb. için kullanıcı adı varsa şifre de olmalı; auth’suz relay isteyenler SMTP_USER’ı boş bırakır.
   if (user && !pass) return false;
   if (pass && !user) return false;
   return true;
 }
 
-export type ContactEmailPayload = {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-};
+function isYahooSmtp(host: string): boolean {
+  return /yahoo/i.test(host);
+}
+
+function buildTransport(port: number, secure: boolean): SmtpTransportOptions {
+  const host = envTrim('SMTP_HOST');
+  const user = envTrim('SMTP_USER');
+  const pass = envTrim('SMTP_PASS');
+
+  const base: SmtpTransportOptions = {
+    host,
+    port,
+    secure,
+    ...(user ? { auth: { user, pass } } : {}),
+    tls: { minVersion: 'TLSv1.2' },
+  };
+
+  if (isYahooSmtp(host)) {
+    return { ...base, name: 'yahoo' };
+  }
+  return base;
+}
+
+async function trySend(
+  transport: nodemailer.Transporter,
+  mail: nodemailer.SendMailOptions
+): Promise<void> {
+  await transport.sendMail(mail);
+}
 
 /**
  * SMTP ile iletişim formu e-postası (yalnızca API route / sunucu).
- * SMTP_HOST, MAIL_FROM, CONTACT_MAIL_TO zorunlu; SMTP_PORT (varsayılan 587), SMTP_USER, SMTP_PASS, SMTP_SECURE isteğe bağlı.
- * SMTP_USER doluysa SMTP_PASS de gerekir (yapılandırılmış sayılması için). Yahoo vb. için MAIL_FROM ile SMTP_USER aynı hesap olmalı; 465 için SMTP_SECURE=true önerilir (port 465 ise secure yine açılır).
+ * Yahoo: Reply-To başka domain’e (Gmail vb.) işaret edince 550 verebilir — yanıt adresi metin gövdesinde.
  */
 export async function sendContactEmail(
   payload: ContactEmailPayload
@@ -41,58 +79,50 @@ export async function sendContactEmail(
   }
 
   const portRaw = envTrim('SMTP_PORT');
-  const port = portRaw ? Number.parseInt(portRaw, 10) : 587;
-  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+  const preferredPort = portRaw ? Number.parseInt(portRaw, 10) : 587;
+  if (!Number.isFinite(preferredPort) || preferredPort < 1 || preferredPort > 65535) {
     return { ok: false, reason: 'not_configured' };
   }
 
-  const secure = envTrim('SMTP_SECURE') === 'true' || port === 465;
-  const user = envTrim('SMTP_USER');
-  const pass = envTrim('SMTP_PASS');
+  const yahoo = isYahooSmtp(host);
+  const allowReplyTo = envTrim('SMTP_ALLOW_REPLY_TO') === 'true' && !yahoo;
 
-  if (user && from && user.toLowerCase() !== from.toLowerCase()) {
-    console.warn(
-      'SMTP_USER ve MAIL_FROM farklı; Yahoo gibi sağlayıcılarda genelde aynı hesap adresi olmalı.'
-    );
+  const mail: nodemailer.SendMailOptions = {
+    from,
+    to,
+    subject: buildContactEmailSubject(payload),
+    text: buildContactEmailText(payload, { yahooHint: yahoo }),
+    html: buildContactEmailHtml(payload),
+    ...(allowReplyTo && payload.email
+      ? {
+          replyTo: `"${payload.name.replace(/"/g, '')}" <${payload.email}>`,
+        }
+      : {}),
+  };
+
+  const attempts: { port: number; secure: boolean }[] = [
+    { port: preferredPort, secure: preferredPort === 465 },
+    ...(preferredPort !== 587 ? [{ port: 587, secure: false }] : []),
+    ...(preferredPort !== 465 ? [{ port: 465, secure: true }] : []),
+  ];
+
+  let lastErr: unknown;
+  for (const { port, secure } of attempts) {
+    const transport = nodemailer.createTransport(buildTransport(port, secure));
+    try {
+      await trySend(transport, mail);
+      transport.close();
+      return { ok: true };
+    } catch (err) {
+      lastErr = err;
+      transport.close();
+      if (process.env.NODE_ENV === 'development') {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`SMTP send failed (port ${port}):`, msg);
+      }
+    }
   }
 
-  try {
-    const transport = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      ...(user ? { auth: { user, pass: pass || '' } } : {}),
-    });
-
-    await transport.verify();
-    console.log('SMTP verified');
-
-    const subjectLine = `[Contact] ${payload.subject}`;
-    const text = [
-      `Name: ${payload.name}`,
-      `Email: ${payload.email}`,
-      `Subject: ${payload.subject}`,
-      '',
-      payload.message,
-    ].join('\n');
-
-    const fromHeader = `"Website Contact" <${from}>`;
-
-    await transport.sendMail({
-      from: fromHeader,
-      sender: from,
-      envelope: {
-        from,
-        to: [to],
-      },
-      to,
-      replyTo: payload.email,
-      subject: subjectLine,
-      text,
-    });
-    return { ok: true };
-  } catch (err) {
-    console.error('Contact mail send failed:', err);
-    return { ok: false, reason: 'send_failed' };
-  }
+  console.error('Contact mail send failed:', lastErr);
+  return { ok: false, reason: 'send_failed' };
 }

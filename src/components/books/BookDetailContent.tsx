@@ -7,6 +7,7 @@ import type { Book } from '@/types';
 import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
 import { isUnknownAuthorDisplayName, resolveAuthorDisplayName } from '@/lib/author-display-name';
 import { useBookModal } from '@/contexts/BookModalContext';
+import ReadingListControls from '@/components/books/ReadingListControls';
 
 /** Sunucudan gelen serileştirilmiş tarihler için */
 export type BookDetailBook = Omit<Book, 'createdAt' | 'updatedAt'> & {
@@ -130,6 +131,8 @@ const BookDetailContent = ({ book }: BookDetailContentProps) => {
                   )
               )}
             </div>
+
+            <ReadingListControls bookId={book.id} />
           </div>
         </div>
       </div>

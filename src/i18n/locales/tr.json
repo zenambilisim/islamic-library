@@ -374,6 +374,41 @@
       "fillSample": "Örnek veri ile doldur"
     }
   },
+  "userAuth": {
+    "loginTitle": "Giriş Yap",
+    "signupTitle": "Üye Ol",
+    "subtitle": "Kitaplarınızı listelerinize ekleyin",
+    "tabLogin": "Giriş",
+    "tabSignup": "Kayıt",
+    "emailLabel": "E-posta",
+    "emailPlaceholder": "ornek@email.com",
+    "passwordLabel": "Şifre",
+    "passwordPlaceholder": "En az 6 karakter",
+    "displayNameLabel": "Ad (isteğe bağlı)",
+    "displayNamePlaceholder": "Adınız",
+    "submitLogin": "Giriş Yap",
+    "submitSignup": "Hesap Oluştur",
+    "submitting": "İşleniyor...",
+    "loginSuccess": "Giriş başarılı.",
+    "signupSuccess": "Hesabınız oluşturuldu.",
+    "confirmEmail": "E-posta adresinize doğrulama linki gönderildi.",
+    "errorDefault": "İşlem başarısız. Lütfen tekrar deneyin.",
+    "backToHome": "Ana Sayfaya Dön",
+    "loginShort": "Giriş",
+    "logout": "Çıkış Yap"
+  },
+  "readingList": {
+    "myLibrary": "Kütüphanem",
+    "addToList": "Listeme ekle",
+    "loginPrompt": "Listeye eklemek için",
+    "loginLink": "giriş yapın",
+    "emptyList": "Bu listede henüz kitap yok.",
+    "status": {
+      "want_to_read": "Okuyacağım",
+      "reading": "Okuyorum",
+      "read": "Okudum"
+    }
+  },
   "login": {
     "pageTitle": "Giriş Yap",
     "formTitle": "Hesabınıza giriş yapın",

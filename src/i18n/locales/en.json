@@ -373,6 +373,41 @@
       "fillSample": "Fill with sample data"
     }
   },
+  "userAuth": {
+    "loginTitle": "Sign In",
+    "signupTitle": "Create Account",
+    "subtitle": "Save books to your reading lists",
+    "tabLogin": "Sign in",
+    "tabSignup": "Register",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "displayNameLabel": "Name (optional)",
+    "displayNamePlaceholder": "Your name",
+    "submitLogin": "Sign In",
+    "submitSignup": "Create Account",
+    "submitting": "Please wait...",
+    "loginSuccess": "Signed in successfully.",
+    "signupSuccess": "Your account has been created.",
+    "confirmEmail": "A confirmation link was sent to your email.",
+    "errorDefault": "Something went wrong. Please try again.",
+    "backToHome": "Back to Home",
+    "loginShort": "Sign in",
+    "logout": "Sign out"
+  },
+  "readingList": {
+    "myLibrary": "My Library",
+    "addToList": "Add to my list",
+    "loginPrompt": "To add to a list,",
+    "loginLink": "sign in",
+    "emptyList": "No books in this list yet.",
+    "status": {
+      "want_to_read": "Want to read",
+      "reading": "Reading",
+      "read": "Read"
+    }
+  },
   "login": {
     "pageTitle": "Sign In",
     "formTitle": "Sign in to your account",

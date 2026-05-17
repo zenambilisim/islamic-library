@@ -373,6 +373,41 @@
       "fillSample": "Заполнить примером"
     }
   },
+  "userAuth": {
+    "loginTitle": "Вход",
+    "signupTitle": "Регистрация",
+    "subtitle": "Добавляйте книги в свои списки",
+    "tabLogin": "Вход",
+    "tabSignup": "Регистрация",
+    "emailLabel": "Эл. почта",
+    "emailPlaceholder": "example@mail.com",
+    "passwordLabel": "Пароль",
+    "passwordPlaceholder": "Не менее 6 символов",
+    "displayNameLabel": "Имя (необязательно)",
+    "displayNamePlaceholder": "Ваше имя",
+    "submitLogin": "Войти",
+    "submitSignup": "Создать аккаунт",
+    "submitting": "Подождите...",
+    "loginSuccess": "Вход выполнен.",
+    "signupSuccess": "Аккаунт создан.",
+    "confirmEmail": "Ссылка для подтверждения отправлена на почту.",
+    "errorDefault": "Не удалось выполнить действие.",
+    "backToHome": "На главную",
+    "loginShort": "Вход",
+    "logout": "Выйти"
+  },
+  "readingList": {
+    "myLibrary": "Моя библиотека",
+    "addToList": "Добавить в список",
+    "loginPrompt": "Чтобы добавить в список,",
+    "loginLink": "войдите",
+    "emptyList": "В этом списке пока нет книг.",
+    "status": {
+      "want_to_read": "Буду читать",
+      "reading": "Читаю",
+      "read": "Прочитал"
+    }
+  },
   "login": {
     "pageTitle": "Вход",
     "formTitle": "Войдите в аккаунт",

@@ -81,6 +81,9 @@
   "authors": {
     "pageTitle": "Müəlliflər",
     "pageDescription": "Əsərlərin dəyərli müəlliflərini kəşf edin",
+    "heroEyebrow": "Kataloq · müəlliflər",
+    "heroTitleLine1": "İslami əsərlərin",
+    "heroTitleEm": "müəlliflərini kəşf edin.",
     "alphabetSort": "Əlifba sıralaması",
     "browseByLetter": "Hərflərə görə gəzin",
     "all": "Hamısı",
@@ -107,6 +110,9 @@
   "categories": {
     "pageTitle": "Kateqoriyalar",
     "pageDescription": "Kitabları kateqoriyalara görə kəşf edin",
+    "heroEyebrow": "Kataloq · mövzular",
+    "heroTitleLine1": "İslami elmləri",
+    "heroTitleEm": "kateqoriyalara görə kəşf edin.",
     "noCategories": "Hələ kateqoriya yoxdur",
     "browseByCategory": "Kateqoriyaya görə gəzin",
     "booksInCategory": "kitab",
@@ -126,19 +132,80 @@
     "totalCategories": "Kateqoriya",
     "totalBooks": "Ümumi Kitab"
   },
+  "hikme": {
+    "status": "Kitabxananın süni intellekt bələdçisi · onlayn",
+    "newChat": "Yeni söhbət",
+    "more": "Daha çox",
+    "open": "Aç",
+    "openChat": "AI söhbətini aç",
+    "placeholder": "Ayə, hədis və ya kitab haqqında soruş…",
+    "footerNote": "Hikme klassik mənbələrə əsaslanır — vacib məsələlərdə alimlərə müraciət edin.",
+    "allCategories": "Hamısı",
+    "greet": {
+      "arabic": "السَّلَامُ عَلَيْكُمْ",
+      "title": "Mən Hikməm — kitabxana bələdçiniz",
+      "text": "Ayələr, hədislər, fiqh və ya kitab tövsiyələri haqqında soruşun. Mənbələri göstərir, kataloqa yönləndirirəm."
+    },
+    "prompts": {
+      "explain-ayah": {
+        "label": "Bir ayəni izah et",
+        "sub": "Təfsir və kontekst",
+        "userText": "Fatiha surəsinin ilk ayəsini izah et."
+      },
+      "find-book": {
+        "label": "Mövzuya görə kitab tap",
+        "sub": "Kitabxanadan seçki",
+        "userText": "Namaz və ziyarətlər haqqında nə oxumalıyam?"
+      },
+      "hadith-day": {
+        "label": "Günün hədisi",
+        "sub": "İzah ilə",
+        "userText": "Günün hədisini göstər."
+      },
+      "for-beginner": {
+        "label": "Haradan başlamalı",
+        "sub": "Yeni başlayanlar üçün",
+        "userText": "Yeni başlayan nə oxumalı?"
+      }
+    },
+    "responses": {
+      "explainAyah1": "Bismillah — «Mərhəmətli və Rəhmli Allahın adı ilə» — Qur'anı və bir istisna olmaqla hər surəni açır.",
+      "explainAyah2": "ər-Rəhman və ər-Rəhim rəhmət kökündən gəlir. Alimlər ümumi və xüsusi rəhməti ayırır; besmələ surənin mahiyyətini daşıyır.",
+      "findBook": "Bu mövzuda kitabxanamızda bir neçə əsas əsər var — gündəlik ibadət, dua və fiqh üçün:",
+      "hadithTag": "Hədis · gündəlik seçki",
+      "hadithText": "«Hər insanın dəyəri bacardığı iş qədərdir». — İmam Əlidən (ə.) nəql olunur. Təhsil əxlaqının qısa düsturudur.",
+      "forBeginner1": "Üç mərhələli bir yol təklif edirəm:\n\n1. Dua və zikir məcmuaları ilə başla.\n2. Xütbə və öyüdlərlə davam et.\n3. Sonra təfsir və fiqha keç.",
+      "forBeginner2": "Qur'anı daha dərindən anlamaq istədikdə kataloqdakı təfsir əsərlərinə bax.",
+      "generic": "Maraqlı sual. Kitabxanamızdan bir neçə başlanğıc nöqtəsi:"
+    }
+  },
   "hero": {
     "title": "Geniş Rəqəmsal İslam Kitabxanası",
-    "subtitle": "Hər hansı bir cihazda onlayn və ya oflayn oxumaq üçün kitablar mövcuddur",
+    "eyebrow": "Islamic Library · rəqəmsal kolleksiya",
+    "titleLine1": "İslam düşüncəsinin klassikləri —",
+    "titleEm": "tək kataloqda.",
+    "subtitle": "Təfsir, hədis, fiqh və fəlsəfə. İstənilən cihazda onlayn və ya oflayn oxuyun.",
     "booksCount": "Kitab",
     "languagesCount": "Dil",
+    "categoriesCount": "Kateqoriya",
     "knowledgeCount": "Bilik",
-    "exploreButton": "Kitabları Kəşf Et ↓",
+    "exploreButton": "Kataloqu kəşf et",
+    "catalogTitle": "Kataloq",
+    "catalogSubtitle": "Kolleksiyadan {{count}} kitab",
+    "featuredEyebrow": "Seçilmiş · önə çıxanlar",
+    "featuredDetails": "Ətraflı bax",
+    "sliderPrev": "Əvvəlki",
+    "sliderNext": "Növbəti",
     "bannerAlt": "İslam Kitabxanası Banner",
     "mockupAlt": "İslam Kitabları"
   },
   "contact": {
     "pageTitle": "Əlaqə",
     "pageDescription": "Suallarınız, təklifləriniz və ya töhfələriniz üçün bizimlə əlaqə saxlayın. Sizə kömək etməkdən məmnunuq.",
+    "heroEyebrow": "Islamic Library · əlaqə",
+    "heroTitleLine1": "Bizimlə",
+    "heroTitleEm": "əlaqə saxlayın.",
+    "browseForm": "Mesaj göndərin",
     "formTitle": "Bizə Mesaj Göndərin",
     "nameLabel": "Adınız *",
     "namePlaceholder": "adınızı daxil edin",
@@ -190,6 +257,12 @@
   "about": {
     "pageTitle": "Haqqımızda",
     "pageDescription": "Islamic Library dini kitabları rəqəmsal formatda əlçatan etmək məqsədi ilə yaradılmış pulsuz elektron kitabxana platformasıdır.",
+    "heroEyebrow": "Islamic Library",
+    "heroTitleLine1": "Rəqəmsal İslami",
+    "heroTitleEm": "kitabxana platforması.",
+    "browseMission": "Missiyamızı kəşf edin",
+    "featuresTitle": "Niyə Islamic Library?",
+    "featuresSubtitle": "Platformamızın təklif etdiyi əsas dəyərlər",
     "missionTitle": "Missiyamız",
     "missionText1": "Əsas missiyamız İslam elmləri sahəsindəki dəyərli əsərləri rəqəmsal formatda cəmiyyətin xidmətinə təqdim etmək, İslam mədəniyyəti və elminin yayılmasına töhfə verməkdir.",
     "missionText2": "Qurani-Kərim, hədis, təfsir, irfan və digər İslami mövzularda keyfiyyətli mənbələri pulsuz əlçatan edirik.",
@@ -425,6 +498,10 @@
   "usefulInfo": {
     "pageTitle": "Faydalı Məlumatlar",
     "pageDescription": "Islamic Library platformasından daha səmərəli istifadə etmək üçün hazırladığımız təlimatlar, məsləhətlər və tez-tez verilən sualların cavabları.",
+    "heroEyebrow": "Kitabxana · kömək",
+    "heroTitleLine1": "Platformadan",
+    "heroTitleEm": "daha çox faydalanın.",
+    "browseGuides": "Təlimatlara bax",
     "usageGuides": "İstifadə Təlimatları",
     "fileFormatsGuide": "Fayl Formatları Təlimatı",
     "faq": "Tez-tez Verilən Suallar",

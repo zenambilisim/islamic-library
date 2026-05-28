@@ -7,6 +7,7 @@ import { useSearch } from '@/contexts/SearchContext';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { CategoryDetailSection } from '@/components/categories/CategoryDetailSection';
+import CategoriesGridSkeleton from '@/components/categories/CategoriesGridSkeleton';
 
 type Props = { slug: string };
 
@@ -25,10 +26,11 @@ const CategoryBySlugPage = ({ slug }: Props) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-6 h-32 w-32 animate-spin rounded-full border-b-4 border-primary-600" />
-          <h2 className="mb-2 text-2xl font-bold text-gray-800">{t('common.loading')}</h2>
+      <div className="min-h-screen bg-cream">
+        <div className="content-layout">
+          <div className="h-5 w-36 animate-pulse rounded bg-cream-200" />
+          <div className="h-40 animate-pulse rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)]" />
+          <CategoriesGridSkeleton count={6} />
         </div>
       </div>
     );
@@ -36,15 +38,17 @@ const CategoryBySlugPage = ({ slug }: Props) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md text-center">
-          <p className="mb-6 text-gray-700">{error}</p>
-          <Link
-            href="/categories"
-            className="rounded-xl bg-gradient-to-r from-primary-600 to-purple-600 px-6 py-3 text-white shadow-lg transition hover:from-primary-700 hover:to-purple-700"
-          >
-            {t('categories.backToCategories')}
-          </Link>
+      <div className="min-h-screen bg-cream">
+        <div className="content-layout">
+          <div className="rounded-editorial border border-red-200 bg-red-50 p-6 text-center text-red-800">
+            <p className="mb-4">{error}</p>
+            <Link
+              href="/categories"
+              className="inline-flex h-10 items-center rounded-full bg-ink px-5 text-sm font-semibold text-cream"
+            >
+              {t('categories.backToCategories')}
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -52,16 +56,20 @@ const CategoryBySlugPage = ({ slug }: Props) => {
 
   if (!category) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md text-center">
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">{t('categories.categoryNotFound')}</h1>
-          <p className="mb-8 text-gray-600">{t('categories.categoryNotFoundDesc')}</p>
-          <Link
-            href="/categories"
-            className="rounded-xl bg-gradient-to-r from-primary-600 to-purple-600 px-6 py-3 text-white shadow-lg transition hover:from-primary-700 hover:to-purple-700"
-          >
-            {t('categories.backToCategories')}
-          </Link>
+      <div className="min-h-screen bg-cream">
+        <div className="content-layout">
+          <div className="rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-10 text-center shadow-soft">
+            <h1 className="font-display text-2xl font-medium text-ink">
+              {t('categories.categoryNotFound')}
+            </h1>
+            <p className="mt-2 text-ink-muted">{t('categories.categoryNotFoundDesc')}</p>
+            <Link
+              href="/categories"
+              className="mt-6 inline-flex h-10 items-center rounded-full bg-ink px-5 text-sm font-semibold text-cream"
+            >
+              {t('categories.backToCategories')}
+            </Link>
+          </div>
         </div>
       </div>
     );

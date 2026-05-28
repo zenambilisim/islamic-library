@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Download, Eye, FileText, Loader2, User } from 'lucide-react';
+import { BookOpen, Download, Eye, Loader2 } from 'lucide-react';
 import type { Book } from '@/types';
 import { useBookModal } from '@/contexts/BookModalContext';
 import { downloadBookAsset, safeDownloadBasename } from '@/lib/download-book-file';
@@ -10,15 +10,16 @@ import { isUnknownAuthorDisplayName, resolveAuthorDisplayName } from '@/lib/auth
 
 interface BookCardProps {
   book: Book;
+  /** Ana sayfa kataloğu için sade kart */
+  variant?: 'default' | 'compact';
 }
 
-const BookCard: React.FC<BookCardProps> = ({ book }) => {
+const BookCard: React.FC<BookCardProps> = ({ book, variant = 'default' }) => {
   const { openDetails, openReader } = useBookModal();
   const { t } = useTranslation();
   const [downloadLoading, setDownloadLoading] = useState<Record<string, boolean>>({});
   const authorTrimmed = book.author?.trim() ?? '';
   const showAuthorRow = Boolean(authorTrimmed);
-  /** İndirme dosya adında bilinmeyen yer tutucu kullanılmaz */
   const useAuthorForDownload = showAuthorRow && !isUnknownAuthorDisplayName(book.author);
 
   const handleFormatDownload = async (e: React.MouseEvent, format: string, url: string) => {
@@ -37,100 +38,140 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
     }
   };
 
-  return (
-    <div
-      className="flex h-full flex-col bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group cursor-pointer transform hover:-translate-y-2 border border-gray-100"
-      onClick={() => openDetails(book)}
-    >
-      <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-gray-100">
-        <img
-          src={book.coverImage || '/placeholder-book.svg'}
-          alt={book.title}
-          className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
-          loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/placeholder-book.svg';
-          }}
-        />
-
-        {/* Overlay with actions */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-4">
-          <div className="flex space-x-3">
+  if (variant === 'compact') {
+    return (
+      <article
+        className="group flex cursor-pointer flex-col gap-2.5 transition-transform duration-300 hover:-translate-y-1"
+        onClick={() => openDetails(book)}
+      >
+        <div className="relative aspect-[2/3] overflow-hidden rounded-[var(--radius-md)] shadow-card transition-shadow group-hover:shadow-lift">
+          <img
+            src={book.coverImage || '/placeholder-book.svg'}
+            alt={book.title}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder-book.svg';
+            }}
+          />
+          <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 openReader(book);
               }}
-              className="bg-gradient-to-r from-primary-600 to-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:from-primary-700 hover:to-purple-700 transition-all duration-300 flex items-center space-x-2 shadow-lg transform hover:scale-105"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-elev)] px-3 py-1.5 text-xs font-semibold text-ink"
             >
-              <Eye size={16} />
-              <span className="text-sm">{t('common.read')}</span>
+              <Eye size={14} />
+              {t('common.read')}
             </button>
           </div>
         </div>
+        <div className="px-0.5">
+          <h3 className="font-display line-clamp-2 text-[15px] font-medium leading-snug tracking-tight text-ink">
+            {book.title}
+          </h3>
+          {showAuthorRow && (
+            <p className="mt-1 line-clamp-1 text-xs text-ink-muted">
+              {resolveAuthorDisplayName(book.author, t)}
+            </p>
+          )}
+          <p className="mt-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
+            <span className="line-clamp-1">{book.category}</span>
+            {book.pages > 0 && (
+              <>
+                <span className="h-1 w-1 shrink-0 rounded-full bg-ink-faint" />
+                <span className="shrink-0 tabular-nums">
+                  {book.pages.toLocaleString()} {t('book.pagesShort', 's.')}
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <div
+      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-card"
+      onClick={() => openDetails(book)}
+    >
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--surface-2)]">
+        <img
+          src={book.coverImage || '/placeholder-book.svg'}
+          alt={book.title}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/placeholder-book.svg';
+          }}
+        />
+        <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              openReader(book);
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white"
+          >
+            <Eye size={16} />
+            {t('common.read')}
+          </button>
+        </div>
       </div>
 
-      {/* Book Info */}
-      <div className="flex flex-1 flex-col min-h-0 p-6">
-        {/* Title */}
-        <h3 className="font-bold text-xl text-gray-900 mb-3 line-clamp-2 min-h-[3.25rem] group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+      <div className="flex min-h-0 flex-1 flex-col p-5">
+        <h3 className="font-display mb-2 line-clamp-2 text-lg font-medium leading-snug text-ink">
           {book.title}
         </h3>
 
-        {/* Author & Category — yazar yoksa yazar satırı gösterilmez */}
         <div
-          className={`flex min-h-[2.75rem] items-start gap-3 mb-3 ${showAuthorRow ? 'justify-between' : 'justify-end'}`}
+          className={`mb-3 flex min-h-[2.5rem] items-start gap-3 ${showAuthorRow ? 'justify-between' : 'justify-end'}`}
         >
           {showAuthorRow && (
-            <div className="flex min-w-0 flex-1 items-center text-gray-600">
-              <User size={16} className="mr-2 shrink-0 text-primary-500" aria-hidden />
-              <span className="line-clamp-2 text-sm font-medium">
-                {resolveAuthorDisplayName(book.author, t)}
-              </span>
-            </div>
+            <p className="line-clamp-2 flex-1 text-sm text-ink-muted">
+              {resolveAuthorDisplayName(book.author, t)}
+            </p>
           )}
-          <div
-            className={`flex shrink-0 items-center text-gray-600 ${showAuthorRow ? 'max-w-[42%]' : 'max-w-full justify-end'}`}
-          >
-            <FileText size={14} className="mr-2 shrink-0" aria-hidden />
-            <span className="line-clamp-2 text-right text-xs">{book.category}</span>
-          </div>
+          <p className="line-clamp-2 shrink-0 text-right text-xs text-ink-faint">{book.category}</p>
         </div>
 
         {book.pages > 0 && (
-          <div className="mb-3 flex items-center gap-1.5 text-xs text-gray-500">
-            <BookOpen size={14} className="shrink-0 text-primary-500" aria-hidden />
+          <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-muted">
+            <BookOpen size={14} className="shrink-0 text-accent" aria-hidden />
             <span>
               {book.pages.toLocaleString()} {t('book.pages')}
             </span>
           </div>
         )}
 
-        {/* Description */}
-        <p className="text-gray-600 text-sm line-clamp-3 min-h-[4.5rem] leading-relaxed">
+        <p className="line-clamp-3 min-h-[4rem] text-sm leading-relaxed text-ink-muted">
           {book.description}
         </p>
 
         <div className="mt-auto flex flex-wrap gap-2 pt-4">
-          {Object.entries(book.formats).map(([format, url]) => (
-            url && (
-              <button
-                key={format}
-                type="button"
-                disabled={!!downloadLoading[format]}
-                onClick={(e) => void handleFormatDownload(e, format, url)}
-                className="bg-gradient-to-r from-primary-100 to-purple-100 hover:from-primary-200 hover:to-purple-200 disabled:opacity-60 disabled:cursor-wait text-primary-700 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center space-x-1 transform hover:scale-105 shadow-sm"
-              >
-                {downloadLoading[format] ? (
-                  <Loader2 size={12} className="animate-spin shrink-0" />
-                ) : (
-                  <Download size={12} />
-                )}
-                <span>{format.toUpperCase()}</span>
-              </button>
-            )
-          ))}
+          {Object.entries(book.formats).map(
+            ([format, url]) =>
+              url && (
+                <button
+                  key={format}
+                  type="button"
+                  disabled={!!downloadLoading[format]}
+                  onClick={(e) => void handleFormatDownload(e, format, url)}
+                  className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/15 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {downloadLoading[format] ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Download size={12} />
+                  )}
+                  <span>{format.toUpperCase()}</span>
+                </button>
+              ),
+          )}
         </div>
       </div>
     </div>

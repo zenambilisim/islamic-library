@@ -2,8 +2,24 @@
 
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { Send, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Mail,
+  MessageCircle,
+  Send,
+} from 'lucide-react';
+import ContactHero from '@/components/contact/ContactHero';
 import { submitContactForm } from '../lib/emailService';
+
+const CONTACT_EMAIL = 'islamic.library@yahoo.com';
+
+const inputClassName =
+  'w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent';
+
+const textareaClassName =
+  'w-full resize-none rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent';
 
 const ContactPage = () => {
   const { t } = useTranslation();
@@ -11,7 +27,7 @@ const ContactPage = () => {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
@@ -19,11 +35,13 @@ const ContactPage = () => {
     message: string;
   }>({ type: null, message: '' });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -35,75 +53,82 @@ const ContactPage = () => {
 
     try {
       const result = await submitContactForm(formData);
-      
+
       if (result.success) {
         setSubmitStatus({
           type: 'success',
-          message: t('contact.successMessage')
+          message: t('contact.successMessage'),
         });
-        // Reset form
         setFormData({ name: '', email: '', subject: '', message: '' });
       } else {
         setSubmitStatus({
           type: 'error',
-          message: t('contact.errorMessage')
+          message: t('contact.errorMessage'),
         });
       }
     } catch (error) {
       console.error('Form submission error:', error);
       setSubmitStatus({
         type: 'error',
-        message: t('contact.errorMessage')
+        message: t('contact.errorMessage'),
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const scrollToForm = () => {
+    document.getElementById('contact-form')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {t('contact.pageTitle')}
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {t('contact.pageDescription')}
-          </p>
-        </div>
+    <div className="min-h-screen bg-cream">
+      <div className="content-layout">
+        <ContactHero onBrowse={scrollToForm} />
 
-        {/* Contact Form */}
-        <div className="flex items-center justify-center py-12">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 w-full max-w-2xl">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <MessageCircle className="text-primary-600 mr-3" size={24} />
-              {t('contact.formTitle')}
-            </h2>
+        <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section
+            id="contact-form"
+            className="rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-6 shadow-soft md:p-7"
+          >
+            <div className="mb-6 flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <MessageCircle size={18} strokeWidth={1.75} aria-hidden />
+              </span>
+              <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
+                {t('contact.formTitle')}
+              </h2>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Status Message */}
+            <form onSubmit={handleSubmit} className="space-y-5">
               {submitStatus.type && (
-                <div className={`p-4 rounded-lg flex items-start space-x-3 ${
-                  submitStatus.type === 'success' 
-                    ? 'bg-green-50 border border-green-200' 
-                    : 'bg-red-50 border border-red-200'
-                }`}>
+                <div
+                  className={`flex items-start gap-3 rounded-[var(--radius-md)] border p-4 ${
+                    submitStatus.type === 'success'
+                      ? 'border-green-200 bg-green-50'
+                      : 'border-red-200 bg-red-50'
+                  }`}
+                >
                   {submitStatus.type === 'success' ? (
-                    <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
+                    <CheckCircle className="shrink-0 text-green-600" size={20} />
                   ) : (
-                    <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+                    <AlertCircle className="shrink-0 text-red-600" size={20} />
                   )}
-                  <p className={`text-sm ${
-                    submitStatus.type === 'success' ? 'text-green-800' : 'text-red-800'
-                  }`}>
+                  <p
+                    className={`text-sm ${
+                      submitStatus.type === 'success' ? 'text-green-800' : 'text-red-800'
+                    }`}
+                  >
                     {submitStatus.message}
                   </p>
                 </div>
               )}
 
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="mb-2 block text-[12.5px] font-medium text-ink-muted">
                   {t('contact.nameLabel')}
                 </label>
                 <input
@@ -113,13 +138,13 @@ const ContactPage = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  className="search-input"
+                  className={inputClassName}
                   placeholder={t('contact.namePlaceholder')}
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="mb-2 block text-[12.5px] font-medium text-ink-muted">
                   {t('contact.emailLabel')}
                 </label>
                 <input
@@ -129,13 +154,16 @@ const ContactPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="search-input"
+                  className={inputClassName}
                   placeholder={t('contact.emailPlaceholder')}
                 />
               </div>
 
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="subject"
+                  className="mb-2 block text-[12.5px] font-medium text-ink-muted"
+                >
                   {t('contact.subjectLabel')}
                 </label>
                 <select
@@ -144,7 +172,7 @@ const ContactPage = () => {
                   value={formData.subject}
                   onChange={handleInputChange}
                   required
-                  className="search-input"
+                  className={inputClassName}
                 >
                   <option value="">{t('contact.subjectPlaceholder')}</option>
                   <option value="book-request">{t('contact.subjectBookRequest')}</option>
@@ -158,7 +186,10 @@ const ContactPage = () => {
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="message"
+                  className="mb-2 block text-[12.5px] font-medium text-ink-muted"
+                >
                   {t('contact.messageLabel')}
                 </label>
                 <textarea
@@ -168,7 +199,7 @@ const ContactPage = () => {
                   onChange={handleInputChange}
                   required
                   rows={6}
-                  className="search-input resize-none"
+                  className={textareaClassName}
                   placeholder={t('contact.messagePlaceholder')}
                 />
               </div>
@@ -176,17 +207,57 @@ const ContactPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full btn-primary flex items-center justify-center space-x-2 ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink text-sm font-semibold text-cream transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6`}
               >
-                <Send size={20} />
+                <Send size={18} strokeWidth={2} />
                 <span>
                   {isSubmitting ? t('contact.sendingButton') : t('contact.sendButton')}
                 </span>
               </button>
             </form>
-          </div>
+          </section>
+
+          <aside className="space-y-[18px]">
+            <div className="rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-5 shadow-soft">
+              <h3 className="font-display mb-4 text-lg font-medium tracking-tight text-ink">
+                {t('contact.contactInfoTitle')}
+              </h3>
+              <ul className="space-y-4">
+                <li className="flex gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                    <Mail size={16} strokeWidth={1.75} aria-hidden />
+                  </span>
+                  <div>
+                    <p className="text-[12px] font-medium uppercase tracking-wide text-ink-muted">
+                      {t('contact.emailTitle')}
+                    </p>
+                    <a
+                      href={`mailto:${CONTACT_EMAIL}`}
+                      className="text-sm text-ink transition-colors hover:text-accent"
+                    >
+                      {CONTACT_EMAIL}
+                    </a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-5 shadow-soft">
+              <div className="mb-3 flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Clock size={16} strokeWidth={1.75} aria-hidden />
+                </span>
+                <h3 className="font-display text-lg font-medium tracking-tight text-ink">
+                  {t('contact.responseTimeTitle')}
+                </h3>
+              </div>
+              <ul className="space-y-2 text-[13px] text-ink-muted">
+                <li>{t('contact.responseGeneral')}</li>
+                <li>{t('contact.responseTechnical')}</li>
+                <li>{t('contact.responseBooks')}</li>
+              </ul>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

@@ -1,0 +1,3290 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Islamic Library — Books + Hikma AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<style>
+/* ============================================
+   Islamic Library — Digital Library
+   Three aesthetic variants via data-aesthetic
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&family=Amiri:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&display=swap');
+
+/* ============================================
+   BASE TOKENS
+   ============================================ */
+:root {
+  --header-h: 72px;
+  --gap: 20px;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08);
+  --shadow-lift: 0 20px 60px rgba(0,0,0,0.12);
+
+  --font-display: 'Fraunces', 'IBM Plex Serif', Georgia, serif;
+  --font-body: 'Geist', 'Inter', system-ui, sans-serif;
+  --font-arabic: 'Amiri', 'Reem Kufi', serif;
+}
+
+/* ============================================
+   AESTHETIC 1 — EDITORIAL (default)
+   Cream paper · navy ink · single emerald accent
+   ============================================ */
+body[data-aesthetic="editorial"] {
+  --bg: #F7F5F0;
+  --bg-elev: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #FAF8F3;
+  --surface-3: #EFEBE2;
+  --border: rgba(20, 25, 30, 0.08);
+  --border-strong: rgba(20, 25, 30, 0.16);
+  --text: #14191E;
+  --text-muted: #5A6168;
+  --text-faint: #8A8F95;
+  --accent: #6B76E8;
+  --accent-fg: #FFFFFF;
+  --accent-soft: #E6E8FB;
+  --chat-bg: #FFFFFF;
+  --chat-user: #14191E;
+  --chat-user-fg: #F7F5F0;
+  --chat-ai: #FAF8F3;
+  --chat-ai-fg: #14191E;
+  --pattern-color: rgba(107, 118, 232, 0.05);
+  --book-mark-fg: #14191E;
+  --cover-grain: 0.02;
+}
+
+/* ============================================
+   AESTHETIC 2 — WARM BOOKISH
+   Paper · dark forest · ochre · serif headings
+   ============================================ */
+body[data-aesthetic="bookish"] {
+  --bg: #F0E9DC;
+  --bg-elev: #F7F1E4;
+  --surface: #FBF5E8;
+  --surface-2: #F0E9DC;
+  --surface-3: #E5DCC8;
+  --border: rgba(60, 45, 25, 0.14);
+  --border-strong: rgba(60, 45, 25, 0.26);
+  --text: #1B3A2E;
+  --text-muted: #5F5040;
+  --text-faint: #8A7860;
+  --accent: #C9882F;
+  --accent-fg: #FBF5E8;
+  --accent-soft: #F2E1BE;
+  --chat-bg: #FBF5E8;
+  --chat-user: #1B3A2E;
+  --chat-user-fg: #FBF5E8;
+  --chat-ai: #F0E6D0;
+  --chat-ai-fg: #1B3A2E;
+  --pattern-color: rgba(27, 58, 46, 0.06);
+  --book-mark-fg: #FBF5E8;
+  --cover-grain: 0.06;
+}
+
+/* ============================================
+   AESTHETIC 3 — DARK PREMIUM
+   Deep teal-black · gold · emerald · geometric
+   ============================================ */
+body[data-aesthetic="dark"] {
+  --bg: #0A0F0E;
+  --bg-elev: #11181A;
+  --surface: #141C1F;
+  --surface-2: #1A2326;
+  --surface-3: #232E32;
+  --border: rgba(212, 165, 92, 0.12);
+  --border-strong: rgba(212, 165, 92, 0.28);
+  --text: #ECE6D8;
+  --text-muted: #9DA39C;
+  --text-faint: #6B716A;
+  --accent: #D4A55C;
+  --accent-fg: #0A0F0E;
+  --accent-soft: rgba(212, 165, 92, 0.14);
+  --chat-bg: #11181A;
+  --chat-user: #D4A55C;
+  --chat-user-fg: #0A0F0E;
+  --chat-ai: #1A2326;
+  --chat-ai-fg: #ECE6D8;
+  --pattern-color: rgba(212, 165, 92, 0.06);
+  --book-mark-fg: #ECE6D8;
+  --cover-grain: 0.04;
+}
+
+/* ============================================
+   BASE
+   ============================================ */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+  min-height: 100vh;
+  letter-spacing: -0.01em;
+  transition: background 0.4s ease, color 0.4s ease;
+  position: relative;
+}
+
+/* Subtle geometric overlay for dark mode */
+body[data-aesthetic="dark"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 25% 20%, var(--pattern-color) 0, transparent 50%),
+    radial-gradient(circle at 75% 80%, var(--pattern-color) 0, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font-family: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ============================================
+   HEADER
+   ============================================ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-h);
+  background: color-mix(in oklab, var(--bg) 80%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  height: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #8B95F0;
+  flex-shrink: 0;
+}
+.brand-mark svg { width: 100%; height: 100%; display: block; }
+body[data-aesthetic="dark"] .brand-mark {
+  color: #A4ADF5;
+}
+body[data-aesthetic="bookish"] .brand-mark {
+  color: #8B95F0;
+}
+
+.brand-name {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: #6B76E8;
+  text-transform: uppercase;
+}
+body[data-aesthetic="dark"] .brand-name {
+  color: #A4ADF5;
+}
+.brand-name em {
+  font-style: normal;
+  display: block;
+  margin-top: 3px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  max-width: 560px;
+  width: 100%;
+  justify-self: center;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.search:focus-within {
+  border-color: var(--accent);
+  background: var(--bg-elev);
+}
+.search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text);
+}
+.search input::placeholder { color: var(--text-faint); }
+.search-kbd {
+  display: flex;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+  font-family: var(--font-body);
+}
+.search-kbd kbd {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-switch {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  gap: 2px;
+}
+.lang-switch button {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+}
+.lang-switch button.active {
+  background: var(--text);
+  color: var(--bg);
+}
+body[data-aesthetic="dark"] .lang-switch button.active {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.lang-switch button[data-lang="ar"].active {
+  font-family: var(--font-arabic);
+  font-size: 14px;
+}
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+.icon-btn:hover { background: var(--surface-2); }
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--text));
+  display: grid;
+  place-items: center;
+  color: var(--accent-fg);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ============================================
+   MAIN GRID LAYOUT
+   ============================================ */
+.layout {
+  display: grid;
+  grid-template-columns: 400px minmax(0, 1fr) 260px;
+  gap: var(--gap);
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: var(--gap) 24px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-chat,
+.col-filters {
+  position: sticky;
+  top: calc(var(--header-h) + var(--gap));
+  height: calc(100vh - var(--header-h) - var(--gap) * 2);
+}
+
+/* ============================================
+   CHAT PANEL
+   ============================================ */
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--chat-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.chat-header {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+
+.ai-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 60%, var(--text)));
+  display: grid;
+  place-items: center;
+  position: relative;
+  color: var(--accent-fg);
+}
+.ai-avatar::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 2px solid var(--bg-elev);
+}
+
+.ai-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.ai-status {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+.chat-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.chat-actions .icon-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+}
+.chat-body::-webkit-scrollbar { width: 6px; }
+.chat-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* Empty state — Greeting card */
+.chat-greet {
+  padding: 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+.chat-greet-arabic {
+  font-family: var(--font-arabic);
+  font-size: 22px;
+  color: var(--accent);
+  margin-bottom: 6px;
+  line-height: 1.4;
+  direction: rtl;
+}
+.chat-greet-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.chat-greet-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.quick-prompts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.quick-prompt {
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quick-prompt:hover {
+  border-color: var(--accent);
+  background: var(--bg-elev);
+  transform: translateY(-1px);
+}
+.quick-prompt-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+.quick-prompt-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.quick-prompt-sub {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  line-height: 1.3;
+}
+
+/* Messages */
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 92%;
+}
+.msg.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.msg.ai { align-self: flex-start; }
+
+.msg-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.msg.user .msg-bubble {
+  background: var(--chat-user);
+  color: var(--chat-user-fg);
+  border-bottom-right-radius: 6px;
+}
+.msg.ai .msg-bubble {
+  background: var(--chat-ai);
+  color: var(--chat-ai-fg);
+  border-bottom-left-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.msg-time {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  padding: 0 4px;
+}
+
+.msg .arabic {
+  font-family: var(--font-arabic);
+  font-size: 19px;
+  line-height: 1.6;
+  direction: rtl;
+  display: block;
+  margin: 8px 0 4px;
+  color: var(--accent);
+}
+
+/* Book cards inside a chat message */
+.cite-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.cite-card {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  align-items: center;
+  transition: all 0.2s ease;
+}
+.cite-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+.cite-cover {
+  width: 44px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.cite-info {
+  flex: 1;
+  min-width: 0;
+}
+.cite-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin-bottom: 3px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cite-author {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.cite-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-top: 4px;
+  display: inline-block;
+}
+.cite-open {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+}
+body[data-aesthetic="dark"] .cite-open {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+/* Typing indicator */
+.typing {
+  display: flex;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--chat-ai);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  border-bottom-left-radius: 6px;
+  width: fit-content;
+}
+.typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing 1.2s infinite ease-in-out;
+}
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* Chat input */
+.chat-input-wrap {
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.chat-input {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 8px 8px 8px 14px;
+  transition: border-color 0.2s ease;
+}
+.chat-input:focus-within { border-color: var(--accent); }
+.chat-input textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 13.5px;
+  line-height: 1.45;
+  max-height: 100px;
+  min-height: 22px;
+  padding: 8px 0;
+}
+.chat-input textarea::placeholder { color: var(--text-faint); }
+.chat-input-tools {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+.chat-tool {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--text-muted);
+}
+.chat-tool:hover { background: var(--surface-2); color: var(--text); }
+.send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s ease;
+}
+.send-btn:hover { transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chat-footer-note {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  text-align: center;
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   FEATURED SLIDER
+   ============================================ */
+.slider {
+  position: relative;
+  height: 420px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  isolation: isolate;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 32px;
+  padding: 44px 48px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(20px);
+  transition: opacity 0.7s ease, transform 0.8s cubic-bezier(.22,.61,.36,1);
+  color: #FBF6E8;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.slide-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+.slide-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 50%),
+    linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.25));
+  pointer-events: none;
+}
+
+.slide-pattern {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.slide-arabic-bg {
+  position: absolute;
+  top: -40px;
+  right: 240px;
+  font-family: var(--font-arabic);
+  font-size: 360px;
+  line-height: 1;
+  font-weight: 700;
+  color: rgba(255,255,255,0.07);
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.slide-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.slide-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 4px;
+}
+
+.slide-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  margin: 0;
+  color: #FBF6E8;
+}
+
+.slide-arabic {
+  font-family: var(--font-arabic);
+  font-size: 28px;
+  direction: rtl;
+  color: rgba(255,255,255,0.85);
+  margin-top: 2px;
+}
+
+.slide-author {
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.75);
+  margin-top: 2px;
+  letter-spacing: -0.01em;
+}
+
+.slide-quote {
+  margin-top: 14px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(255,255,255,0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 480px;
+}
+.slide-quote-ar {
+  font-family: var(--font-arabic);
+  font-size: 17px;
+  direction: rtl;
+  color: rgba(255,255,255,0.8);
+}
+.slide-quote-ru {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.92);
+}
+
+.slide-ctas {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+.slide-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.slide-cta.primary {
+  background: #FBF6E8;
+  color: #1A1A1A;
+}
+.slide-cta.primary:hover { transform: translateY(-1px); }
+.slide-cta.ghost {
+  background: rgba(255,255,255,0.1);
+  color: #FBF6E8;
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(6px);
+}
+.slide-cta.ghost:hover { background: rgba(255,255,255,0.18); }
+
+.slide-cover {
+  position: relative;
+  z-index: 1;
+  width: 220px;
+  align-self: center;
+  justify-self: end;
+  filter: drop-shadow(0 24px 50px rgba(0,0,0,0.35));
+  transform: rotate(3deg);
+  transition: transform 0.5s ease;
+}
+.slide-cover svg {
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+}
+.slide.active .slide-cover { transform: rotate(3deg) translateY(0); }
+.slide:not(.active) .slide-cover { transform: rotate(3deg) translateY(20px); }
+
+/* Arrows */
+.slider-arrow {
+  position: absolute;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  background: rgba(0,0,0,0.32);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  color: #FBF6E8;
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  transform: translateY(-50%);
+  transition: background 0.2s ease;
+}
+.slider-arrow:hover { background: rgba(0,0,0,0.5); }
+.slider-arrow.prev { left: 18px; transform: translateY(-50%) rotate(90deg); }
+.slider-arrow.next { right: 18px; transform: translateY(-50%) rotate(-90deg); }
+
+/* Dots */
+.slider-dots {
+  position: absolute;
+  bottom: 22px;
+  left: 48px;
+  display: flex;
+  gap: 6px;
+  z-index: 4;
+}
+.slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transition: all 0.3s ease;
+}
+.slider-dot.active {
+  background: #FBF6E8;
+  width: 24px;
+  border-radius: 4px;
+}
+.slider-dot:hover { background: rgba(255,255,255,0.6); }
+
+.slider-count {
+  position: absolute;
+  bottom: 22px;
+  right: 48px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  z-index: 4;
+}
+
+@media (max-width: 1180px) {
+  .slide { padding: 32px 36px; grid-template-columns: 1fr 200px; }
+  .slide-title { font-size: 38px; }
+  .slide-arabic-bg { right: 180px; font-size: 280px; }
+  .slide-cover { width: 180px; }
+  .slider { height: 380px; }
+}
+@media (max-width: 880px) {
+  .slider { height: 360px; }
+  .slide { grid-template-columns: 1fr; padding: 28px 26px; }
+  .slide-title { font-size: 30px; }
+  .slide-arabic-bg { right: 0; font-size: 220px; opacity: 0.04; }
+  .slide-cover { display: none; }
+  .slide-quote { display: none; }
+  .slider-dots { left: 26px; bottom: 18px; }
+  .slider-count { right: 26px; bottom: 18px; }
+  .slider-arrow { width: 32px; height: 32px; }
+  .slider-arrow.prev { left: 10px; }
+  .slider-arrow.next { right: 10px; }
+}
+
+/* ============================================
+   MIDDLE COLUMN — BROWSE
+   ============================================ */
+.browse {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.browse-hero {
+  padding: 28px 30px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+}
+.browse-hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.browse-hero h1 {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin: 0 0 12px;
+}
+.browse-hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+.browse-hero p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  max-width: 580px;
+  margin: 0;
+}
+.browse-hero-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: 20px;
+}
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  display: block;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+.hero-pattern {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 240px;
+  height: 240px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+body[data-aesthetic="dark"] .hero-pattern { opacity: 0.4; }
+
+/* Section header */
+.section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.section-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+.tab {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.tab.active {
+  background: var(--text);
+  color: var(--bg);
+}
+body[data-aesthetic="dark"] .tab.active {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.tab-count {
+  font-size: 10.5px;
+  opacity: 0.65;
+}
+
+/* Book grid */
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+.book {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+.book:hover { transform: translateY(-3px); }
+.book:hover .book-cover { box-shadow: var(--shadow-lift); }
+
+.book-cover {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.25s ease;
+}
+.book-bookmark {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  color: #14191E;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.book:hover .book-bookmark { opacity: 1; }
+.book-bookmark.saved { opacity: 1; background: var(--accent); color: var(--accent-fg); }
+
+.book-meta {
+  padding: 0 2px;
+}
+.book-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  margin: 0 0 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.book-author {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.book-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.book-tag .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+/* ============================================
+   FILTERS (right column)
+   ============================================ */
+.filters {
+  height: 100%;
+  overflow-y: auto;
+  padding: 22px 20px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.filters::-webkit-scrollbar { width: 6px; }
+.filters::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+.filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.filter-head h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.filter-clear {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.filter-group {
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+.filter-group:last-child { border-bottom: none; padding-bottom: 0; }
+.filter-label {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.filter-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter-pill {
+  font-size: 11.5px;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.filter-pill:hover { border-color: var(--border-strong); }
+.filter-pill.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+body[data-aesthetic="dark"] .filter-pill.active {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+.filter-cat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: background 0.15s ease;
+}
+.filter-cat:hover { background: var(--surface-2); }
+.filter-cat.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.filter-cat-count {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.filter-cat.active .filter-cat-count {
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.filter-slider {
+  width: 100%;
+  margin: 8px 0 6px;
+  accent-color: var(--accent);
+}
+.filter-range-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   MOBILE — Floating pearl + fullscreen chat
+   ============================================ */
+.pearl {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 80;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--bg);
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  display: none;
+  place-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s ease;
+}
+.pearl::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35), transparent 50%);
+  pointer-events: none;
+}
+body[data-aesthetic="dark"] .pearl { background: var(--accent); color: var(--accent-fg); }
+.pearl:hover { transform: scale(1.05); }
+.pearl-ping {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: ping 2.4s ease-out infinite;
+  opacity: 0;
+}
+@keyframes ping {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.mobile-chat {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  flex-direction: column;
+  animation: chatRise 0.45s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes chatRise {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1180px) {
+  .layout { grid-template-columns: 360px minmax(0, 1fr); }
+  .col-filters { display: none; }
+}
+
+@media (max-width: 880px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 12px 14px 100px;
+  }
+  .col-chat { display: none; }
+  .browse-hero { padding: 22px; }
+  .browse-hero h1 { font-size: 28px; }
+  .header-inner { grid-template-columns: auto 1fr auto; gap: 12px; padding: 0 14px; }
+  .search { max-width: none; }
+  .lang-switch, .brand-sub { display: none; }
+  .pearl { display: grid; }
+  .pearl-show .mobile-chat { display: flex; }
+}
+
+/* ============================================
+   UTIL
+   ============================================ */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+.message-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+</style>
+</head>
+<body data-aesthetic="editorial">
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>
+// Islamic Library — Books and chat data
+// Only Shia classical sources
+
+window.LIBRARY = (function () {
+  const categories = [
+    { id: "all", label: "Tümü", count: 4280 },
+    { id: "tafsir", label: "Tefsir", count: 612 },
+    { id: "hadith", label: "Hadisler", count: 1340 },
+    { id: "fiqh", label: "Fıkıh", count: 720 },
+    { id: "aqida", label: "Akaid", count: 380 },
+    { id: "akhlaq", label: "Ahlak ve adab", count: 510 },
+    { id: "dua", label: "Dua ve ziyaret", count: 290 },
+    { id: "sira", label: "Siyer ve tarih", count: 240 },
+    { id: "falsafa", label: "Felsefe", count: 188 },
+  ];
+
+  const covers = {
+    forest: ["#1F4737", "#0E2820"],
+    olive: ["#5C6B3E", "#2D341E"],
+    indigo: ["#2E3A5F", "#13182D"],
+    burgundy: ["#5A1F2A", "#2A0E13"],
+    ochre: ["#A67234", "#5C3E18"],
+    teal: ["#205A5F", "#0E2A2D"],
+    cream: ["#E8D9B8", "#C9B486"],
+    rust: ["#8C4A2A", "#4A2614"],
+    stone: ["#4A4A48", "#1F1F1E"],
+    cobalt: ["#1E3A6E", "#0E1E3A"],
+    plum: ["#3F1F4A", "#1F0E26"],
+    moss: ["#3A5A36", "#1E2F1B"],
+  };
+
+  const books = [
+    {
+      id: "nahj-balagha",
+      title: "Nehcü'l-Belâğa",
+      titleAr: "نهج البلاغة",
+      author: "İmam Ali bin Ebî Tâlib · derleyen: eş-Şerîf er-Radî",
+      year: 1009,
+      category: "akhlaq",
+      cover: "burgundy",
+      mark: "ع",
+      pages: 752,
+      featured: true,
+      quote: "En güzel söz, mercanlar gibi dağınık olan değil, inciler gibi dizilmiş olandır.",
+      quoteAr: "خَيْرُ الْكَلَامِ مَا كَانَ نَظْمُهُ كَنَظْمِ الدُّرِّ",
+    },
+    {
+      id: "al-mizan",
+      title: "el-Mîzân Tefsiri",
+      titleAr: "الميزان في تفسير القرآن",
+      author: "Allâme Muhammed Hüseyin Tabâtabâî",
+      year: 1972,
+      category: "tafsir",
+      cover: "moss",
+      mark: "ط",
+      pages: 8542,
+      featured: true,
+      quote: "Kur'an kendisini tefsir eder — müfessirin görevi sadece bu bağı ortaya çıkarmaktır.",
+      quoteAr: "الْقُرْآنُ يُفَسِّرُ بَعْضُهُ بَعْضًا",
+    },
+    {
+      id: "al-kafi",
+      title: "el-Kâfî",
+      titleAr: "الكافي",
+      author: "Muhammed bin Yâkûb el-Küleynî",
+      year: 941,
+      category: "hadith",
+      cover: "teal",
+      mark: "ك",
+      pages: 6280,
+      featured: true,
+      quote: "Her insanın değeri, ustalaştığı şey kadardır.",
+      quoteAr: "قِيمَةُ كُلِّ امْرِئٍ مَا يُحْسِنُهُ",
+    },
+    {
+      id: "bihar-anwar",
+      title: "Bihârü'l-Envâr",
+      titleAr: "بحار الأنوار",
+      author: "Allâme Muhammed Bâkır el-Meclisî",
+      year: 1698,
+      category: "hadith",
+      cover: "plum",
+      mark: "ب",
+      pages: 22640,
+      featured: true,
+      quote: "Ehl-i Beyt'in tüm incilerini toplayan okyanus.",
+      quoteAr: "بَحْرٌ جَمَعَ كُلَّ دُرَرِ آلِ الْبَيْتِ",
+    },
+    {
+      id: "sahifa-sajjadiyya",
+      title: "es-Sahîfetü's-Seccâdiyye",
+      titleAr: "الصحيفة السجادية",
+      author: "İmam Zeynelâbidîn Ali bin Hüseyin",
+      year: 712,
+      category: "dua",
+      cover: "ochre",
+      mark: "ز",
+      pages: 480,
+      featured: true,
+      quote: "Peygamber Ehl-i Beyti'nin Mezmuru — Allah'a giden yola dair elli dört dua.",
+      quoteAr: "زَبُورُ آلِ مُحَمَّدٍ",
+    },
+    {
+      id: "mafatih-jinan",
+      title: "Mefâtîhu'l-Cinân",
+      titleAr: "مفاتيح الجنان",
+      author: "Şeyh Abbas el-Kummî",
+      year: 1925,
+      category: "dua",
+      cover: "ochre",
+      mark: "م",
+      pages: 1280,
+      quote: "Cennet bahçelerinin anahtarları — her güne dair ziyaret ve dua derlemesi.",
+    },
+    {
+      id: "man-la-yahduruhu",
+      title: "Men lâ Yahduruhu'l-Fakîh",
+      titleAr: "من لا يحضره الفقيه",
+      author: "Şeyh Muhammed es-Sadûk",
+      year: 991,
+      category: "fiqh",
+      cover: "cobalt",
+      mark: "ص",
+      pages: 2480,
+    },
+    {
+      id: "tawhid-saduq",
+      title: "Kitâbü't-Tevhîd",
+      titleAr: "كتاب التوحيد",
+      author: "Şeyh Muhammed es-Sadûk",
+      year: 991,
+      category: "aqida",
+      cover: "cobalt",
+      mark: "ت",
+      pages: 680,
+    },
+    {
+      id: "noor-thaqalayn",
+      title: "Nûru's-Sakaleyn",
+      titleAr: "نور الثقلين",
+      author: "Şeyh Abd Ali el-Huveyzî",
+      year: 1693,
+      category: "tafsir",
+      cover: "plum",
+      mark: "ن",
+      pages: 5320,
+    },
+    {
+      id: "tafsir-qummi",
+      title: "el-Kummî Tefsiri",
+      titleAr: "تفسير القمي",
+      author: "Ali bin İbrahim el-Kummî",
+      year: 919,
+      category: "tafsir",
+      cover: "moss",
+      mark: "ق",
+      pages: 1640,
+    },
+    {
+      id: "wasail-shia",
+      title: "Vesâilü'ş-Şîa",
+      titleAr: "وسائل الشيعة",
+      author: "Muhammed bin el-Hasan el-Hurr el-Âmilî",
+      year: 1693,
+      category: "fiqh",
+      cover: "forest",
+      mark: "و",
+      pages: 14200,
+    },
+    {
+      id: "tahdhib-ahkam",
+      title: "Tehzîbü'l-Ahkâm",
+      titleAr: "تهذيب الأحكام",
+      author: "Şeyh Muhammed et-Tûsî",
+      year: 1067,
+      category: "fiqh",
+      cover: "stone",
+      mark: "ط",
+      pages: 4830,
+    },
+    {
+      id: "istibsar",
+      title: "el-İstibsâr",
+      titleAr: "الاستبصار",
+      author: "Şeyh Muhammed et-Tûsî",
+      year: 1067,
+      category: "hadith",
+      cover: "stone",
+      mark: "ا",
+      pages: 2200,
+    },
+    {
+      id: "misbah-shariah",
+      title: "Misbâhu'ş-Şerîa",
+      titleAr: "مصباح الشريعة",
+      author: "İmam Cafer es-Sâdık'a nispet edilir",
+      year: 765,
+      category: "akhlaq",
+      cover: "burgundy",
+      mark: "ج",
+      pages: 320,
+    },
+    {
+      id: "ilam-wara",
+      title: "İ'lâmu'l-Verâ",
+      titleAr: "إعلام الورى بأعلام الهدى",
+      author: "el-Fadl bin el-Hasan et-Tabersî",
+      year: 1153,
+      category: "sira",
+      cover: "rust",
+      mark: "ه",
+      pages: 980,
+    },
+    {
+      id: "bidayat-hikma",
+      title: "Bidâyetü'l-Hikme",
+      titleAr: "بداية الحكمة",
+      author: "Allâme Muhammed Hüseyin Tabâtabâî",
+      year: 1970,
+      category: "falsafa",
+      cover: "indigo",
+      mark: "ب",
+      pages: 280,
+    },
+    {
+      id: "nihayat-hikma",
+      title: "Nihâyetü'l-Hikme",
+      titleAr: "نهاية الحكمة",
+      author: "Allâme Muhammed Hüseyin Tabâtabâî",
+      year: 1974,
+      category: "falsafa",
+      cover: "indigo",
+      mark: "ن",
+      pages: 480,
+    },
+    {
+      id: "ghaybat-numani",
+      title: "el-Gaybe",
+      titleAr: "الغيبة",
+      author: "Muhammed bin İbrahim en-Nu'mânî",
+      year: 953,
+      category: "aqida",
+      cover: "cobalt",
+      mark: "غ",
+      pages: 520,
+    },
+  ];
+
+  const quickPrompts = [
+    { id: "explain-ayah", label: "Bir ayeti açıkla", sub: "Tefsir ve nüzul sebebi", icon: "book" },
+    { id: "find-book", label: "Konuya göre kitap bul", sub: "Kütüphaneden seçki", icon: "search" },
+    { id: "hadith-day", label: "Günün hadisi", sub: "Açıklama ve sened ile", icon: "sun" },
+    { id: "for-beginner", label: "Yeni başlayan ne okumalı", sub: "Sıfırdan başlangıç rotası", icon: "seedling" },
+  ];
+
+  const responses = {
+    "explain-ayah": {
+      userText: "Fâtiha sûresinin ilk ayetini açıkla.",
+      aiBlocks: [
+        {
+          type: "text",
+          content:
+            "Bismillâhirrahmânirrahîm — «Rahmân ve Rahîm olan Allah'ın adıyla» — Kur'an'ı ve dokuzuncu hariç her sûreyi açar.",
+        },
+        { type: "arabic", content: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ" },
+        {
+          type: "text",
+          content:
+            "«ar-Rahmân» ve «ar-Rahîm» isimleri رحم (râ-hâ-mîm) kökünden gelir — «rahmet». Müfessirler bunları şöyle ayırır:\n\n• ar-Rahmân — bu dünyada tüm yaratılmışlara yönelik geniş rahmet.\n• ar-Rahîm — iki dünyada müminlere yönelik özel rahmet.\n\nAllâme Tabâtabâî «el-Mîzân»da şunu vurgular: besmele sûrenin tüm içeriğini taşır ve Fâtiha'da kulun Rabb'e hitabını açar. el-Kummî, İmam Bâkır'dan şöyle nakleder: «Besmele Kur'an'ın en büyük ayetidir».",
+        },
+        { type: "books", ids: ["al-mizan", "noor-thaqalayn", "tafsir-qummi"] },
+      ],
+    },
+    "find-book": {
+      userText: "Namaz ve ziyaretler hakkında ne okumalı?",
+      aiBlocks: [
+        {
+          type: "text",
+          content:
+            "Günlük namaz ve ziyaret pratiği için iki temel rehber var — fıkıh temeli ve her duruma uygun dua derlemesi.\n\nAbbâs Kummî'nin «Mefâtîhu'l-Cinân»ı — başucu kitabıdır: günün, haftanın, Ramazan ayının duaları, imamların ziyareti. Kerbela ve Meşhed yolcuları yanında taşır.\n\nŞeyh et-Tûsî'nin «Tehzîbü'l-Ahkâm»ı — namaz, oruç ve hac kurallarının derin incelenmesi için.",
+        },
+        { type: "books", ids: ["mafatih-jinan", "tahdhib-ahkam", "wasail-shia"] },
+      ],
+    },
+    "hadith-day": {
+      userText: "Günün hadisini göster.",
+      aiBlocks: [
+        { type: "tag", content: "el-Kâfî · c.1 · s.50" },
+        { type: "arabic", content: "قِيمَةُ كُلِّ امْرِئٍ مَا يُحْسِنُهُ" },
+        {
+          type: "text",
+          content:
+            "«Her insanın değeri, ustalaştığı şey kadardır.»\n\nEmîrü'l-Mü'minîn İmam Ali bin Ebî Tâlib'ten (a.s.) nakledilir. Hadis el-Küleynî'nin «el-Kâfî»sinde yer alır ve eş-Şerîf er-Radî tarafından «Nehcü'l-Belâğa»da kısa sözler arasında derlenmiştir.\n\nÇalışma ahlâkının kısa bir formülüdür: insanın değeri soyu veya serveti ile değil, ustalığı ile — iyi yaptığı ve derinleştiği işle ölçülür.",
+        },
+        { type: "books", ids: ["al-kafi", "nahj-balagha", "bihar-anwar"] },
+      ],
+    },
+    "for-beginner": {
+      userText: "Yeni başlayan ne okumalı?",
+      aiBlocks: [
+        {
+          type: "text",
+          content:
+            "Üç aşamalı bir rota öneriyorum — en erişilebilirden daha derine doğru.\n\n1. «es-Sahîfetü's-Seccâdiyye» ile başla — İmam Zeynelâbidîn'in dua mecmuası. Yumuşak okunur, Allah'a hitap edilen dili açar.\n2. Sonra «Nehcü'l-Belâğa»: İmam Ali'nin hutbeleri ve mektupları. Kısa, güçlü ve akılda kalıcı.\n3. Ancak ondan sonra — ahlâk risaleleri ve tefsire geçiş.",
+        },
+        { type: "books", ids: ["sahifa-sajjadiyya", "nahj-balagha", "misbah-shariah"] },
+        {
+          type: "text",
+          content:
+            "Kur'an'ı daha derin anlamak istediğinde — Tabâtabâî'nin «el-Mîzân»ından başla. Modern tefsirin zirvesidir.",
+        },
+        { type: "books", ids: ["al-mizan"] },
+      ],
+    },
+  };
+
+  return { categories, covers, books, quickPrompts, responses };
+})();
+
+</script>
+<script type="text/babel" data-presets="react">
+(function(){
+
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+
+})();
+</script>
+<script type="text/babel" data-presets="react">
+(function(){
+/* eslint-disable */
+// Chat panel — includes empty state, messages, citations, input
+// Also exports the mobile pearl + fullscreen wrapper
+
+const { useState, useEffect, useRef, useCallback } = React;
+const LIB = window.LIBRARY;
+
+// ===== Icons (inline SVG, single source) =====
+const Icon = ({ name, size = 16, stroke = 1.6 }) => {
+  const props = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: stroke,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+  const paths = {
+    search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>,
+    plus: <><path d="M12 5v14M5 12h14" /></>,
+    send: <><path d="M3 12 21 4l-8 18-2.5-7.5L3 12Z" /></>,
+    book: <><path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4Z" /><path d="M4 16a4 4 0 0 1 4-4h10" /></>,
+    sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></>,
+    seedling: <><path d="M12 22V12" /><path d="M12 12c0-3 2-6 6-6 0 4-2 7-6 7" /><path d="M12 14c0-3-2-5-5-5 0 3 2 5 5 5" /></>,
+    bookmark: <><path d="M6 3h12v18l-6-4-6 4V3Z" /></>,
+    mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></>,
+    paperclip: <><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 1 1-3-3l7.5-7.5" /></>,
+    sparkle: <><path d="M12 3 13.5 9 19 10.5 13.5 12 12 18 10.5 12 5 10.5 10.5 9 12 3Z" /></>,
+    x: <><path d="M18 6 6 18M6 6l12 12" /></>,
+    more: <><circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" /></>,
+    refresh: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></>,
+    globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+    chevronDown: <><path d="m6 9 6 6 6-6" /></>,
+    arrowUp: <><path d="M12 19V5M5 12l7-7 7 7" /></>,
+  };
+  return <svg {...props}>{paths[name]}</svg>;
+};
+
+window.Icon = Icon;
+
+// ===== Book mini-cover (used in chat citations and book grid) =====
+const BookCover = ({ book, large = false }) => {
+  const [c1, c2] = LIB.covers[book.cover] || ["#333", "#111"];
+  const isCream = book.cover === "cream";
+  const txt = isCream ? "#3A2E1E" : "rgba(255,255,255,0.92)";
+  const sub = isCream ? "rgba(58,46,30,0.7)" : "rgba(255,255,255,0.6)";
+
+  return (
+    <svg
+      viewBox="0 0 200 300"
+      preserveAspectRatio="xMidYMid slice"
+      style={{ width: "100%", height: "100%", display: "block" }}
+    >
+      <defs>
+        <linearGradient id={`g-${book.id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={c1} />
+          <stop offset="1" stopColor={c2} />
+        </linearGradient>
+        <pattern
+          id={`p-${book.id}`}
+          width="40"
+          height="40"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
+          <rect width="40" height="40" fill="transparent" />
+          <path
+            d="M0 20 L20 0 L40 20 L20 40 Z"
+            fill="none"
+            stroke={isCream ? "rgba(58,46,30,0.08)" : "rgba(255,255,255,0.05)"}
+            strokeWidth="1"
+          />
+        </pattern>
+      </defs>
+      <rect width="200" height="300" fill={`url(#g-${book.id})`} />
+      <rect width="200" height="300" fill={`url(#p-${book.id})`} />
+      {/* Spine highlight */}
+      <rect x="0" y="0" width="6" height="300" fill="rgba(0,0,0,0.18)" />
+      <rect x="6" y="0" width="1" height="300" fill="rgba(255,255,255,0.1)" />
+      {/* Top ornament */}
+      <g transform="translate(100, 50)" opacity="0.85">
+        <circle r="22" fill="none" stroke={txt} strokeWidth="0.6" />
+        <circle r="16" fill="none" stroke={txt} strokeWidth="0.4" />
+        <text
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill={txt}
+          fontFamily="Amiri, serif"
+          fontSize="20"
+          fontWeight="700"
+        >
+          {book.mark}
+        </text>
+      </g>
+      {/* Arabic title */}
+      <text
+        x="100"
+        y="160"
+        textAnchor="middle"
+        fill={txt}
+        fontFamily="Amiri, serif"
+        fontSize={large ? "16" : "20"}
+        fontWeight="700"
+        direction="rtl"
+      >
+        {book.titleAr}
+      </text>
+      {/* Latin title */}
+      <foreignObject x="16" y="190" width="168" height="60">
+        <div
+          xmlns="http://www.w3.org/1999/xhtml"
+          style={{
+            color: txt,
+            fontFamily: "Fraunces, serif",
+            fontSize: 14,
+            fontWeight: 500,
+            lineHeight: 1.15,
+            textAlign: "center",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {book.title}
+        </div>
+      </foreignObject>
+      {/* Author bottom */}
+      <text
+        x="100"
+        y="278"
+        textAnchor="middle"
+        fill={sub}
+        fontFamily="Geist, sans-serif"
+        fontSize="8"
+        letterSpacing="1.6"
+      >
+        {book.year < 1900 ? `${book.year} CE` : book.year}
+      </text>
+    </svg>
+  );
+};
+window.BookCover = BookCover;
+
+// ===== Citation card inside chat =====
+const CiteCard = ({ book, onOpen }) => {
+  const cat = LIB.categories.find((c) => c.id === book.category);
+  return (
+    <div className="cite-card" onClick={() => onOpen && onOpen(book)}>
+      <div className="cite-cover">
+        <BookCover book={book} />
+      </div>
+      <div className="cite-info">
+        <div className="cite-title">{book.title}</div>
+        <div className="cite-author">{book.author.split(" · ")[0]}</div>
+        <div className="cite-badge">
+          {cat ? cat.label : ""} · {book.year} CE
+        </div>
+      </div>
+      <button className="cite-open" type="button">
+        Aç
+      </button>
+    </div>
+  );
+};
+
+// ===== Message block renderer =====
+const MessageBlock = ({ block, onOpenBook }) => {
+  if (block.type === "text") {
+    return <div>{block.content}</div>;
+  }
+  if (block.type === "arabic") {
+    return <span className="arabic">{block.content}</span>;
+  }
+  if (block.type === "tag") {
+    return <div className="message-tag">{block.content}</div>;
+  }
+  if (block.type === "books") {
+    const books = block.ids
+      .map((id) => LIB.books.find((b) => b.id === id))
+      .filter(Boolean);
+    return (
+      <div className="cite-cards">
+        {books.map((b) => (
+          <CiteCard key={b.id} book={b} onOpen={onOpenBook} />
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+// ===== Quick prompt button =====
+const QuickPromptBtn = ({ prompt, onClick }) => (
+  <button className="quick-prompt" onClick={onClick}>
+    <div className="quick-prompt-icon">
+      <Icon name={prompt.icon} size={15} />
+    </div>
+    <div>
+      <div className="quick-prompt-label">{prompt.label}</div>
+      <div className="quick-prompt-sub">{prompt.sub}</div>
+    </div>
+  </button>
+);
+
+// ===== Greet text (changes by language) =====
+const greetings = {
+  ru: {
+    arabic: "السَّلَامُ عَلَيْكُمْ",
+    title: "Ben Hikme — kütüphane rehberin",
+    text: "Ayetler, hadisler, fıkıh ya da kitap önerileri hakkında sor. Kaynakları gösterir, doğrudan kataloğa yönlendiririm.",
+  },
+  tr: {
+    arabic: "السَّلَامُ عَلَيْكُمْ",
+    title: "Ben Hikme — kütüphane rehberin",
+    text: "Ayetler, hadisler, fıkıh ya da kitap önerileri hakkında sor. Kaynakları gösterir, kataloğa doğrudan yönlendiririm.",
+  },
+  ar: {
+    arabic: "السَّلَامُ عَلَيْكُمْ ورَحْمَةُ اللهِ",
+    title: "أنا حِكْمة — رفيقُك في المكتبة",
+    text: "اسأل عن الآيات والأحاديث والفقه أو اقتراحات الكتب. أُحيلُك إلى المصادر مباشرة.",
+  },
+};
+const placeholders = {
+  ru: "Bir şey sor — ayet, hadis, kitap…",
+  tr: "Soru sor — ayet, hadis, kitap…",
+  ar: "اسأل عن آية أو حديث أو كتاب…",
+};
+
+// ===== Chat panel =====
+const ChatPanel = ({ lang, onLangChange, onClose, isMobile }) => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const bodyRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const scrollToBottom = useCallback(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight + 1000;
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, thinking, scrollToBottom]);
+
+  const sendPrompt = (promptId, customText) => {
+    const resp = LIB.responses[promptId];
+    const userText = customText || (resp ? resp.userText : "");
+    const aiBlocks = resp
+      ? resp.aiBlocks
+      : [
+          {
+            type: "text",
+            content:
+              "Güzel bir gözlem. Kütüphanedeki kaynaklara bakalım — işte ilgili birkaç tanesi:",
+          },
+          { type: "books", ids: ["riyad-saliheen", "nahj-balagha"] },
+        ];
+
+    setMessages((m) => [...m, { role: "user", text: userText }]);
+    setThinking(true);
+    setTimeout(() => {
+      setThinking(false);
+      setMessages((m) => [...m, { role: "ai", blocks: aiBlocks }]);
+    }, 1100);
+  };
+
+  const handleSend = () => {
+    const text = input.trim();
+    if (!text) return;
+    setInput("");
+    // Pick best-matching pre-baked response by keywords
+    const lower = text.toLowerCase();
+    let key = null;
+    if (lower.includes("ayet") || lower.includes("fatih") || lower.includes("sure"))
+      key = "explain-ayah";
+    else if (lower.includes("tecvid") || lower.includes("bul") || lower.includes("kitap"))
+      key = "find-book";
+    else if (lower.includes("hadis")) key = "hadith-day";
+    else if (lower.includes("başla") || lower.includes("yeni") || lower.includes("nereden"))
+      key = "for-beginner";
+
+    if (key) {
+      sendPrompt(key, text);
+    } else {
+      // generic
+      setMessages((m) => [...m, { role: "user", text }]);
+      setThinking(true);
+      setTimeout(() => {
+        setThinking(false);
+        setMessages((m) => [
+          ...m,
+          {
+            role: "ai",
+            blocks: [
+              {
+                type: "text",
+                content:
+                  "İlginç bir soru. Bu konuda klasik eserler var — işte kütüphaneden birkaç başlangıç noktası. Geleneği (Sünni / Şii) belirtirsen seçimi daha da daraltabilirim.",
+              },
+              { type: "books", ids: ["riyad-saliheen", "nahj-balagha", "ihya-ulum"] },
+            ],
+          },
+        ]);
+      }, 1200);
+    }
+  };
+
+  const handleKey = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const onOpenBook = (book) => {
+    console.log("Open book:", book.id);
+    // would navigate to /book/:id
+  };
+
+  const newChat = () => setMessages([]);
+
+  const greet = greetings[lang] || greetings.tr;
+
+  return (
+    <div className="chat">
+      {/* Header */}
+      <div className="chat-header">
+        <div className="ai-avatar">
+          <Icon name="sparkle" size={20} stroke={1.4} />
+        </div>
+        <div>
+          <div className="ai-name">Hikme</div>
+          <div className="ai-status">Kütüphanenin yapay zekâ rehberi · çevrimiçi</div>
+        </div>
+        <div className="chat-actions">
+          <button
+            className="icon-btn"
+            title="Yeni sohbet"
+            onClick={newChat}
+            type="button"
+          >
+            <Icon name="plus" size={15} />
+          </button>
+          {isMobile ? (
+            <button
+              className="icon-btn"
+              title="Kapat"
+              onClick={onClose}
+              type="button"
+            >
+              <Icon name="x" size={15} />
+            </button>
+          ) : (
+            <button className="icon-btn" title="Daha fazla" type="button">
+              <Icon name="more" size={15} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="chat-body" ref={bodyRef}>
+        {messages.length === 0 && (
+          <>
+            <div className="chat-greet">
+              <div className="chat-greet-arabic">{greet.arabic}</div>
+              <div className="chat-greet-title">{greet.title}</div>
+              <div className="chat-greet-text">{greet.text}</div>
+            </div>
+            <div className="quick-prompts">
+              {LIB.quickPrompts.map((p) => (
+                <QuickPromptBtn
+                  key={p.id}
+                  prompt={p}
+                  onClick={() => sendPrompt(p.id)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {messages.map((msg, i) => {
+          if (msg.role === "user") {
+            return (
+              <div key={i} className="msg user">
+                <div className="msg-bubble">{msg.text}</div>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className="msg ai">
+              <div className="msg-bubble">
+                {msg.blocks.map((b, j) => (
+                  <MessageBlock key={j} block={b} onOpenBook={onOpenBook} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {thinking && (
+          <div className="msg ai">
+            <div className="typing">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="chat-input-wrap">
+        <div className="chat-input">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder={placeholders[lang]}
+            rows={1}
+          />
+          <div className="chat-input-tools">
+            <button className="chat-tool" title="Ekle" type="button">
+              <Icon name="paperclip" size={16} />
+            </button>
+            <button className="chat-tool" title="Ses" type="button">
+              <Icon name="mic" size={16} />
+            </button>
+            <button
+              className="send-btn"
+              onClick={handleSend}
+              disabled={!input.trim()}
+              type="button"
+            >
+              <Icon name="arrowUp" size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="chat-footer-note">
+          Hikme klasik kaynaklara dayanır — önemli konuları âlimlere danış.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+window.ChatPanel = ChatPanel;
+
+// ===== Mobile pearl =====
+const Pearl = ({ onClick }) => (
+  <button className="pearl" onClick={onClick} aria-label="AI sohbetini aç" type="button">
+    <span className="pearl-ping"></span>
+    <Icon name="sparkle" size={26} stroke={1.4} />
+  </button>
+);
+window.Pearl = Pearl;
+
+})();
+</script>
+<script type="text/babel" data-presets="react">
+(function(){
+/* eslint-disable */
+// Islamic Library — main app: header, browse, filters, root
+const { useState, useEffect, useMemo } = React;
+const LIB = window.LIBRARY;
+const { Icon, BookCover, ChatPanel, Pearl } = window;
+
+// ===== Header =====
+const Header = ({ lang, onLangChange }) => {
+  return (
+    <header className="header">
+      <div className="header-inner">
+        <div className="brand">
+          <div className="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* 8-pointed Rub el Hizb — two overlapping rounded squares */}
+              <g stroke="currentColor" strokeWidth="6.5" strokeLinejoin="round" fill="none">
+                <rect x="18" y="18" width="64" height="64" rx="10" />
+                <rect x="18" y="18" width="64" height="64" rx="10" transform="rotate(45 50 50)" />
+              </g>
+              {/* Inner document */}
+              <g stroke="currentColor" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" fill="none">
+                <rect x="36" y="30" width="28" height="40" rx="3" />
+                <line x1="41" y1="39" x2="59" y2="39" />
+                <line x1="41" y1="46" x2="59" y2="46" />
+                <line x1="41" y1="53" x2="59" y2="53" />
+                <line x1="41" y1="60" x2="54" y2="60" />
+              </g>
+            </svg>
+          </div>
+          <div className="brand-name">
+            ISLAMIC<em>LIBRARY</em>
+          </div>
+        </div>
+
+        <div className="search">
+          <Icon name="search" size={16} />
+          <input
+            type="text"
+            placeholder="Kitap, yazar, konu, ayet ara…"
+            aria-label="Ara"
+          />
+          <div className="search-kbd">
+            <kbd>⌘</kbd>
+            <kbd>K</kbd>
+          </div>
+        </div>
+
+        <div className="header-right">
+          <div className="lang-switch" role="tablist">
+            {["ru", "tr", "ar"].map((l) => (
+              <button
+                key={l}
+                data-lang={l}
+                className={lang === l ? "active" : ""}
+                onClick={() => onLangChange(l)}
+                type="button"
+              >
+                {l === "ar" ? "ع" : l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <button className="icon-btn" title="Yer imleri" type="button">
+            <Icon name="bookmark" size={16} />
+          </button>
+          <div className="avatar" title="Hesap">
+            A
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+// ===== Browse hero =====
+const heroByAesthetic = {
+  editorial: {
+    eyebrow: "Islamic Library · 12 847 cilt",
+    title: ["İslam düşüncesinin klasikleri —", "tek bir satırdan."],
+    text:
+      "Tefsir, hadis, fıkıh, felsefe. Sünni ve Şii kaynaklar tek bir katalogda. Hikme aradığını bulmana ve bağlamı açıklamana yardım eder.",
+  },
+  bookish: {
+    eyebrow: "Islamic Library · فهرس",
+    title: ["On dört yüzyıllık düşüncenin", "kitaplığı."],
+    text:
+      "el-Buhârî ve el-Küleynî'den modern tefsirlere. Aslından oku, çeviriden oku ya da Hikme'den açıklamasını iste.",
+  },
+  dark: {
+    eyebrow: "Karanlık koleksiyon · seçkiler",
+    title: ["Bin yıllık ilim —", "tek bir kandilin ışığında."],
+    text:
+      "Seçilmiş kütüphane: klasik metinler, tefsirler, biyografiler ve tasavvuf eserleri. Yapay zekâ asistanı ve hassas filtrelerle arama.",
+  },
+};
+
+const HeroPattern = () => (
+  <svg className="hero-pattern" viewBox="0 0 200 200" fill="none">
+    <g stroke="var(--accent)" strokeWidth="0.8" opacity="0.7">
+      {[...Array(8)].map((_, i) => {
+        const a = (i * Math.PI) / 4;
+        return (
+          <line
+            key={i}
+            x1={100}
+            y1={100}
+            x2={100 + Math.cos(a) * 90}
+            y2={100 + Math.sin(a) * 90}
+          />
+        );
+      })}
+      <circle cx="100" cy="100" r="30" />
+      <circle cx="100" cy="100" r="55" />
+      <circle cx="100" cy="100" r="85" />
+      {/* 8-pointed star */}
+      <g>
+        <rect x="60" y="60" width="80" height="80" transform="rotate(0 100 100)" />
+        <rect x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" />
+      </g>
+    </g>
+  </svg>
+);
+
+const Hero = ({ aesthetic }) => {
+  const h = heroByAesthetic[aesthetic] || heroByAesthetic.editorial;
+  return (
+    <div className="browse-hero">
+      <HeroPattern />
+      <div className="browse-hero-eyebrow">{h.eyebrow}</div>
+      <h1>
+        {h.title[0]} <br />
+        <em>{h.title[1]}</em>
+      </h1>
+      <p>{h.text}</p>
+      <div className="browse-hero-stats">
+        <div>
+          <span className="stat-num">12 847</span>
+          <div className="stat-label">Cilt</div>
+        </div>
+        <div>
+          <span className="stat-num">3 ٫ 1 M</span>
+          <div className="stat-label">Dizindeki ayet ve hadis</div>
+        </div>
+        <div>
+          <span className="stat-num">9</span>
+          <div className="stat-label">Kategori</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ===== Featured slider =====
+const FeaturedSlider = ({ onAsk }) => {
+  const featured = LIB.books.filter((b) => b.featured);
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % featured.length), 7000);
+    return () => clearInterval(t);
+  }, [paused, featured.length]);
+
+  const go = (n) => setIdx((n + featured.length) % featured.length);
+  const current = featured[idx];
+  const [c1, c2] = LIB.covers[current.cover];
+
+  return (
+    <div
+      className="slider"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {featured.map((b, i) => {
+        const [bc1, bc2] = LIB.covers[b.cover];
+        return (
+          <div
+            key={b.id}
+            className={`slide ${i === idx ? "active" : ""}`}
+            aria-hidden={i !== idx}
+          >
+            <div
+              className="slide-bg"
+              style={{
+                background: `linear-gradient(135deg, ${bc1}, ${bc2})`,
+              }}
+            />
+            <svg
+              className="slide-pattern"
+              viewBox="0 0 400 400"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <defs>
+                <pattern
+                  id={`sp-${b.id}`}
+                  width="60"
+                  height="60"
+                  patternUnits="userSpaceOnUse"
+                  patternTransform="rotate(45)"
+                >
+                  <path
+                    d="M0 30 L30 0 L60 30 L30 60 Z"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.06)"
+                    strokeWidth="1"
+                  />
+                </pattern>
+              </defs>
+              <rect width="400" height="400" fill={`url(#sp-${b.id})`} />
+            </svg>
+            <div className="slide-arabic-bg" aria-hidden="true">
+              {b.mark}
+            </div>
+
+            <div className="slide-content">
+              <div className="slide-eyebrow">Seçkiler · Klasikler</div>
+              <h2 className="slide-title">{b.title}</h2>
+              <div className="slide-arabic">{b.titleAr}</div>
+              <div className="slide-author">{b.author.split(" · ")[0]}</div>
+              {b.quote && (
+                <div className="slide-quote">
+                  {b.quoteAr && (
+                    <span className="slide-quote-ar">{b.quoteAr}</span>
+                  )}
+                  <span className="slide-quote-ru">«{b.quote}»</span>
+                </div>
+              )}
+              <div className="slide-ctas">
+                <button className="slide-cta primary" type="button">
+                  <Icon name="book" size={15} />
+                  Oku
+                </button>
+                <button
+                  className="slide-cta ghost"
+                  type="button"
+                  onClick={() => onAsk && onAsk(b)}
+                >
+                  <Icon name="sparkle" size={15} />
+                  Kitabı Hikme'ye sor
+                </button>
+              </div>
+            </div>
+
+            <div className="slide-cover">
+              <BookCover book={b} large />
+            </div>
+          </div>
+        );
+      })}
+
+      <button
+        className="slider-arrow prev"
+        onClick={() => go(idx - 1)}
+        aria-label="Önceki"
+        type="button"
+      >
+        <Icon name="chevronDown" size={18} />
+      </button>
+      <button
+        className="slider-arrow next"
+        onClick={() => go(idx + 1)}
+        aria-label="Sonraki"
+        type="button"
+      >
+        <Icon name="chevronDown" size={18} />
+      </button>
+
+      <div className="slider-dots">
+        {featured.map((b, i) => (
+          <button
+            key={b.id}
+            className={`slider-dot ${i === idx ? "active" : ""}`}
+            onClick={() => setIdx(i)}
+            aria-label={`Slide ${i + 1}`}
+            type="button"
+          />
+        ))}
+      </div>
+
+      <div className="slider-count">
+        {String(idx + 1).padStart(2, "0")} / {String(featured.length).padStart(2, "0")}
+      </div>
+    </div>
+  );
+};
+
+// ===== Tabs (categories) =====
+const Tabs = ({ value, onChange }) => {
+  // Show first 5 categories as tabs
+  const visible = LIB.categories.slice(0, 5);
+  return (
+    <div className="tabs">
+      {visible.map((c) => (
+        <button
+          key={c.id}
+          className={`tab ${value === c.id ? "active" : ""}`}
+          onClick={() => onChange(c.id)}
+          type="button"
+        >
+          {c.label}
+          <span className="tab-count">{c.count.toLocaleString("tr")}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ===== Book card =====
+const BookCard = ({ book }) => {
+  const [saved, setSaved] = useState(false);
+  const cat = LIB.categories.find((c) => c.id === book.category);
+  return (
+    <div className="book">
+      <div className="book-cover">
+        <button
+          className={`book-bookmark ${saved ? "saved" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSaved((s) => !s);
+          }}
+          type="button"
+          aria-label="Yer imi"
+        >
+          <Icon name="bookmark" size={14} stroke={2} />
+        </button>
+        <BookCover book={book} />
+      </div>
+      <div className="book-meta">
+        <h3 className="book-title">{book.title}</h3>
+        <div className="book-author">{book.author.split(" · ")[0]}</div>
+        <div className="book-tag">
+          {cat ? cat.label : ""}
+          <span className="dot"></span>
+          {book.pages.toLocaleString("tr")} s.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ===== Filters panel =====
+const Filters = ({ category, onCategory }) => {
+  return (
+    <aside className="filters">
+      <div className="filter-head">
+        <h3>Filtreler</h3>
+        <button className="filter-clear" type="button">
+          Sıfırla
+        </button>
+      </div>
+
+      <div className="filter-group">
+        <div className="filter-label">Sıralama</div>
+        <div className="filter-pill-row">
+          <span className="filter-pill active">İlgi düzeyine göre</span>
+          <span className="filter-pill">Yeniler</span>
+          <span className="filter-pill">A — Z</span>
+          <span className="filter-pill">Popüler</span>
+        </div>
+      </div>
+
+      <div className="filter-group">
+        <div className="filter-label">Kategori</div>
+        {LIB.categories.map((c) => (
+          <div
+            key={c.id}
+            className={`filter-cat ${category === c.id ? "active" : ""}`}
+            onClick={() => onCategory(c.id)}
+          >
+            <span>{c.label}</span>
+            <span className="filter-cat-count">{c.count.toLocaleString("tr")}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="filter-group">
+        <div className="filter-label">Yazıldığı yüzyıl</div>
+        <input
+          type="range"
+          min="7"
+          max="21"
+          defaultValue="15"
+          className="filter-slider"
+        />
+        <div className="filter-range-row">
+          <span>VII. yy</span>
+          <span>XXI. yy</span>
+        </div>
+      </div>
+
+      <div className="filter-group">
+        <div className="filter-label">Orijinal dil</div>
+        <div className="filter-pill-row">
+          <span className="filter-pill active">Arapça</span>
+          <span className="filter-pill">Farsça</span>
+          <span className="filter-pill">Türkçe</span>
+          <span className="filter-pill">Urduca</span>
+        </div>
+      </div>
+
+      <div className="filter-group">
+        <div className="filter-label">Erişilebilirlik</div>
+        <div className="filter-pill-row">
+          <span className="filter-pill">PDF</span>
+          <span className="filter-pill">Sesli</span>
+          <span className="filter-pill active">TR Çeviri</span>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+// ===== Tweaks panel =====
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "aesthetic": "editorial",
+  "lang": "tr"
+}/*EDITMODE-END*/;
+
+const App = () => {
+  const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+  const [category, setCategory] = useState("all");
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const aesthetic = tweaks.aesthetic;
+  const lang = tweaks.lang;
+
+  // Apply aesthetic to body
+  useEffect(() => {
+    document.body.setAttribute("data-aesthetic", aesthetic);
+  }, [aesthetic]);
+
+  const filtered = useMemo(() => {
+    return LIB.books.filter(
+      (b) => category === "all" || b.category === category
+    );
+  }, [category]);
+
+  const browseSubtitle = `koleksiyondan ${filtered.length} kitap`;
+
+  return (
+    <>
+      <Header lang={lang} onLangChange={(l) => setTweak("lang", l)} />
+
+      <div className="layout">
+        {/* Left — Chat */}
+        <div className="col-chat" data-screen-label="ai-chat">
+          <ChatPanel
+            lang={lang}
+            onLangChange={(l) => setTweak("lang", l)}
+            isMobile={false}
+          />
+        </div>
+
+        {/* Center — Browse */}
+        <main className="browse" data-screen-label="browse">
+          <FeaturedSlider />
+
+          <div>
+            <div className="section-head">
+              <div>
+                <h2 className="section-title">Katalog</h2>
+                <div className="section-sub">{browseSubtitle}</div>
+              </div>
+              <Tabs value={category} onChange={setCategory} />
+            </div>
+            <div className="books-grid">
+              {filtered.map((b) => (
+                <BookCard key={b.id} book={b} />
+              ))}
+            </div>
+          </div>
+        </main>
+
+        {/* Right — Filters */}
+        <div className="col-filters" data-screen-label="filters">
+          <Filters
+            category={category}
+            onCategory={setCategory}
+          />
+        </div>
+      </div>
+
+      {/* Mobile pearl */}
+      <Pearl onClick={() => setMobileOpen(true)} />
+      {mobileOpen && (
+        <div
+          className="mobile-chat"
+          style={{ display: "flex" }}
+          data-screen-label="mobile-chat"
+        >
+          <ChatPanel
+            lang={lang}
+            onLangChange={(l) => setTweak("lang", l)}
+            isMobile={true}
+            onClose={() => setMobileOpen(false)}
+          />
+        </div>
+      )}
+
+      {/* Tweaks */}
+      <window.TweaksPanel title="Tweaks">
+        <window.TweakSection label="Estetik" />
+        <window.TweakRadio
+          label="Tema"
+          value={tweaks.aesthetic}
+          onChange={(v) => setTweak("aesthetic", v)}
+          options={[
+            { value: "editorial", label: "Editorial" },
+            { value: "bookish", label: "Bookish" },
+            { value: "dark", label: "Dark" },
+          ]}
+        />
+        <window.TweakSection label="Arayüz dili" />
+        <window.TweakRadio
+          label="Dil"
+          value={tweaks.lang}
+          onChange={(v) => setTweak("lang", v)}
+          options={[
+            { value: "ru", label: "RU" },
+            { value: "tr", label: "TR" },
+            { value: "ar", label: "AR" },
+          ]}
+        />
+      </window.TweaksPanel>
+    </>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+
+})();
+</script>
+</body>
+</html>

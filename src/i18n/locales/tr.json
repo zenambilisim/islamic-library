@@ -18,7 +18,9 @@
     "noResults": "Sonuç bulunamadı",
     "showMore": "Daha Fazla",
     "close": "Kapat",
-    "logoAlt": "Islamic Library Logo"
+    "retry": "Tekrar dene",
+    "logoAlt": "Islamic Library Logo",
+    "siteTagline": "İslami Dijital Kütüphane"
   },
   "errors": {
     "downloadFailed": "İndirme başarısız oldu. Lütfen tekrar deneyin."
@@ -82,6 +84,9 @@
   "authors": {
     "pageTitle": "Yazarlar",
     "pageDescription": "Eserlerin değerli yazarlarını keşfedin",
+    "heroEyebrow": "Katalog · yazarlar",
+    "heroTitleLine1": "İslami eserlerin",
+    "heroTitleEm": "yazarlarını keşfedin.",
     "alphabetSort": "Alfabetik Sıralama",
     "browseByLetter": "Harflere Göre Gezin",
     "all": "Tümü",
@@ -108,6 +113,9 @@
   "categories": {
     "pageTitle": "Kategoriler",
     "pageDescription": "Kitapları kategorilerine göre keşfedin",
+    "heroEyebrow": "Katalog · konular",
+    "heroTitleLine1": "İslami ilimleri",
+    "heroTitleEm": "kategorilere göre keşfedin.",
     "noCategories": "Henüz kategori bulunmuyor",
     "browseByCategory": "Kategoriye göre gözat",
     "booksInCategory": "kitap",
@@ -127,19 +135,80 @@
     "totalCategories": "Kategori",
     "totalBooks": "Toplam Kitap"
   },
+  "hikme": {
+    "status": "Kütüphanenin yapay zekâ rehberi · çevrimiçi",
+    "newChat": "Yeni sohbet",
+    "more": "Daha fazla",
+    "open": "Aç",
+    "openChat": "AI sohbetini aç",
+    "placeholder": "Soru sor — ayet, hadis, kitap…",
+    "footerNote": "Hikme klasik kaynaklara dayanır — önemli konuları âlimlere danış.",
+    "allCategories": "Tümü",
+    "greet": {
+      "arabic": "السَّلَامُ عَلَيْكُمْ",
+      "title": "Ben Hikme — kütüphane rehberin",
+      "text": "Ayetler, hadisler, fıkıh ya da kitap önerileri hakkında sor. Kaynakları gösterir, kataloğa doğrudan yönlendiririm."
+    },
+    "prompts": {
+      "explain-ayah": {
+        "label": "Bir ayeti açıkla",
+        "sub": "Tefsir ve nüzul sebebi",
+        "userText": "Fâtiha sûresinin ilk ayetini açıkla."
+      },
+      "find-book": {
+        "label": "Konuya göre kitap bul",
+        "sub": "Kütüphaneden seçki",
+        "userText": "Namaz ve ziyaretler hakkında ne okumalı?"
+      },
+      "hadith-day": {
+        "label": "Günün hadisi",
+        "sub": "Açıklama ve sened ile",
+        "userText": "Günün hadisini göster."
+      },
+      "for-beginner": {
+        "label": "Yeni başlayan ne okumalı",
+        "sub": "Sıfırdan başlangıç rotası",
+        "userText": "Yeni başlayan ne okumalı?"
+      }
+    },
+    "responses": {
+      "explainAyah1": "Bismillâhirrahmânirrahîm — «Rahmân ve Rahîm olan Allah'ın adıyla» — Kur'an'ı ve dokuzuncu hariç her sûreyi açar.",
+      "explainAyah2": "«ar-Rahmân» ve «ar-Rahîm» isimleri rahmet kökünden gelir. Müfessirler bunları geniş ve özel rahmet olarak ayırır; besmele sûrenin özünü taşır.",
+      "findBook": "Bu konuda kütüphanemizde birkaç temel eser var — günlük ibadet, dua ve fıkıh için başlangıç noktaları:",
+      "hadithTag": "Hadis · günlük seçki",
+      "hadithText": "«Her insanın değeri, ustalaştığı şey kadardır.» — İmam Ali'den (a.s.) nakledilir. Çalışma ahlâkının kısa bir formülüdür.",
+      "forBeginner1": "Üç aşamalı bir rota öneriyorum — en erişilebilirden daha derine:\n\n1. Dua ve zikir mecmualarıyla başla.\n2. Hutbe ve öğüt derlemeleriyle devam et.\n3. Sonra tefsir ve fıkha geç.",
+      "forBeginner2": "Kur'an'ı daha derin anlamak istediğinde kütüphanedeki tefsir eserlerine göz at.",
+      "generic": "İlginç bir soru. Bu konuda kütüphanemizde ilgili eserler var — işte birkaç başlangıç noktası:"
+    }
+  },
   "hero": {
     "title": "Geniş Dijital İslami Kütüphane",
-    "subtitle": "Herhangi bir cihazda çevrimiçi veya çevrimdışı okunabilen kitaplar mevcut",
+    "eyebrow": "Islamic Library · dijital koleksiyon",
+    "titleLine1": "İslam düşüncesinin klasikleri —",
+    "titleEm": "tek bir katalogda.",
+    "subtitle": "Tefsir, hadis, fıkıh ve felsefe. Herhangi bir cihazda çevrimiçi veya çevrimdışı okuyun.",
     "booksCount": "Kitap",
     "languagesCount": "Dil",
+    "categoriesCount": "Kategori",
     "knowledgeCount": "Bilgi",
-    "exploreButton": "Kitapları Keşfet ↓",
+    "exploreButton": "Kataloğu keşfet",
+    "catalogTitle": "Katalog",
+    "catalogSubtitle": "Koleksiyondan {{count}} kitap",
+    "featuredEyebrow": "Seçkiler · öne çıkanlar",
+    "featuredDetails": "Detayları gör",
+    "sliderPrev": "Önceki",
+    "sliderNext": "Sonraki",
     "bannerAlt": "İslami Kütüphane Banner",
     "mockupAlt": "İslami Kitaplar"
   },
   "contact": {
     "pageTitle": "İletişim",
     "pageDescription": "Sorularınız, önerileriniz veya katkılarınız için bizimle iletişime geçin. Size yardımcı olmaktan memnuniyet duyarız.",
+    "heroEyebrow": "Islamic Library · iletişim",
+    "heroTitleLine1": "Bizimle",
+    "heroTitleEm": "iletişime geçin.",
+    "browseForm": "Mesaj gönder",
     "formTitle": "Bize Mesaj Gönderin",
     "nameLabel": "Adınız *",
     "namePlaceholder": "Adınızı girin",
@@ -191,6 +260,12 @@
   "about": {
     "pageTitle": "Hakkımızda",
     "pageDescription": "İslamic Library, dini kitapları dijital ortamda erişilebilir kılmak amacıyla oluşturulmuş ücretsiz bir elektronik kütüphane platformudur.",
+    "heroEyebrow": "Islamic Library",
+    "heroTitleLine1": "Dijital İslami",
+    "heroTitleEm": "kütüphane platformu.",
+    "browseMission": "Misyonumuzu keşfet",
+    "featuresTitle": "Neden Islamic Library?",
+    "featuresSubtitle": "Platformumuzun sunduğu temel değerler",
     "missionTitle": "Misyonumuz",
     "missionText1": "İslami ilimler alanındaki değerli eserleri dijital ortamda toplumun hizmetine sunmak, İslam kültürünün ve biliminin yaygınlaşmasına katkıda bulunmak temel misyonumuzdur.",
     "missionText2": "Kuran-ı Kerim, hadis, tefsir, tasavvuf ve diğer İslami konularda kaliteli kaynakları ücretsiz olarak erişilebilir kılıyoruz.",
@@ -426,6 +501,10 @@
   "usefulInfo": {
     "pageTitle": "Faydalı Bilgiler",
     "pageDescription": "Islamic Library platformunu daha verimli kullanmanız için hazırladığımız rehberler, ipuçları ve sık sorulan soruların cevapları.",
+    "heroEyebrow": "Kütüphane · yardım",
+    "heroTitleLine1": "Platformu",
+    "heroTitleEm": "daha verimli kullanın.",
+    "browseGuides": "Rehberlere göz at",
     "usageGuides": "Kullanım Rehberleri",
     "fileFormatsGuide": "Dosya Formatları Rehberi",
     "faq": "Sık Sorulan Sorular",

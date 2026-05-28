@@ -15,7 +15,7 @@ const ChatPearl = ({ onClick }: ChatPearlProps) => {
       type="button"
       onClick={onClick}
       aria-label={t('hikme.openChat')}
-      className="pearl fixed bottom-6 right-6 z-[80] grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-ink text-cream shadow-[0_12px_40px_rgba(0,0,0,0.25)] transition-transform hover:scale-105 xl:hidden"
+      className="pearl fixed bottom-6 right-6 z-[80] hidden h-16 w-16 place-items-center overflow-hidden rounded-full bg-ink text-cream shadow-[0_12px_40px_rgba(0,0,0,0.25)] transition-transform hover:scale-105 max-[1179px]:grid"
     >
       <span
         className="pointer-events-none absolute inset-[-4px] animate-ping rounded-full border-2 border-accent opacity-60"

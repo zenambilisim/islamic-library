@@ -8,8 +8,6 @@ import FilterSidebar from '@/components/books/FilterSidebar';
 import AuthorCard from '@/components/authors/AuthorCard';
 import AuthorsGridSkeleton from '@/components/authors/AuthorsGridSkeleton';
 import { AuthorDetailSection } from '@/components/authors/AuthorDetailSection';
-import HikmeChatPanel from '@/components/chat/HikmeChatPanel';
-import ChatPearl from '@/components/chat/ChatPearl';
 import HomeHero from '@/components/home/HomeHero';
 import FeaturedBooksSlider from '@/components/home/FeaturedBooksSlider';
 import HomeFiltersPanel from '@/components/home/HomeFiltersPanel';
@@ -34,7 +32,6 @@ const HomePage = () => {
   const [filters, setFilters] = useState<SearchFilters>({});
   const [categorySlug, setCategorySlug] = useState<string | undefined>();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
   const isSearchMode = searchTerm.trim().length > 0;
 
@@ -177,12 +174,6 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-cream">
       <div className="home-layout">
-        {/* Sol — Hikme sohbet */}
-        <div className="col-chat">
-          <HikmeChatPanel books={supabaseBooks} />
-        </div>
-
-        {/* Orta — Katalog */}
         <div className="browse-column">
           {!searchTerm && (
             <>
@@ -337,18 +328,6 @@ const HomePage = () => {
         />
       </div>
 
-      {/* Mobil Hikme */}
-      <ChatPearl onClick={() => setMobileChatOpen(true)} />
-      {mobileChatOpen && (
-        <div className="mobile-chat-overlay fixed inset-0 z-[100] flex flex-col bg-cream p-3 pt-[calc(var(--header-h)+8px)] xl:hidden">
-          <HikmeChatPanel
-            books={supabaseBooks}
-            isMobile
-            onClose={() => setMobileChatOpen(false)}
-            className="h-full"
-          />
-        </div>
-      )}
     </div>
   );
 };

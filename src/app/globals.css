@@ -119,45 +119,67 @@
     opacity: 0;
   }
 
-  /* Ana sayfa — chat | katalog | filtre */
-  .home-layout {
+  /* Tüm public sayfalar — sol chat sütunu + içerik */
+  .site-chat-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--gap, 20px);
+    width: 100%;
     max-width: 1680px;
     margin: 0 auto;
-    padding: 20px 16px 80px;
     position: relative;
     z-index: 1;
   }
 
   @media (min-width: 1180px) {
-    .home-layout {
+    .site-chat-layout {
       grid-template-columns: 360px minmax(0, 1fr);
       padding-left: 24px;
       padding-right: 24px;
     }
   }
 
-  @media (min-width: 1280px) {
-    .home-layout {
-      grid-template-columns: 400px minmax(0, 1fr) 260px;
-    }
-  }
-
-  .col-chat,
-  .col-filters {
+  .site-chat-column {
     display: none;
   }
 
   @media (min-width: 1180px) {
-    .col-chat {
+    .site-chat-column {
       display: block;
       position: sticky;
       top: calc(var(--header-h) + 20px);
+      align-self: start;
       height: calc(100vh - var(--header-h) - 40px);
       min-height: 480px;
+      padding-top: 20px;
+      padding-bottom: 20px;
     }
+  }
+
+  .site-chat-main {
+    min-width: 0;
+  }
+
+  /* Ana sayfa — katalog | filtre (chat site-chat-layout içinde) */
+  .home-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gap, 20px);
+    padding: 20px 16px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (min-width: 1280px) {
+    .home-layout {
+      grid-template-columns: minmax(0, 1fr) 260px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .col-filters {
+    display: none;
   }
 
   @media (min-width: 1280px) {

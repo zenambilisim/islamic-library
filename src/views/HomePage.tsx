@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import BookCard from '@/components/books/BookCard';
 import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import FilterSidebar from '@/components/books/FilterSidebar';
+import AuthorCard from '@/components/authors/AuthorCard';
+import AuthorsGridSkeleton from '@/components/authors/AuthorsGridSkeleton';
+import { AuthorDetailSection } from '@/components/authors/AuthorDetailSection';
 import HikmeChatPanel from '@/components/chat/HikmeChatPanel';
 import ChatPearl from '@/components/chat/ChatPearl';
 import HomeHero from '@/components/home/HomeHero';
@@ -12,12 +15,17 @@ import FeaturedBooksSlider from '@/components/home/FeaturedBooksSlider';
 import HomeFiltersPanel from '@/components/home/HomeFiltersPanel';
 import CategoryTabs from '@/components/home/CategoryTabs';
 import { useSearch } from '@/contexts/SearchContext';
-import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
+import { useSupabaseBooks, resolveAppLanguage } from '@/hooks/useSupabaseBooks';
+import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
-import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
-import type { SearchFilters } from '@/types';
-import { resolveSearchLocale, textIncludesSearch, normalizeForSearch } from '@/lib/search-utils';
+import type { Author, SearchFilters } from '@/types';
+import {
+  authorMatchesSearch,
+  bookMatchesSearch,
+  normalizeForSearch,
+  resolveSearchLocale,
+} from '@/lib/search-utils';
 
 const HomePage = () => {
   const { t, i18n } = useTranslation();
@@ -27,6 +35,7 @@ const HomePage = () => {
   const [categorySlug, setCategorySlug] = useState<string | undefined>();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
   const isSearchMode = searchTerm.trim().length > 0;
 
   const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } =
@@ -54,6 +63,10 @@ const HomePage = () => {
           : 'en-US';
 
   const { categories } = useSupabaseCategories(appLanguage);
+  const {
+    authors: supabaseAuthors,
+    loading: authorsLoading,
+  } = useSupabaseAuthors(appLanguage, { enabled: isSearchMode });
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +107,12 @@ const HomePage = () => {
   }, [setSearchMode, setPlaceholder, t]);
 
   useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSelectedAuthorId(null);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
     setFilters((prev) => ({
       ...prev,
       category: categorySlug,
@@ -112,7 +131,7 @@ const HomePage = () => {
     const searchLocale = resolveSearchLocale(activeLanguage);
 
     if (searchTerm.trim()) {
-      books = books.filter((book) => textIncludesSearch(book.title, searchTerm, searchLocale));
+      books = books.filter((book) => bookMatchesSearch(book, searchTerm, searchLocale));
     }
 
     if (categorySlug) {
@@ -125,10 +144,34 @@ const HomePage = () => {
     return books;
   }, [supabaseBooks, searchTerm, categorySlug, activeLanguage]);
 
+  const filteredAuthors = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const searchLocale = resolveSearchLocale(activeLanguage);
+    return supabaseAuthors.filter((author) =>
+      authorMatchesSearch(author, searchTerm, searchLocale),
+    );
+  }, [supabaseAuthors, searchTerm, activeLanguage]);
+
+  const selectedAuthor = useMemo(
+    () => supabaseAuthors.find((a) => a.id === selectedAuthorId) ?? null,
+    [supabaseAuthors, selectedAuthorId],
+  );
+
   const awaitingFirstBooks = loading && supabaseBooks.length === 0;
+  const searchLoading = isSearchMode && (loading || authorsLoading);
+  const hasSearchResults = filteredBooks.length > 0 || filteredAuthors.length > 0;
 
   if (!isMounted) {
     return <div className="min-h-screen bg-cream" />;
+  }
+
+  if (selectedAuthor && isSearchMode) {
+    return (
+      <AuthorDetailSection
+        author={selectedAuthor}
+        onBack={() => setSelectedAuthorId(null)}
+      />
+    );
   }
 
   return (
@@ -159,7 +202,7 @@ const HomePage = () => {
                 <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
                   {searchTerm
                     ? t('search.resultsFor', {
-                        count: filteredBooks.length,
+                        count: filteredBooks.length + filteredAuthors.length,
                         word: searchTerm,
                       })
                     : t('hero.catalogTitle', 'Katalog')}
@@ -201,6 +244,49 @@ const HomePage = () => {
               </div>
             )}
 
+            {searchTerm && (
+              <>
+                {authorsLoading ? (
+                  <div className="mb-8">
+                    <h3 className="mb-4 font-display text-lg font-medium tracking-tight text-ink">
+                      {t('search.matchingAuthors')}
+                    </h3>
+                    <AuthorsGridSkeleton count={3} />
+                  </div>
+                ) : filteredAuthors.length > 0 ? (
+                  <section className="mb-8">
+                    <h3 className="mb-4 font-display text-lg font-medium tracking-tight text-ink">
+                      {t('search.matchingAuthors')}
+                      <span className="ml-2 text-[13px] font-normal text-ink-muted tabular-nums">
+                        ({filteredAuthors.length})
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+                      {filteredAuthors.map((author: Author, index) => (
+                        <AuthorCard
+                          key={author.id}
+                          author={author}
+                          index={index}
+                          onClick={() => setSelectedAuthorId(author.id)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+              </>
+            )}
+
+            {searchTerm && filteredAuthors.length > 0 && (
+              <h3 className="mb-4 font-display text-lg font-medium tracking-tight text-ink">
+                {t('search.matchingBooks')}
+                {!loading && (
+                  <span className="ml-2 text-[13px] font-normal text-ink-muted tabular-nums">
+                    ({filteredBooks.length})
+                  </span>
+                )}
+              </h3>
+            )}
+
             {filteredBooks.length > 0 ? (
               <div className="books-grid grid grid-cols-2 gap-[18px] sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
                 {filteredBooks.map((book, index) => (
@@ -213,14 +299,14 @@ const HomePage = () => {
                   </div>
                 ))}
               </div>
-            ) : awaitingFirstBooks ? (
+            ) : awaitingFirstBooks || searchLoading ? (
               <BookGridSkeleton count={10} />
-            ) : (searchTerm || categorySlug) && (
+            ) : (searchTerm || categorySlug) && !hasSearchResults ? (
               <div className="py-16 text-center">
                 <p className="font-display text-xl font-medium text-ink">{t('search.noResults')}</p>
                 <p className="mt-2 text-ink-muted">{t('search.tryDifferentKeywords')}</p>
               </div>
-            )}
+            ) : null}
 
             {hasMore && <div ref={booksLoadMoreRef} className="h-10 w-full shrink-0" aria-hidden />}
             {loadingMore && (

@@ -28,3 +28,28 @@ export function textIncludesSearch(
   const loc = locale ?? 'tr-TR';
   return normalizeForSearch(haystack ?? '', loc).includes(normalizeForSearch(q, loc));
 }
+
+export function bookMatchesSearch(
+  book: { title: string; author?: string; authors?: string[] },
+  needle: string,
+  locale?: string,
+): boolean {
+  const q = needle.trim();
+  if (!q) return true;
+  if (textIncludesSearch(book.title, q, locale)) return true;
+  if (textIncludesSearch(book.author, q, locale)) return true;
+  if (book.authors?.some((name) => textIncludesSearch(name, q, locale))) return true;
+  return false;
+}
+
+export function authorMatchesSearch(
+  author: { name: string; biography?: string },
+  needle: string,
+  locale?: string,
+): boolean {
+  const q = needle.trim();
+  if (!q) return true;
+  if (textIncludesSearch(author.name, q, locale)) return true;
+  if (textIncludesSearch(author.biography, q, locale)) return true;
+  return false;
+}

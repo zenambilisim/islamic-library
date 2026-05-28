@@ -32,7 +32,9 @@
   },
   "search": {
     "placeholder": "Kitab, müəllif və ya kateqoriya axtarın...",
-    "booksPlaceholder": "Kitab axtarın...",
+    "booksPlaceholder": "Kitab axtar...",
+    "matchingAuthors": "Müəlliflər",
+    "matchingBooks": "Kitablar",
     "authorsPlaceholder": "Müəllif axtarın...",
     "categoriesPlaceholder": "Kateqoriya axtarın...",
     "noResults": "Axtarış kriteriyalarınıza uyğun kitab tapılmadı",

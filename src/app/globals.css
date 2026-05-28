@@ -204,6 +204,77 @@
     scroll-margin-top: calc(var(--header-h) + 24px);
   }
 
+  /* Admin panel */
+  .admin-layout {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+  }
+
+  @media (min-width: 768px) {
+    .admin-layout {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+  }
+
+  /* Kitap formları vb. — henüz AdminShell kullanmayan sayfalar için */
+  .admin-content .container.mx-auto {
+    max-width: 1280px;
+    padding: 24px 16px 64px;
+  }
+
+  .admin-content .rounded-xl.border.border-gray-200.bg-white,
+  .admin-content .bg-white.rounded-xl.shadow-sm.border,
+  .admin-content .p-4.rounded-xl.border.border-gray-200.bg-white {
+    border-radius: var(--radius-lg);
+    border-color: var(--border);
+    background: var(--bg-elev);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .admin-content .text-gray-900 {
+    color: var(--ink);
+  }
+
+  .admin-content .text-gray-600,
+  .admin-content .text-gray-700,
+  .admin-content .text-gray-500 {
+    color: var(--ink-muted);
+  }
+
+  .admin-content .bg-primary-600 {
+    background-color: var(--ink);
+  }
+
+  .admin-content .hover\:bg-primary-700:hover {
+    background-color: #0a1014;
+  }
+
+  .admin-content .text-primary-600 {
+    color: var(--accent);
+  }
+
+  .admin-content .search-input,
+  .admin-content input.rounded-lg.border.border-gray-300,
+  .admin-content select.rounded-lg.border.border-gray-300,
+  .admin-content textarea.rounded-lg.border.border-gray-300 {
+    border-radius: 9999px;
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .admin-content textarea.rounded-lg.border.border-gray-300 {
+    border-radius: var(--radius-md);
+  }
+
+  .admin-content .border-gray-200.bg-gray-50\/80,
+  .admin-content tr.border-b.border-gray-200.bg-gray-50\/80 {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+
   .chat-body::-webkit-scrollbar,
   .filters-panel::-webkit-scrollbar {
     width: 6px;

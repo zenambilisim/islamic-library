@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
 import { useUserAuth } from '@/contexts/UserAuthContext';
+import SiteLogo from '@/components/layout/SiteLogo';
 import type { Language } from '../../types';
 
 const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
@@ -66,8 +67,8 @@ const Header = () => {
       <div className="mx-auto max-w-site px-4 md:px-6">
         <div className="flex h-[var(--header-h)] items-center gap-4 md:gap-6">
           <Link href="/" onClick={handleLogoClick} className="flex shrink-0 items-center gap-3">
-            <div className="font-arabic grid h-[38px] w-[38px] place-items-center rounded-[11px] bg-ink pt-0.5 text-[22px] font-bold leading-none text-cream">
-              م
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-[var(--border)] bg-[var(--bg-elev)] p-1">
+              <SiteLogo size={42} className="h-full w-full" />
             </div>
             <div className="hidden sm:block">
               <div className="font-display text-[22px] font-semibold leading-none tracking-tight text-ink">

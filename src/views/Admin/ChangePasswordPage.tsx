@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { KeyRound, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, KeyRound, Lock } from 'lucide-react';
+import AdminShell from '@/components/admin/AdminShell';
+import {
+  adminBtnPrimary,
+  adminCard,
+  adminInputWithIcon,
+  adminLabel,
+  adminLinkBack,
+} from '@/components/admin/admin-classes';
 
 const ChangePasswordPage = () => {
   const { t } = useTranslation();
@@ -49,111 +57,86 @@ const ChangePasswordPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <Link
-        href="/admin/dashboard"
-        className="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 mb-6"
-      >
-        <ArrowLeft size={16} />
+    <AdminShell className="max-w-lg">
+      <Link href="/admin/dashboard" className={`${adminLinkBack} mb-6`}>
+        <ArrowLeft size={16} aria-hidden />
         {t('admin.changePassword.back')}
       </Link>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-primary-600 to-purple-600 p-3 rounded-xl shadow-lg">
-            <KeyRound className="text-white" size={24} />
+      <div className={`${adminCard} p-6 md:p-8`}>
+        <div className="mb-6 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
+            <KeyRound size={20} strokeWidth={1.75} />
+          </span>
+          <div>
+            <h1 className="font-display text-2xl font-medium tracking-tight text-ink">
+              {t('admin.changePassword.title')}
+            </h1>
+            <p className="mt-1 text-[13px] text-ink-muted">{t('admin.changePassword.description')}</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('admin.changePassword.title')}</h1>
         </div>
-
-        <p className="text-sm text-gray-600 mb-6">{t('admin.changePassword.description')}</p>
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5">
           {status.type && (
             <div
-              className={`p-4 rounded-lg flex items-start gap-3 ${
+              className={`flex items-start gap-3 rounded-[var(--radius-md)] border p-4 ${
                 status.type === 'success'
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
+                  ? 'border-green-200 bg-green-50 text-green-800'
+                  : 'border-red-200 bg-red-50 text-red-800'
               }`}
             >
               {status.type === 'success' ? (
-                <CheckCircle className="text-green-600 shrink-0" size={20} />
+                <CheckCircle className="shrink-0 text-green-600" size={20} />
               ) : (
-                <AlertCircle className="text-red-600 shrink-0" size={20} />
+                <AlertCircle className="shrink-0 text-red-600" size={20} />
               )}
-              <p className={`text-sm ${status.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-                {status.message}
-              </p>
+              <p className="text-sm">{status.message}</p>
             </div>
           )}
 
-          <div>
-            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.changePassword.currentLabel')}
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                id="currentPassword"
-                type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-              />
-            </div>
-          </div>
+          {(['currentPassword', 'newPassword', 'confirmPassword'] as const).map((field) => {
+            const labels = {
+              currentPassword: t('admin.changePassword.currentLabel'),
+              newPassword: t('admin.changePassword.newLabel'),
+              confirmPassword: t('admin.changePassword.confirmLabel'),
+            };
+            const values = { currentPassword, newPassword, confirmPassword };
+            const setters = {
+              currentPassword: setCurrentPassword,
+              newPassword: setNewPassword,
+              confirmPassword: setConfirmPassword,
+            };
+            return (
+              <div key={field}>
+                <label htmlFor={field} className={adminLabel}>
+                  {labels[field]}
+                </label>
+                <div className="relative">
+                  <Lock
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint"
+                    size={18}
+                  />
+                  <input
+                    id={field}
+                    type="password"
+                    autoComplete={field === 'currentPassword' ? 'current-password' : 'new-password'}
+                    value={values[field]}
+                    onChange={(e) => setters[field](e.target.value)}
+                    className={adminInputWithIcon}
+                    required
+                    minLength={field === 'currentPassword' ? undefined : 6}
+                  />
+                </div>
+              </div>
+            );
+          })}
 
-          <div>
-            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.changePassword.newLabel')}
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                id="newPassword"
-                type="password"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-                minLength={6}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.changePassword.confirmLabel')}
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                id="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-                minLength={6}
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-primary-600 to-purple-600 text-white font-semibold hover:from-primary-700 hover:to-purple-700 disabled:opacity-60 transition-all"
-          >
+          <button type="submit" disabled={submitting} className={`${adminBtnPrimary} w-full`}>
             {submitting ? t('admin.changePassword.submitting') : t('admin.changePassword.submit')}
           </button>
         </form>
       </div>
-    </div>
+    </AdminShell>
   );
 };
 

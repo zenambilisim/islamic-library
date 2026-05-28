@@ -285,7 +285,7 @@
   "admin": {
     "nav": {
       "dashboard": "Panel",
-      "myBooks": "Kitablarım",
+      "myBooks": "Kitablar",
       "authors": "Müəlliflər",
       "categories": "Kateqoriyalar",
       "backToSite": "Sayta qayıt",
@@ -312,14 +312,18 @@
       "title": "Panel",
       "welcome": "Xoş gəlmisiniz",
       "welcomeDesc": "Hesabınıza ümumi baxış.",
-      "myBooksCard": "Kitablarım",
-      "myBooksDesc": "Saxladığınız və yüklədiyiniz kitablar",
+      "myBooksCard": "Kitablar",
+      "myBooksDesc": "Kitabxanadakı kitabları idarə edin və yenilərini əlavə edin",
       "goToBooks": "Kitablara get",
       "profileCard": "Profil",
       "comingSoon": "Tezliklə...",
       "trafficCard": "Sayt trafiki",
       "trafficDesc": "Ziyarətçi və sorğu statistikası",
-      "goToTraffic": "Trafikə get"
+      "goToTraffic": "Trafikə get",
+      "authorsDesc": "Müəllifləri idarə edin və yenilərini əlavə edin",
+      "goToAuthors": "Müəlliflər səhifəsinə",
+      "categoriesDesc": "Kateqoriyaları idarə edin",
+      "goToCategories": "Kateqoriyalar səhifəsinə"
     },
     "traffic": {
       "title": "Sayt trafiki",
@@ -336,7 +340,7 @@
       "sourceNote": "Məlumatlar Cloudflare proxy trafikindən gəlir. 7 və 30 günlük ziyarətçi sayı günlük cəmdir."
     },
     "books": {
-      "title": "Bütün kitablar",
+      "title": "Kitablar",
       "loading": "Kitablar yüklənir...",
       "noBooks": "Hələ kitab yoxdur.",
       "noBooksMatch": "Bu axtarışa uyğun kitab yoxdur.",
@@ -483,6 +487,7 @@
   },
   "login": {
     "pageTitle": "Daxil ol",
+    "heroEyebrow": "İdarəetmə",
     "formTitle": "Hesabınıza daxil olun",
     "emailLabel": "E-poçt",
     "emailPlaceholder": "example@email.com",

@@ -4,6 +4,19 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import type { Author, Language } from '@/types';
+import AdminShell from '@/components/admin/AdminShell';
+import AdminFormSection from '@/components/admin/AdminFormSection';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import {
+  adminAlertError,
+  adminBtnPrimary,
+  adminBtnSecondary,
+  adminInput,
+  adminLinkAccent,
+  adminLoadingState,
+  adminSelect,
+  adminTextarea,
+} from '@/components/admin/admin-classes';
 
 const LANG_OPTIONS: { code: Language; label: string }[] = [
   { code: 'tr', label: 'Türkçe' },
@@ -19,7 +32,6 @@ const EditAuthorPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-
   const [name, setName] = useState('');
   const [biography, setBiography] = useState('');
   const [language, setLanguage] = useState<Language>('tr');
@@ -34,7 +46,7 @@ const EditAuthorPage = () => {
     }
 
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const res = await fetch(`/api/authors/by-id/${encodeURIComponent(id)}`);
         const data = (await res.json()) as Author & { error?: string };
@@ -71,8 +83,6 @@ const EditAuthorPage = () => {
       return;
     }
 
-    const bioTrim = biography.trim();
-
     setSubmitting(true);
     try {
       const res = await fetch(`/api/authors/by-id/${encodeURIComponent(id)}`, {
@@ -80,7 +90,7 @@ const EditAuthorPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: nameTrim,
-          biography: bioTrim,
+          biography: biography.trim(),
           language_code: language,
         }),
       });
@@ -97,93 +107,77 @@ const EditAuthorPage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-gray-500">Yükleniyor...</div>
-      </div>
+      <AdminShell className="max-w-2xl">
+        <div className={adminLoadingState}>Yükleniyor...</div>
+      </AdminShell>
     );
   }
 
   if (loadError) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 mb-4">{loadError}</div>
-        <Link href="/admin/authors" className="text-primary-600 hover:underline">
+      <AdminShell className="max-w-2xl space-y-4">
+        <div className={adminAlertError}>{loadError}</div>
+        <Link href="/admin/authors" className={adminLinkAccent}>
           Yazarlara dön
         </Link>
-      </div>
+      </AdminShell>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Yazarı Düzenle</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Bu kayıt tek bir dil için geçerlidir. Başka dilde isim için yeni yazar kaydı ekleyin.
-        </p>
+    <AdminShell className="max-w-2xl">
+      <AdminPageHeader
+        title="Yazarı Düzenle"
+        description="Bu kayıt tek bir dil için geçerlidir. Başka dilde isim için yeni yazar kaydı ekleyin."
+      />
 
-        {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+      {error && <div className={adminAlertError}>{error}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Dil *</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Language)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-            >
-              {LANG_OPTIONS.map((o) => (
-                <option key={o.code} value={o.code}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        <AdminFormSection label="Dil *">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+            className={adminSelect}
+          >
+            {LANG_OPTIONS.map((o) => (
+              <option key={o.code} value={o.code}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </AdminFormSection>
 
-          <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Ad *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Yazar adı"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
+        <AdminFormSection label="Ad *">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Yazar adı"
+            className={adminInput}
+          />
+        </AdminFormSection>
 
-          <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Biyografi</label>
-            <textarea
-              value={biography}
-              onChange={(e) => setBiography(e.target.value)}
-              placeholder="Kısa biyografi"
-              rows={5}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
+        <AdminFormSection label="Biyografi">
+          <textarea
+            value={biography}
+            onChange={(e) => setBiography(e.target.value)}
+            placeholder="Kısa biyografi"
+            rows={5}
+            className={adminTextarea}
+          />
+        </AdminFormSection>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2.5 rounded-lg font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Kaydediliyor...' : 'Kaydet'}
-            </button>
-            <Link
-              href="/admin/authors"
-              className="px-5 py-2.5 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
-            >
-              İptal
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-wrap gap-3 pt-2">
+          <button type="submit" disabled={submitting} className={adminBtnPrimary}>
+            {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+          </button>
+          <Link href="/admin/authors" className={adminBtnSecondary}>
+            İptal
+          </Link>
+        </div>
+      </form>
+    </AdminShell>
   );
 };
 

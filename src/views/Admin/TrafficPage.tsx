@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Eye, Loader2 } from 'lucide-react';
+import AdminShell from '@/components/admin/AdminShell';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { adminCard, adminLinkBack } from '@/components/admin/admin-classes';
 
 type TrafficPeriod = { requests: number; uniques: number };
 type AnalyticsData = {
@@ -31,7 +34,7 @@ const TrafficPage = () => {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       setLoading(true);
       setError(null);
       try {
@@ -66,88 +69,81 @@ const TrafficPage = () => {
   const recentDaily = analytics?.daily.slice(0, 7) ?? [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl">
-        <Link
-          href="/admin/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-primary-600 hover:underline mb-6"
-        >
-          <ArrowLeft size={16} aria-hidden />
-          {t('admin.traffic.back')}
-        </Link>
+    <AdminShell className="max-w-4xl">
+      <Link href="/admin/dashboard" className={`${adminLinkBack} mb-6 inline-flex`}>
+        <ArrowLeft size={16} aria-hidden />
+        {t('admin.traffic.back')}
+      </Link>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{t('admin.traffic.title')}</h1>
-        <p className="text-gray-600 mb-8">{t('admin.traffic.description')}</p>
+      <AdminPageHeader title={t('admin.traffic.title')} description={t('admin.traffic.description')} />
 
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-gray-500 py-6">
-            <Loader2 size={18} className="animate-spin" aria-hidden />
-            {t('admin.traffic.loading')}
-          </div>
-        )}
+      {loading && (
+        <div className="flex items-center gap-2 py-6 text-sm text-ink-muted">
+          <Loader2 size={18} className="animate-spin" aria-hidden />
+          {t('admin.traffic.loading')}
+        </div>
+      )}
 
-        {!loading && error && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-            {error}
-          </p>
-        )}
+      {!loading && error && (
+        <p className="rounded-[var(--radius-md)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {error}
+        </p>
+      )}
 
-        {!loading && !error && analytics && (
-          <>
-            <div className="grid gap-4 sm:grid-cols-3 mb-4">
-              {periodCards.map(({ key, label, data }) => (
-                <div
-                  key={key}
-                  className="rounded-xl bg-white border border-gray-200 shadow-sm p-5"
-                >
-                  <p className="text-sm font-medium text-gray-500 mb-3">{label}</p>
-                  <div className="flex items-start gap-2 mb-2">
-                    <Eye size={18} className="text-primary-600 mt-0.5 shrink-0" aria-hidden />
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900 tabular-nums">
-                        {formatCount(data.uniques, locale)}
-                      </p>
-                      <p className="text-xs text-gray-500">{t('admin.traffic.visitors')}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 tabular-nums">
-                    {formatCount(data.requests, locale)}{' '}
-                    <span className="text-gray-400">{t('admin.traffic.requests')}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {recentDaily.length > 0 && (
-              <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden">
-                <p className="text-sm font-medium text-gray-700 px-4 py-3 border-b border-gray-100">
-                  {t('admin.traffic.dailyBreakdown')}
+      {!loading && !error && analytics && (
+        <>
+          <div className="mb-4 grid gap-[18px] sm:grid-cols-3">
+            {periodCards.map(({ key, label, data }) => (
+              <div key={key} className={`${adminCard} p-5`}>
+                <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-ink-muted">
+                  {label}
                 </p>
-                <ul className="divide-y divide-gray-100">
-                  {recentDaily.map((day) => (
-                    <li
-                      key={day.date}
-                      className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
-                    >
-                      <span className="text-gray-600">{formatDayLabel(day.date, locale)}</span>
-                      <span className="text-gray-900 tabular-nums">
-                        {formatCount(day.uniques, locale)}{' '}
-                        <span className="text-gray-400">{t('admin.traffic.visitors')}</span>
-                        <span className="mx-2 text-gray-300">·</span>
-                        {formatCount(day.requests, locale)}{' '}
-                        <span className="text-gray-400">{t('admin.traffic.requests')}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mb-2 flex items-start gap-2">
+                  <Eye size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+                  <div>
+                    <p className="font-display text-2xl font-semibold tabular-nums text-ink">
+                      {formatCount(data.uniques, locale)}
+                    </p>
+                    <p className="text-[11px] text-ink-muted">{t('admin.traffic.visitors')}</p>
+                  </div>
+                </div>
+                <p className="text-sm tabular-nums text-ink-muted">
+                  {formatCount(data.requests, locale)}{' '}
+                  <span className="text-ink-faint">{t('admin.traffic.requests')}</span>
+                </p>
               </div>
-            )}
+            ))}
+          </div>
 
-            <p className="mt-3 text-xs text-gray-400">{t('admin.traffic.sourceNote')}</p>
-          </>
-        )}
-      </div>
-    </div>
+          {recentDaily.length > 0 && (
+            <div className={`${adminCard} overflow-hidden`}>
+              <p className="border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-ink">
+                {t('admin.traffic.dailyBreakdown')}
+              </p>
+              <ul className="divide-y divide-[var(--border)]">
+                {recentDaily.map((day) => (
+                  <li
+                    key={day.date}
+                    className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
+                  >
+                    <span className="text-ink-muted">{formatDayLabel(day.date, locale)}</span>
+                    <span className="tabular-nums text-ink">
+                      {formatCount(day.uniques, locale)}{' '}
+                      <span className="text-ink-faint">{t('admin.traffic.visitors')}</span>
+                      <span className="mx-2 text-ink-faint">·</span>
+                      {formatCount(day.requests, locale)}{' '}
+                      <span className="text-ink-faint">{t('admin.traffic.requests')}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p className="mt-3 text-xs text-ink-faint">{t('admin.traffic.sourceNote')}</p>
+        </>
+      )}
+    </AdminShell>
   );
 };
 

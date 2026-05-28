@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
+import SiteLogo from '@/components/layout/SiteLogo';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -38,8 +39,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <div className="mb-4 flex items-center gap-3">
-              <div className="font-arabic grid h-10 w-10 place-items-center rounded-[11px] bg-accent text-lg font-bold text-white">
-                م
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-white/15 bg-white/10 p-1">
+                <SiteLogo size={36} className="h-full w-full" />
               </div>
               <div>
                 <h3 className="font-display text-2xl font-semibold tracking-tight">Islamic Library</h3>

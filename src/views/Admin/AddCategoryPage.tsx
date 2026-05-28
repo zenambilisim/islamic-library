@@ -4,6 +4,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Language } from '@/types';
+import AdminShell from '@/components/admin/AdminShell';
+import AdminFormSection from '@/components/admin/AdminFormSection';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import {
+  adminAlertError,
+  adminBtnPrimary,
+  adminBtnSecondary,
+  adminInput,
+  adminSelect,
+  adminTextarea,
+} from '@/components/admin/admin-classes';
 
 const LANG_OPTIONS: { code: Language; label: string }[] = [
   { code: 'tr', label: 'Türkçe' },
@@ -30,8 +41,6 @@ const AddCategoryPage = () => {
       return;
     }
 
-    const descTrim = description.trim();
-
     setSubmitting(true);
     try {
       const res = await fetch('/api/categories', {
@@ -39,7 +48,7 @@ const AddCategoryPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: nameTrim,
-          description: descTrim,
+          description: description.trim(),
           language_code: language,
         }),
       });
@@ -55,76 +64,62 @@ const AddCategoryPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Yeni Kategori Ekle</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Her dil için ayrı bir kategori satırı oluşturun; aynı konunun farklı dillerdeki adları için yeni
-          kayıt ekleyin. Slug sunucuda otomatik üretilir.
-        </p>
+    <AdminShell className="max-w-2xl">
+      <AdminPageHeader
+        title="Yeni Kategori Ekle"
+        description="Her dil için ayrı bir kategori satırı oluşturun; slug sunucuda otomatik üretilir."
+      />
 
-        {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+      {error && <div className={adminAlertError}>{error}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Dil *</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Language)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500"
-            >
-              {LANG_OPTIONS.map((o) => (
-                <option key={o.code} value={o.code}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        <AdminFormSection label="Dil *" htmlFor="category-lang">
+          <select
+            id="category-lang"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+            className={adminSelect}
+          >
+            {LANG_OPTIONS.map((o) => (
+              <option key={o.code} value={o.code}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </AdminFormSection>
 
-          <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Kategori adı *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Örn. Tefsir"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
+        <AdminFormSection label="Kategori adı *" htmlFor="category-name">
+          <input
+            id="category-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Örn. Tefsir"
+            className={adminInput}
+          />
+        </AdminFormSection>
 
-          <div className="p-4 rounded-xl border border-gray-200 bg-white">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Açıklama</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Kısa açıklama"
-              rows={4}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
+        <AdminFormSection label="Açıklama" htmlFor="category-desc">
+          <textarea
+            id="category-desc"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Kısa açıklama"
+            rows={4}
+            className={adminTextarea}
+          />
+        </AdminFormSection>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2.5 rounded-lg font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Ekleniyor...' : 'Kategoriyi Ekle'}
-            </button>
-            <Link
-              href="/admin/categories"
-              className="px-5 py-2.5 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
-            >
-              Kategorilere dön
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-wrap gap-3 pt-2">
+          <button type="submit" disabled={submitting} className={adminBtnPrimary}>
+            {submitting ? 'Ekleniyor...' : 'Kategoriyi Ekle'}
+          </button>
+          <Link href="/admin/categories" className={adminBtnSecondary}>
+            Kategorilere dön
+          </Link>
+        </div>
+      </form>
+    </AdminShell>
   );
 };
 

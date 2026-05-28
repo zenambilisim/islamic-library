@@ -285,7 +285,7 @@
   "admin": {
     "nav": {
       "dashboard": "Панель",
-      "myBooks": "Мои книги",
+      "myBooks": "Книги",
       "authors": "Авторы",
       "categories": "Категории",
       "backToSite": "На сайт",
@@ -312,14 +312,18 @@
       "title": "Панель",
       "welcome": "Добро пожаловать",
       "welcomeDesc": "Обзор вашей учётной записи.",
-      "myBooksCard": "Мои книги",
-      "myBooksDesc": "Сохранённые и загруженные книги",
+      "myBooksCard": "Книги",
+      "myBooksDesc": "Управление книгами библиотеки и добавление новых",
       "goToBooks": "К книгам",
       "profileCard": "Профиль",
       "comingSoon": "Скоро...",
       "trafficCard": "Трафик сайта",
       "trafficDesc": "Статистика посетителей и запросов",
-      "goToTraffic": "К трафику"
+      "goToTraffic": "К трафику",
+      "authorsDesc": "Управление авторами и добавление новых",
+      "goToAuthors": "К авторам",
+      "categoriesDesc": "Управление категориями",
+      "goToCategories": "К категориям"
     },
     "traffic": {
       "title": "Трафик сайта",
@@ -336,7 +340,7 @@
       "sourceNote": "Данные из трафика через Cloudflare proxy. За 7 и 30 дней — сумма дневных уникальных посетителей."
     },
     "books": {
-      "title": "Все книги",
+      "title": "Книги",
       "loading": "Загрузка книг...",
       "noBooks": "Книг пока нет.",
       "noBooksMatch": "Нет книг, соответствующих запросу.",
@@ -483,6 +487,7 @@
   },
   "login": {
     "pageTitle": "Вход",
+    "heroEyebrow": "Администрирование",
     "formTitle": "Войдите в аккаунт",
     "emailLabel": "Эл. почта",
     "emailPlaceholder": "example@email.com",

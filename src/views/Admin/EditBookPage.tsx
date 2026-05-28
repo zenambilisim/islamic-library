@@ -255,7 +255,7 @@ const EditBookPage = () => {
 
   if (!id || loadError) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="admin-layout">
         <div className="max-w-2xl">
           <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
             {loadError || 'Geçersiz kitap.'}
@@ -270,14 +270,14 @@ const EditBookPage = () => {
 
   if (bookLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="admin-layout">
         <div className="max-w-2xl text-gray-600">Kitap yükleniyor...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="admin-layout">
       <div className="max-w-2xl">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Kitabı Düzenle</h1>
 

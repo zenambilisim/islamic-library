@@ -285,7 +285,7 @@
   "admin": {
     "nav": {
       "dashboard": "Dashboard",
-      "myBooks": "My Books",
+      "myBooks": "Books",
       "authors": "Authors",
       "categories": "Categories",
       "backToSite": "Back to Site",
@@ -312,14 +312,18 @@
       "title": "Dashboard",
       "welcome": "Welcome",
       "welcomeDesc": "Overview of your account.",
-      "myBooksCard": "My Books",
-      "myBooksDesc": "Books you saved or downloaded",
+      "myBooksCard": "Books",
+      "myBooksDesc": "Manage library books and add new titles",
       "goToBooks": "Go to Books",
       "profileCard": "Profile",
       "comingSoon": "Coming soon...",
       "trafficCard": "Site traffic",
       "trafficDesc": "Visitor and request statistics",
-      "goToTraffic": "View traffic"
+      "goToTraffic": "View traffic",
+      "authorsDesc": "Manage authors and add new ones",
+      "goToAuthors": "Go to authors",
+      "categoriesDesc": "Manage categories and add new ones",
+      "goToCategories": "Go to categories"
     },
     "traffic": {
       "title": "Site traffic",
@@ -336,7 +340,7 @@
       "sourceNote": "Data from Cloudflare proxied traffic. 7- and 30-day visitor counts sum daily uniques."
     },
     "books": {
-      "title": "All Books",
+      "title": "Books",
       "loading": "Loading books...",
       "noBooks": "No books yet.",
       "noBooksMatch": "No books match your search.",
@@ -483,6 +487,7 @@
   },
   "login": {
     "pageTitle": "Sign In",
+    "heroEyebrow": "Administration",
     "formTitle": "Sign in to your account",
     "emailLabel": "Email",
     "emailPlaceholder": "example@email.com",

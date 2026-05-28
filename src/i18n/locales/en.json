@@ -451,6 +451,7 @@
     }
   },
   "userAuth": {
+    "heroEyebrow": "Your account",
     "loginTitle": "Sign In",
     "signupTitle": "Create Account",
     "subtitle": "Save books to your reading lists",
@@ -475,6 +476,17 @@
   },
   "readingList": {
     "myLibrary": "My Library",
+    "heroEyebrow": "Islamic Library · personal",
+    "heroTitleLine1": "Your reading lists",
+    "heroTitleEm": "in one place.",
+    "pageDescription": "Group books you plan to read, are reading, or have finished.",
+    "signedInAs": "Signed in as {{email}}",
+    "booksInCurrentList": "In this list",
+    "booksInList": "{{count}} books",
+    "browseLists": "Go to lists",
+    "browseCatalog": "Browse catalog",
+    "sectionTitle": "Reading lists",
+    "emptyListDesc": "Start from the homepage by adding books to your lists.",
     "addToList": "Add to my list",
     "loginPrompt": "To add to a list,",
     "loginLink": "sign in",

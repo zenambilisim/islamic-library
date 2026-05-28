@@ -451,6 +451,7 @@
     }
   },
   "userAuth": {
+    "heroEyebrow": "Hesabınız",
     "loginTitle": "Daxil ol",
     "signupTitle": "Qeydiyyat",
     "subtitle": "Kitabları siyahılarınıza əlavə edin",
@@ -475,6 +476,17 @@
   },
   "readingList": {
     "myLibrary": "Kitabxanam",
+    "heroEyebrow": "Islamic Library · şəxsi",
+    "heroTitleLine1": "Oxuma siyahılarınız",
+    "heroTitleEm": "bir yerdə.",
+    "pageDescription": "Oxuyacağınız, oxuduğunuz və oxuduğunuz kitabları statusa görə qruplaşdırın.",
+    "signedInAs": "Hesab: {{email}}",
+    "booksInCurrentList": "Bu siyahıda",
+    "booksInList": "{{count}} kitab",
+    "browseLists": "Siyahılara keç",
+    "browseCatalog": "Kataloqa keç",
+    "sectionTitle": "Oxuma siyahıları",
+    "emptyListDesc": "Ana səhifədən kitabları siyahılarınıza əlavə edin.",
     "addToList": "Siyahıma əlavə et",
     "loginPrompt": "Siyahıya əlavə etmək üçün",
     "loginLink": "daxil olun",

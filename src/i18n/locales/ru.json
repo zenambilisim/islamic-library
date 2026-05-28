@@ -451,6 +451,7 @@
     }
   },
   "userAuth": {
+    "heroEyebrow": "Ваш аккаунт",
     "loginTitle": "Вход",
     "signupTitle": "Регистрация",
     "subtitle": "Добавляйте книги в свои списки",
@@ -475,6 +476,17 @@
   },
   "readingList": {
     "myLibrary": "Моя библиотека",
+    "heroEyebrow": "Islamic Library · личное",
+    "heroTitleLine1": "Ваши списки чтения",
+    "heroTitleEm": "в одном месте.",
+    "pageDescription": "Группируйте книги, которые хотите прочитать, читаете или уже прочитали.",
+    "signedInAs": "Вход: {{email}}",
+    "booksInCurrentList": "В этом списке",
+    "booksInList": "{{count}} книг",
+    "browseLists": "К спискам",
+    "browseCatalog": "В каталог",
+    "sectionTitle": "Списки чтения",
+    "emptyListDesc": "Добавляйте книги со главной страницы в свои списки.",
     "addToList": "Добавить в список",
     "loginPrompt": "Чтобы добавить в список,",
     "loginLink": "войдите",

@@ -454,6 +454,7 @@
     }
   },
   "userAuth": {
+    "heroEyebrow": "Hesabınız",
     "loginTitle": "Giriş Yap",
     "signupTitle": "Üye Ol",
     "subtitle": "Kitaplarınızı listelerinize ekleyin",
@@ -478,6 +479,17 @@
   },
   "readingList": {
     "myLibrary": "Kütüphanem",
+    "heroEyebrow": "Islamic Library · kişisel",
+    "heroTitleLine1": "Okuma listeniz",
+    "heroTitleEm": "tek yerde.",
+    "pageDescription": "Okuyacağınız, okuduğunuz ve okuduğunuz kitapları duruma göre gruplayın.",
+    "signedInAs": "Oturum: {{email}}",
+    "booksInCurrentList": "Bu listede",
+    "booksInList": "{{count}} kitap",
+    "browseLists": "Listelere git",
+    "browseCatalog": "Kataloğa git",
+    "sectionTitle": "Okuma listeleri",
+    "emptyListDesc": "Ana sayfadaki kitaplardan listelerinize ekleyerek başlayın.",
     "addToList": "Listeme ekle",
     "loginPrompt": "Listeye eklemek için",
     "loginLink": "giriş yapın",

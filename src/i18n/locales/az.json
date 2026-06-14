@@ -179,6 +179,10 @@
       "forBeginner1": "Üç mərhələli bir yol təklif edirəm:\n\n1. Dua və zikir məcmuaları ilə başla.\n2. Xütbə və öyüdlərlə davam et.\n3. Sonra təfsir və fiqha keç.",
       "forBeginner2": "Qur'anı daha dərindən anlamaq istədikdə kataloqdakı təfsir əsərlərinə bax.",
       "generic": "Maraqlı sual. Kitabxanamızdan bir neçə başlanğıc nöqtəsi:"
+    },
+    "errors": {
+      "failed": "Hazırda cavab yaradıla bilmədi. Zəhmət olmasa bir az sonra yenidən cəhd edin.",
+      "unavailable": "Söhbət xidməti konfiqurasiya edilməyib."
     }
   },
   "hero": {

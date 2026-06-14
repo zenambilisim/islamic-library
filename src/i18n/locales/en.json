@@ -179,6 +179,10 @@
       "forBeginner1": "I suggest a three-step path — from accessible to deeper:\n\n1. Start with collections of supplication.\n2. Continue with sermons and wisdom literature.\n3. Then move to tafsir and fiqh.",
       "forBeginner2": "When you want a deeper understanding of the Qur'an, browse the tafsir works in the catalog.",
       "generic": "Good question. Here are several relevant starting points from our library:"
+    },
+    "errors": {
+      "failed": "Could not generate a response right now. Please try again shortly.",
+      "unavailable": "Chat service is not configured."
     }
   },
   "hero": {

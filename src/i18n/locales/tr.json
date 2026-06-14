@@ -182,6 +182,10 @@
       "forBeginner1": "Üç aşamalı bir rota öneriyorum — en erişilebilirden daha derine:\n\n1. Dua ve zikir mecmualarıyla başla.\n2. Hutbe ve öğüt derlemeleriyle devam et.\n3. Sonra tefsir ve fıkha geç.",
       "forBeginner2": "Kur'an'ı daha derin anlamak istediğinde kütüphanedeki tefsir eserlerine göz at.",
       "generic": "İlginç bir soru. Bu konuda kütüphanemizde ilgili eserler var — işte birkaç başlangıç noktası:"
+    },
+    "errors": {
+      "failed": "Şu anda cevap üretilemedi. Lütfen biraz sonra tekrar deneyin.",
+      "unavailable": "Sohbet servisi şu an yapılandırılmamış."
     }
   },
   "hero": {

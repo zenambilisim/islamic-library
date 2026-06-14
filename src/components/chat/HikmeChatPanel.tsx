@@ -3,15 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowUp,
-  BookOpen,
-  MoreHorizontal,
-  Paperclip,
-  Mic,
   Plus,
   Sparkles,
-  Sun,
-  Search,
-  Sprout,
   X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -19,21 +12,11 @@ import type { Book } from '@/types';
 import { useBookModal } from '@/contexts/BookModalContext';
 import { resolveAuthorDisplayName } from '@/lib/author-display-name';
 import {
-  buildGenericResponse,
-  buildQuickPromptResponse,
-  matchPromptFromText,
-  QUICK_PROMPTS,
+  fetchChatResponse,
+  messagesToHistory,
   type ChatBlock,
   type ChatMessage,
-  type QuickPromptId,
 } from '@/lib/hikme-chat';
-
-const PROMPT_ICONS = {
-  book: BookOpen,
-  search: Search,
-  sun: Sun,
-  seedling: Sprout,
-} as const;
 
 interface HikmeChatPanelProps {
   books: Book[];
@@ -129,7 +112,7 @@ function MessageBlocks({
 }
 
 const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatPanelProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { openDetails } = useBookModal();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -145,32 +128,42 @@ const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatP
     scrollToBottom();
   }, [messages, thinking, scrollToBottom]);
 
-  const pushAi = (blocks: ChatBlock[]) => {
-    setThinking(true);
-    window.setTimeout(() => {
-      setThinking(false);
-      setMessages((m) => [...m, { role: 'ai', blocks }]);
-    }, 1100);
-  };
+  const sendMessage = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || thinking) return;
 
-  const sendPrompt = (promptId: QuickPromptId, customText?: string) => {
-    const userText = customText ?? t(`hikme.prompts.${promptId}.userText`);
-    setMessages((m) => [...m, { role: 'user', text: userText }]);
-    pushAi(buildQuickPromptResponse(promptId, books, t));
-  };
+      const history = messagesToHistory(messages);
+      setMessages((m) => [...m, { role: 'user', text: trimmed }]);
+      setThinking(true);
+
+      try {
+        const blocks = await fetchChatResponse({
+          message: trimmed,
+          language: i18n.language,
+          history,
+        });
+        setMessages((m) => [...m, { role: 'ai', blocks }]);
+      } catch {
+        setMessages((m) => [
+          ...m,
+          {
+            role: 'ai',
+            blocks: [{ type: 'text', content: t('hikme.errors.failed') }],
+          },
+        ]);
+      } finally {
+        setThinking(false);
+      }
+    },
+    [messages, thinking, i18n.language, t],
+  );
 
   const handleSend = () => {
     const text = input.trim();
     if (!text || thinking) return;
     setInput('');
-    setMessages((m) => [...m, { role: 'user', text }]);
-
-    const matched = matchPromptFromText(text);
-    if (matched) {
-      pushAi(buildQuickPromptResponse(matched, books, t));
-    } else {
-      pushAi(buildGenericResponse(books, t));
-    }
+    void sendMessage(text);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -202,7 +195,7 @@ const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatP
           >
             <Plus size={15} />
           </button>
-          {isMobile ? (
+          {isMobile && (
             <button
               type="button"
               onClick={onClose}
@@ -210,14 +203,6 @@ const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatP
               title={t('common.close')}
             >
               <X size={15} />
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="icon-btn grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--border)] text-ink"
-              title={t('hikme.more')}
-            >
-              <MoreHorizontal size={15} />
             </button>
           )}
         </div>
@@ -228,42 +213,17 @@ const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatP
         className="chat-body flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-5"
       >
         {messages.length === 0 && (
-          <>
-            <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] p-5">
-              <p className="font-arabic mb-1.5 text-[22px] leading-relaxed text-accent">
-                {t('hikme.greet.arabic')}
-              </p>
-              <p className="font-display text-[19px] font-semibold tracking-tight text-ink">
-                {t('hikme.greet.title')}
-              </p>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
-                {t('hikme.greet.text')}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {QUICK_PROMPTS.map(({ id, icon }) => {
-                const Icon = PROMPT_ICONS[icon] ?? BookOpen;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => sendPrompt(id)}
-                    className="quick-prompt flex flex-col gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-3.5 text-left transition-all hover:-translate-y-px hover:border-accent hover:bg-[var(--bg-elev)]"
-                  >
-                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent-soft text-accent">
-                      <Icon size={15} />
-                    </span>
-                    <span className="text-[12.5px] font-semibold leading-snug text-ink">
-                      {t(`hikme.prompts.${id}.label`)}
-                    </span>
-                    <span className="text-[10.5px] leading-snug text-ink-faint">
-                      {t(`hikme.prompts.${id}.sub`)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </>
+          <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] p-5">
+            <p className="font-arabic mb-1.5 text-[22px] leading-relaxed text-accent">
+              {t('hikme.greet.arabic')}
+            </p>
+            <p className="font-display text-[19px] font-semibold tracking-tight text-ink">
+              {t('hikme.greet.title')}
+            </p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
+              {t('hikme.greet.text')}
+            </p>
+          </div>
         )}
 
         {messages.map((msg, i) =>
@@ -303,13 +263,7 @@ const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatP
             rows={1}
             className="max-h-[100px] min-h-[22px] flex-1 resize-none border-none bg-transparent py-2 text-[13.5px] leading-snug text-ink outline-none placeholder:text-ink-faint"
           />
-          <div className="flex shrink-0 gap-1 pb-0.5">
-            <button type="button" className="chat-tool grid h-8 w-8 place-items-center rounded-[9px] text-ink-muted hover:bg-[var(--surface-2)] hover:text-ink">
-              <Paperclip size={16} />
-            </button>
-            <button type="button" className="chat-tool grid h-8 w-8 place-items-center rounded-[9px] text-ink-muted hover:bg-[var(--surface-2)] hover:text-ink">
-              <Mic size={16} />
-            </button>
+          <div className="flex shrink-0 pb-0.5">
             <button
               type="button"
               onClick={handleSend}

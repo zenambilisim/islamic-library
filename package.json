@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "backfill:book-slugs": "node scripts/backfill-book-slugs.mjs",
     "index:books": "node-22 scripts/index-books.mjs",
-    "index:books:dry-run": "node-22 scripts/index-books.mjs --dry-run --limit=5"
+    "index:books:dry-run": "node-22 scripts/index-books.mjs --dry-run --limit=5",
+    "index:books:status": "node-22 scripts/index-books-status.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.967.0",

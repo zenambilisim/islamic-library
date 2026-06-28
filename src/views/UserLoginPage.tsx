@@ -69,17 +69,19 @@ const UserLoginPage = () => {
         }
         setStatus({ type: 'success', message: t('userAuth.loginSuccess') });
       } else {
+        const displayName = formData.displayName.trim();
+        if (!displayName) {
+          setStatus({ type: 'error', message: t('userAuth.displayNameRequired') });
+          setIsSubmitting(false);
+          return;
+        }
         const result = await signup(
           formData.email.trim(),
           formData.password,
-          formData.displayName.trim() || undefined,
+          displayName,
         );
         if (result.error) {
           setStatus({ type: 'error', message: result.error });
-          return;
-        }
-        if (result.needsEmailConfirmation) {
-          setStatus({ type: 'success', message: t('userAuth.confirmEmail') });
           return;
         }
         setStatus({ type: 'success', message: t('userAuth.signupSuccess') });
@@ -213,7 +215,8 @@ const UserLoginPage = () => {
                     name="displayName"
                     value={formData.displayName}
                     onChange={handleChange}
-                    autoComplete="name"
+                    required
+                    autoComplete="username"
                     className={adminInputWithIcon}
                     placeholder={t('userAuth.displayNamePlaceholder')}
                   />

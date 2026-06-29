@@ -4,7 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { LogIn, Mail, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, Lock, LogIn, Mail } from 'lucide-react';
+import HeroPattern from '@/components/home/HeroPattern';
+import SiteLogo from '@/components/layout/SiteLogo';
+
+const inputClassName =
+  'w-full rounded-full border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-10 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent';
 
 const LoginPage = () => {
   const { t } = useTranslation();
@@ -64,127 +69,130 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="container mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
-        {/* Başlık */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">
-            {t('login.pageTitle')}
-          </h1>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 md:py-16">
+      <div className="w-full max-w-md space-y-6">
+        <Link
+          href="/"
+          className="mx-auto flex w-fit flex-col items-center gap-3 text-center transition-opacity hover:opacity-90"
+        >
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-2 shadow-soft">
+            <SiteLogo size={52} className="h-full w-full" />
+          </div>
+          <div>
+            <p className="font-display text-xl font-semibold tracking-tight text-ink">Islamic Library</p>
+            <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-ink-muted">
+              {t('admin.nav.adminArea', 'Admin')}
+            </p>
+          </div>
+        </Link>
 
-        {/* Form kartı */}
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-gradient-to-r from-primary-600 to-purple-600 p-3 rounded-xl shadow-lg">
-                <LogIn className="text-white" size={24} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {t('login.formTitle')}
-              </h2>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {status.type && (
-                <div
-                  className={`p-4 rounded-lg flex items-start gap-3 ${
-                    status.type === 'success'
-                      ? 'bg-green-50 border border-green-200'
-                      : 'bg-red-50 border border-red-200'
-                  }`}
-                >
-                  {status.type === 'success' ? (
-                    <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
-                  ) : (
-                    <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-                  )}
-                  <p
-                    className={`text-sm ${
-                      status.type === 'success' ? 'text-green-800' : 'text-red-800'
-                    }`}
-                  >
-                    {status.message}
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  {t('login.emailLabel')}
-                </label>
-                <div className="relative">
-                  <Mail
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    autoComplete="email"
-                    className="search-input pl-10"
-                    placeholder={t('login.emailPlaceholder')}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  {t('login.passwordLabel')}
-                </label>
-                <div className="relative">
-                  <Lock
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    autoComplete="current-password"
-                    className="search-input pl-10"
-                    placeholder={t('login.passwordPlaceholder')}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isSubmitting ? 'opacity-70' : ''
-                }`}
-              >
-                <LogIn size={20} />
-                <span>
-                  {isSubmitting ? t('login.submittingButton') : t('login.submitButton')}
-                </span>
-              </button>
-            </form>
-
+        <section className="relative overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-6 shadow-soft md:p-8">
+          <HeroPattern />
+          <div className="relative">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+              {t('login.heroEyebrow', 'Yönetim')}
+            </p>
+            <h1 className="font-display text-2xl font-medium tracking-tight text-ink">
+              {t('login.pageTitle')}
+            </h1>
+            <p className="mt-2 text-sm text-ink-muted">{t('login.formTitle')}</p>
           </div>
 
-          <Link
-            href="/"
-            className="mt-6 flex items-center justify-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
-          >
-            <ArrowLeft size={18} />
-            <span>{t('login.backToHome')}</span>
-          </Link>
-        </div>
+          <form onSubmit={handleSubmit} className="relative mt-6 space-y-5">
+            {status.type && (
+              <div
+                className={`flex items-start gap-3 rounded-[var(--radius-md)] border p-4 ${
+                  status.type === 'success'
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-red-200 bg-red-50'
+                }`}
+              >
+                {status.type === 'success' ? (
+                  <CheckCircle className="shrink-0 text-green-600" size={20} />
+                ) : (
+                  <AlertCircle className="shrink-0 text-red-600" size={20} />
+                )}
+                <p
+                  className={`text-sm ${
+                    status.type === 'success' ? 'text-green-800' : 'text-red-800'
+                  }`}
+                >
+                  {status.message}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="mb-2 block text-[12.5px] font-medium text-ink-muted">
+                {t('login.emailLabel')}
+              </label>
+              <div className="relative">
+                <Mail
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint"
+                  size={18}
+                  aria-hidden
+                />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  autoComplete="email"
+                  className={inputClassName}
+                  placeholder={t('login.emailPlaceholder')}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-2 block text-[12.5px] font-medium text-ink-muted"
+              >
+                {t('login.passwordLabel')}
+              </label>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint"
+                  size={18}
+                  aria-hidden
+                />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  autoComplete="current-password"
+                  className={inputClassName}
+                  placeholder={t('login.passwordPlaceholder')}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink text-sm font-semibold text-cream transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LogIn size={18} strokeWidth={2} />
+              <span>
+                {isSubmitting ? t('login.submittingButton') : t('login.submitButton')}
+              </span>
+            </button>
+          </form>
+        </section>
+
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-accent"
+        >
+          <ArrowLeft size={18} strokeWidth={2} />
+          {t('login.backToHome')}
+        </Link>
       </div>
     </div>
   );

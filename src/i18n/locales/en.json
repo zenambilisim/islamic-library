@@ -33,6 +33,8 @@
   "search": {
     "placeholder": "Search for books, authors or categories...",
     "booksPlaceholder": "Search books...",
+    "matchingAuthors": "Authors",
+    "matchingBooks": "Books",
     "authorsPlaceholder": "Search authors...",
     "categoriesPlaceholder": "Search categories...",
     "noResults": "No books found matching your search criteria",
@@ -81,6 +83,9 @@
   "authors": {
     "pageTitle": "Authors",
     "pageDescription": "Discover the valuable authors",
+    "heroEyebrow": "Catalog · authors",
+    "heroTitleLine1": "Explore the authors",
+    "heroTitleEm": "behind the collection.",
     "alphabetSort": "Alphabetical Sorting",
     "browseByLetter": "Browse by Letter",
     "all": "All",
@@ -107,6 +112,9 @@
   "categories": {
     "pageTitle": "Categories",
     "pageDescription": "Discover books by categories",
+    "heroEyebrow": "Catalog · topics",
+    "heroTitleLine1": "Explore Islamic knowledge",
+    "heroTitleEm": "by category.",
     "noCategories": "No categories available yet",
     "browseByCategory": "Browse by category",
     "booksInCategory": "books",
@@ -126,19 +134,84 @@
     "totalCategories": "Categories",
     "totalBooks": "Total Books"
   },
+  "hikme": {
+    "status": "Your library AI guide · online",
+    "newChat": "New chat",
+    "more": "More",
+    "open": "Open",
+    "openChat": "Open AI chat",
+    "placeholder": "Ask about a verse, hadith, or book…",
+    "footerNote": "Hikme draws on classical sources — consult scholars on important matters.",
+    "allCategories": "All",
+    "greet": {
+      "arabic": "السَّلَامُ عَلَيْكُمْ",
+      "title": "I'm Hikme — your library guide",
+      "text": "Ask about verses, hadith, fiqh, or book recommendations. I'll point you to sources in the catalog."
+    },
+    "prompts": {
+      "explain-ayah": {
+        "label": "Explain a verse",
+        "sub": "Tafsir and context",
+        "userText": "Explain the first verse of Al-Fatiha."
+      },
+      "find-book": {
+        "label": "Find books by topic",
+        "sub": "Curated from the library",
+        "userText": "What should I read about prayer and visits?"
+      },
+      "hadith-day": {
+        "label": "Hadith of the day",
+        "sub": "With explanation",
+        "userText": "Show today's hadith."
+      },
+      "for-beginner": {
+        "label": "Where to start",
+        "sub": "Beginner reading path",
+        "userText": "What should a beginner read?"
+      }
+    },
+    "responses": {
+      "explainAyah1": "Bismillah — «In the name of Allah, the Most Gracious, the Most Merciful» — opens the Qur'an and every surah except one.",
+      "explainAyah2": "Ar-Rahman and Ar-Rahim come from mercy (rahmah). Scholars distinguish universal mercy from special mercy for believers; the basmala carries the surah's essence.",
+      "findBook": "Here are several foundational works in our library for daily worship, supplication, and fiqh:",
+      "hadithTag": "Hadith · daily pick",
+      "hadithText": "«Every person's worth is according to what they excel at.» — Narrated from Imam Ali (a.s.). A concise formula for the ethics of learning.",
+      "forBeginner1": "I suggest a three-step path — from accessible to deeper:\n\n1. Start with collections of supplication.\n2. Continue with sermons and wisdom literature.\n3. Then move to tafsir and fiqh.",
+      "forBeginner2": "When you want a deeper understanding of the Qur'an, browse the tafsir works in the catalog.",
+      "generic": "Good question. Here are several relevant starting points from our library:"
+    },
+    "errors": {
+      "failed": "Could not generate a response right now. Please try again shortly.",
+      "unavailable": "Chat service is not configured."
+    }
+  },
   "hero": {
     "title": "Extensive Digital Islamic Library",
-    "subtitle": "All books available on any device to read online or offline",
+    "eyebrow": "Islamic Library · digital collection",
+    "titleLine1": "Classics of Islamic thought —",
+    "titleEm": "in one catalog.",
+    "subtitle": "Tafsir, hadith, fiqh, and philosophy. Read online or offline on any device.",
     "booksCount": "Books",
     "languagesCount": "Languages",
+    "categoriesCount": "Categories",
     "knowledgeCount": "Knowledge",
-    "exploreButton": "Explore Books ↓",
+    "exploreButton": "Explore catalog",
+    "catalogTitle": "Catalog",
+    "catalogSubtitle": "{{count}} books in the collection",
+    "featuredEyebrow": "Featured · highlights",
+    "featuredDetails": "View details",
+    "sliderPrev": "Previous",
+    "sliderNext": "Next",
     "bannerAlt": "Islamic Library Banner",
     "mockupAlt": "Islamic Books"
   },
   "contact": {
     "pageTitle": "Contact",
     "pageDescription": "Get in touch with us for your questions, suggestions or contributions. We are happy to help you.",
+    "heroEyebrow": "Islamic Library · contact",
+    "heroTitleLine1": "Get in",
+    "heroTitleEm": "touch with us.",
+    "browseForm": "Send a message",
     "formTitle": "Send Us a Message",
     "nameLabel": "Your Name *",
     "namePlaceholder": "Enter your full name",
@@ -190,6 +263,12 @@
   "about": {
     "pageTitle": "About Us",
     "pageDescription": "Islamic Library is a free electronic library platform created to make religious books accessible in digital format.",
+    "heroEyebrow": "Islamic Library",
+    "heroTitleLine1": "A digital Islamic",
+    "heroTitleEm": "library platform.",
+    "browseMission": "Discover our mission",
+    "featuresTitle": "Why Islamic Library?",
+    "featuresSubtitle": "Core values our platform offers",
     "missionTitle": "Our Mission",
     "missionText1": "Our primary mission is to make valuable works in the field of Islamic sciences available to society in digital format and contribute to the spread of Islamic culture and science.",
     "missionText2": "We make quality resources freely accessible on the Quran, hadith, tafsir, Sufism and other Islamic topics.",
@@ -212,7 +291,7 @@
   "admin": {
     "nav": {
       "dashboard": "Dashboard",
-      "myBooks": "My Books",
+      "myBooks": "Books",
       "authors": "Authors",
       "categories": "Categories",
       "backToSite": "Back to Site",
@@ -239,14 +318,18 @@
       "title": "Dashboard",
       "welcome": "Welcome",
       "welcomeDesc": "Overview of your account.",
-      "myBooksCard": "My Books",
-      "myBooksDesc": "Books you saved or downloaded",
+      "myBooksCard": "Books",
+      "myBooksDesc": "Manage library books and add new titles",
       "goToBooks": "Go to Books",
       "profileCard": "Profile",
       "comingSoon": "Coming soon...",
       "trafficCard": "Site traffic",
       "trafficDesc": "Visitor and request statistics",
-      "goToTraffic": "View traffic"
+      "goToTraffic": "View traffic",
+      "authorsDesc": "Manage authors and add new ones",
+      "goToAuthors": "Go to authors",
+      "categoriesDesc": "Manage categories and add new ones",
+      "goToCategories": "Go to categories"
     },
     "traffic": {
       "title": "Site traffic",
@@ -263,7 +346,7 @@
       "sourceNote": "Data from Cloudflare proxied traffic. 7- and 30-day visitor counts sum daily uniques."
     },
     "books": {
-      "title": "All Books",
+      "title": "Books",
       "loading": "Loading books...",
       "noBooks": "No books yet.",
       "noBooksMatch": "No books match your search.",
@@ -374,6 +457,7 @@
     }
   },
   "userAuth": {
+    "heroEyebrow": "Your account",
     "loginTitle": "Sign In",
     "signupTitle": "Create Account",
     "subtitle": "Save books to your reading lists",
@@ -383,8 +467,9 @@
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
     "passwordPlaceholder": "At least 6 characters",
-    "displayNameLabel": "Name (optional)",
-    "displayNamePlaceholder": "Your name",
+    "displayNameLabel": "Username",
+    "displayNamePlaceholder": "Your username",
+    "displayNameRequired": "Username is required.",
     "submitLogin": "Sign In",
     "submitSignup": "Create Account",
     "submitting": "Please wait...",
@@ -398,6 +483,17 @@
   },
   "readingList": {
     "myLibrary": "My Library",
+    "heroEyebrow": "Islamic Library · personal",
+    "heroTitleLine1": "Your reading lists",
+    "heroTitleEm": "in one place.",
+    "pageDescription": "Group books you plan to read, are reading, or have finished.",
+    "signedInAs": "Signed in as {{email}}",
+    "booksInCurrentList": "In this list",
+    "booksInList": "{{count}} books",
+    "browseLists": "Go to lists",
+    "browseCatalog": "Browse catalog",
+    "sectionTitle": "Reading lists",
+    "emptyListDesc": "Start from the homepage by adding books to your lists.",
     "addToList": "Add to my list",
     "loginPrompt": "To add to a list,",
     "loginLink": "sign in",
@@ -410,6 +506,7 @@
   },
   "login": {
     "pageTitle": "Sign In",
+    "heroEyebrow": "Administration",
     "formTitle": "Sign in to your account",
     "emailLabel": "Email",
     "emailPlaceholder": "example@email.com",
@@ -425,6 +522,10 @@
   "usefulInfo": {
     "pageTitle": "Useful Information",
     "pageDescription": "Guides, tips and frequently asked questions to help you use the Islamic Library platform more efficiently.",
+    "heroEyebrow": "Library · help",
+    "heroTitleLine1": "Get more from",
+    "heroTitleEm": "the platform.",
+    "browseGuides": "Browse guides",
     "usageGuides": "Usage Guides",
     "fileFormatsGuide": "File Formats Guide",
     "faq": "Frequently Asked Questions",

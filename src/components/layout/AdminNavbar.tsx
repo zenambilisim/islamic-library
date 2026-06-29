@@ -4,15 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Home, LogOut, Menu, X, KeyRound, Globe } from 'lucide-react';
+import { Home, KeyRound, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import SiteLogo from '@/components/layout/SiteLogo';
 import type { Language } from '@/types';
+
+const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
 
 const AdminNavbar = () => {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const currentLanguage = ((i18n.resolvedLanguage || i18n.language || 'tr').split('-')[0] as Language) || 'tr';
+  const currentLang = ((i18n.resolvedLanguage || i18n.language || 'tr').split('-')[0] as Language) || 'tr';
 
   const handleLogout = async () => {
     setIsMenuOpen(false);
@@ -26,7 +29,6 @@ const AdminNavbar = () => {
 
   const navItems = [
     { key: 'dashboard', label: t('admin.nav.dashboard'), href: '/admin/dashboard', icon: LayoutDashboard },
-    { key: 'traffic', label: t('admin.nav.traffic'), href: '/admin/traffic', icon: Globe },
     {
       key: 'changePassword',
       label: t('admin.nav.changePassword'),
@@ -35,136 +37,133 @@ const AdminNavbar = () => {
     },
   ];
 
-  const languageOptions: { code: Language; label: string }[] = [
-    { code: 'tr', label: 'TR' },
-    { code: 'en', label: 'EN' },
-    { code: 'ru', label: 'RU' },
-    { code: 'az', label: 'AZ' },
-  ];
+  const navLinkClass = (href: string) =>
+    `flex items-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors ${
+      pathname === href || (href !== '/admin/dashboard' && pathname.startsWith(href))
+        ? 'bg-ink text-cream'
+        : 'text-ink-muted hover:bg-[var(--surface-2)] hover:text-ink'
+    }`;
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Logo / Brand */}
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 text-primary-600 hover:text-primary-700 font-semibold"
-          >
-            <span className="text-lg">Islamic Library</span>
-            <span className="text-gray-400 text-sm font-normal hidden sm:inline">— {t('admin.nav.adminArea')}</span>
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-cream/90 backdrop-blur-xl backdrop-saturate-150">
+      <div className="mx-auto max-w-[1280px] px-4 md:px-6">
+        <div className="flex h-14 items-center justify-between gap-4 md:h-16">
+          <Link href="/admin/dashboard" className="flex shrink-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--bg-elev)] p-0.5">
+              <SiteLogo size={30} className="h-full w-full" />
+            </div>
+            <div className="hidden sm:block">
+              <span className="font-display text-base font-semibold tracking-tight text-ink">
+                Islamic Library
+              </span>
+              <span className="ml-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-muted">
+                {t('admin.nav.adminArea')}
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            <label className="sr-only" htmlFor="admin-navbar-language">
-              {t('common.language')}
-            </label>
-            <select
-              id="admin-navbar-language"
-              value={currentLanguage}
-              onChange={(e) => i18n.changeLanguage(e.target.value as Language)}
-              className="h-9 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          <nav className="hidden items-center gap-1 lg:flex">
+            {navItems.map(({ key, href, label, icon: Icon }) => (
+              <Link key={key} href={href} className={navLinkClass(href)}>
+                <Icon size={16} strokeWidth={1.75} />
+                <span className="hidden xl:inline">{label}</span>
+              </Link>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <div
+              className="hidden items-center rounded-full border border-[var(--border)] bg-[var(--surface)] p-0.5 sm:flex"
+              role="tablist"
             >
-              {languageOptions.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.label}
-                </option>
+              {LANG_CODES.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => i18n.changeLanguage(code)}
+                  className={`h-7 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
+                    currentLang === code ? 'bg-ink text-cream' : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  {code.toUpperCase()}
+                </button>
               ))}
-            </select>
+            </div>
+
+            <Link
+              href="/"
+              className="hidden items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-ink-muted transition-colors hover:text-ink md:inline-flex"
+            >
+              <Home size={15} />
+              <span className="hidden lg:inline">{t('admin.nav.backToSite')}</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 md:inline-flex"
+            >
+              <LogOut size={15} />
+              <span className="hidden lg:inline">{t('admin.nav.logout')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="grid h-9 w-9 place-items-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] text-ink lg:hidden"
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {isMenuOpen && (
+          <nav className="border-t border-[var(--border)] py-3 lg:hidden">
+            <div className="mb-3 flex flex-wrap gap-1">
+              {LANG_CODES.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => i18n.changeLanguage(code)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    currentLang === code ? 'bg-ink text-cream' : 'bg-[var(--surface-2)] text-ink-muted'
+                  }`}
+                >
+                  {code.toUpperCase()}
+                </button>
+              ))}
+            </div>
             {navItems.map(({ key, href, label, icon: Icon }) => (
               <Link
                 key={key}
                 href={href}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === href
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                onClick={() => setIsMenuOpen(false)}
+                className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
+                  pathname === href || pathname.startsWith(href)
+                    ? 'bg-accent-soft text-accent'
+                    : 'text-ink hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <Icon size={18} />
                 {label}
               </Link>
             ))}
-            <div className="w-px h-6 bg-gray-200 mx-2" />
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            >
-              <Home size={18} />
-              {t('admin.nav.backToSite')}
-            </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
-              aria-label={t('admin.nav.logout')}
-            >
-              <LogOut size={18} />
-              <span className="hidden lg:inline">{t('admin.nav.logout')}</span>
-            </button>
-          </nav>
-
-          {/* Mobile menu button */}
-          <div className="flex items-center gap-2 md:hidden">
-            <Link
-              href="/"
-              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
-              aria-label={t('admin.nav.backToSite')}
-            >
-              <Home size={20} />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
-              aria-expanded={isMenuOpen}
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile nav */}
-        {isMenuOpen && (
-          <nav className="md:hidden py-3 border-t border-gray-100">
-            <div className="flex flex-col gap-1">
-              <div className="px-4 py-2">
-                <label className="block text-xs text-gray-500 mb-1" htmlFor="admin-navbar-language-mobile">
-                  {t('common.language')}
-                </label>
-                <select
-                  id="admin-navbar-language-mobile"
-                  value={currentLanguage}
-                  onChange={(e) => i18n.changeLanguage(e.target.value as Language)}
-                  className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  {languageOptions.map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {navItems.map(({ key, href, label, icon: Icon }) => (
-                <Link
-                  key={key}
-                  href={href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                    pathname === href ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon size={18} />
-                  {label}
-                </Link>
-              ))}
+            <div className="mt-2 flex gap-2 border-t border-[var(--border)] pt-2">
+              <Link
+                href="/"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--border)] py-2 text-sm font-medium text-ink"
+              >
+                <Home size={16} />
+                {t('admin.nav.backToSite')}
+              </Link>
               <button
                 type="button"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 text-left"
-                onClick={handleLogout}
+                onClick={() => void handleLogout()}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-red-600 hover:bg-red-50"
               >
-                <LogOut size={18} />
+                <LogOut size={16} />
                 {t('admin.nav.logout')}
               </button>
             </div>

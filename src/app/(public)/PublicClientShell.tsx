@@ -6,14 +6,23 @@ import { UserAuthProvider } from '@/contexts/UserAuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BookDetailModal from '@/components/books/BookDetailModal';
+import {
+  GlobalHikmeChatMobile,
+  GlobalHikmeChatSidebar,
+  HikmeChatBooksProvider,
+} from '@/components/chat/GlobalHikmeChat';
 import '@/i18n';
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-cream">
       <Header />
-      <main>{children}</main>
+      <div className="site-chat-layout flex-1">
+        <GlobalHikmeChatSidebar />
+        <main className="site-chat-main flex flex-1 flex-col">{children}</main>
+      </div>
       <Footer />
+      <GlobalHikmeChatMobile />
       <BookDetailModal />
     </div>
   );
@@ -28,7 +37,9 @@ export default function PublicClientShell({ children }: { children: React.ReactN
     <UserAuthProvider>
       <SearchProvider>
         <BookModalProvider>
-          <ShellInner>{children}</ShellInner>
+          <HikmeChatBooksProvider>
+            <ShellInner>{children}</ShellInner>
+          </HikmeChatBooksProvider>
         </BookModalProvider>
       </SearchProvider>
     </UserAuthProvider>

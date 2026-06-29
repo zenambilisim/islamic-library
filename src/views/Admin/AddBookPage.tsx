@@ -190,7 +190,7 @@ const AddBookPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="admin-layout">
       <div className="max-w-2xl">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Yeni Kitap Ekle</h1>
 

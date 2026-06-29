@@ -26,8 +26,8 @@ interface UserAuthContextValue {
   signup: (
     email: string,
     password: string,
-    displayName?: string
-  ) => Promise<{ error?: string; needsEmailConfirmation?: boolean }>;
+    displayName: string
+  ) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -71,7 +71,7 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
   }, [refreshSession]);
 
   const signup = useCallback(
-    async (email: string, password: string, displayName?: string) => {
+    async (email: string, password: string, displayName: string) => {
       const res = await fetch('/api/user/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,9 +81,6 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         return { error: data.error || 'Kayıt oluşturulamadı.' };
-      }
-      if (data.needsEmailConfirmation) {
-        return { needsEmailConfirmation: true };
       }
       await refreshSession();
       return {};

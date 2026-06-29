@@ -18,7 +18,7 @@ Uygulama iki katman kullanır:
 
 - **Authentication → Providers → Email**: açık
 - **Authentication → URL configuration**: Site URL ve redirect URL’lerinizi ekleyin
-- Geliştirmede e-posta onayını kapatabilirsiniz; canlıda açık tutun
+- Kayıt API’si Admin `createUser` + `email_confirm: true` kullanır; doğrulama maili gönderilmez, kullanıcı hemen oturum açar
 
 ## Yeni kullanıcı akışı
 

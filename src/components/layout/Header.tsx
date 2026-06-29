@@ -4,48 +4,25 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { Search, Globe, Menu, X, BookOpen, Library, LogIn } from 'lucide-react';
+import { Search, Menu, X, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
 import { useUserAuth } from '@/contexts/UserAuthContext';
+import SiteLogo from '@/components/layout/SiteLogo';
 import type { Language } from '../../types';
+
+const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
 
 const Header = () => {
   const { t, i18n } = useTranslation();
   const { user, isLoading: authLoading } = useUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [isCondensed, setIsCondensed] = useState(false);
   const { searchInput, setSearchInput, submitSearch, clearSearch, placeholder } = useSearch();
-
-  const languages: { code: Language; name: string; flag: string }[] = [
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
-    { code: 'az', name: 'Azərbaycan', flag: '🇦🇿' },
-  ];
 
   const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const HIDE_THRESHOLD = 100;
-    const SHOW_THRESHOLD = 40;
-
-    const onScroll = () => {
-      const y = window.scrollY;
-      setIsCondensed((prev) => {
-        if (!prev && y > HIDE_THRESHOLD) return true;
-        if (prev && y < SHOW_THRESHOLD) return false;
-        return prev;
-      });
-    };
-
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const currentLangCode =
@@ -77,262 +54,196 @@ const Header = () => {
 
   if (!isMounted) {
     return (
-      <header className="sticky top-0 z-50 border-b border-white/20 bg-white/80 shadow-xl backdrop-blur-lg">
-        <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="h-10 w-full rounded-xl bg-gray-100/80" />
+      <header className="sticky top-0 z-50 h-[var(--header-h)] border-b border-[var(--border)] bg-cream/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-full max-w-site items-center px-4 md:px-6">
+          <div className="h-9 w-48 animate-pulse rounded-lg bg-[var(--surface-3)]" />
         </div>
       </header>
     );
   }
 
   return (
-    <header className="bg-white/80 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-white/20">
-      <div className="container mx-auto px-4">
-        {/* Top bar: auth + language selector - Desktop Only */}
-        <div
-          className={`hidden md:flex justify-end items-center gap-2 border-gradient-to-r from-primary-100 to-purple-100 transition-all duration-300 ${
-            isCondensed
-              ? 'max-h-0 opacity-0 py-0 border-b-0 overflow-hidden'
-              : 'max-h-16 opacity-100 py-2 border-b overflow-visible'
-          }`}
-        >
-          {!authLoading && (
-            user ? (
-              <Link
-                href="/library"
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-sm ${
-                  isMounted && pathname === '/library'
-                    ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
-                    : 'bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 hover:from-primary-50 hover:to-purple-50'
-                }`}
-              >
-                <Library size={16} className={pathname === '/library' ? 'text-white' : 'text-primary-600'} />
-                {t('readingList.myLibrary')}
-              </Link>
-            ) : (
-              <Link
-                href="/user/login"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 text-sm font-medium text-gray-700 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm"
-              >
-                <LogIn size={16} className="text-primary-600" />
-                {t('userAuth.loginShort')}
-              </Link>
-            )
-          )}
-          <div className="relative group">
-            <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 transform hover:scale-105 shadow-sm">
-              <Globe size={16} className="text-primary-600" />
-              <span className="text-sm font-medium text-gray-700">{t('common.language')}</span>
-            </button>
-            
-            {/* Language dropdown */}
-            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2 ${
-                    isMounted && currentLangCode === lang.code
-                      ? 'bg-primary-50 text-primary-700'
-                      : ''
-                  }`}
-                >
-                  <span>{lang.flag}</span>
-                  <span>{lang.name}</span>
-                </button>
-              ))}
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-cream/80 backdrop-blur-xl backdrop-saturate-150">
+      <div className="mx-auto max-w-site px-4 md:px-6">
+        <div className="flex h-[var(--header-h)] items-center gap-4 md:gap-6">
+          <Link href="/" onClick={handleLogoClick} className="flex shrink-0 items-center gap-3">
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-[var(--border)] bg-[var(--bg-elev)] p-1">
+              <SiteLogo size={42} className="h-full w-full" />
             </div>
-          </div>
-        </div>
-
-        {/* Main header */}
-        <div className="py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link
-              href="/"
-              onClick={handleLogoClick}
-              className="flex items-center space-x-3 hover:scale-105 transition-all duration-300"
-            >
-              <div className="flex items-center">
-                <img 
-                  src="/images/logo/ISLAMIC.png" 
-                  alt={t('common.logoAlt', 'Islamic Library')} 
-                  width={140} 
-                  height={140} 
-                  className="object-contain filter drop-shadow-lg"
-                  onError={(e) => {
-                    // Fallback to BookOpen icon if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = target.parentElement?.querySelector('.fallback-icon');
-                    if (fallback) fallback.classList.remove('hidden');
-                  }}
-                />
-                <div className="bg-gradient-to-r from-primary-600 to-purple-600 p-3 rounded-xl hidden fallback-icon shadow-lg">
-                  <BookOpen className="text-white" size={32} />
-                </div>
+            <div className="hidden sm:block">
+              <div className="font-display text-[22px] font-semibold leading-none tracking-tight text-ink">
+                Islamic Library
               </div>
-            </Link>
-            
-            {/* Search bar - Desktop */}
-            <form
-              className="hidden md:flex flex-1 max-w-lg mx-8"
-              onSubmit={handleSearchSubmit}
-              role="search"
-            >
-              <div className="relative w-full">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-purple-100 rounded-2xl blur opacity-30"></div>
-                <div className="relative flex items-center bg-white/90 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg">
-                  <Search
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-500 pointer-events-none"
-                    size={20}
-                    aria-hidden
-                  />
-                  <input
-                    type="search"
-                    placeholder={placeholder}
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-12 pr-28 py-4 bg-transparent border-none outline-none text-gray-700 placeholder-gray-500 font-medium"
-                    aria-label={placeholder}
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary-600 to-purple-600 text-white text-sm font-medium shadow-md hover:opacity-90 transition-opacity"
-                  >
-                    {t('common.search')}
-                  </button>
-                </div>
+              <div className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-ink-muted">
+                {t('common.siteTagline', 'İslami Dijital Kütüphane')}
               </div>
-            </form>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-2">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    isMounted && pathname === item.href
-                      ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg transform scale-105'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-purple-50 hover:text-primary-700'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Mobile: auth, language selector, menu */}
-            <div className="lg:hidden flex items-center space-x-2">
-              {!authLoading && (
-                user ? (
-                  <Link
-                    href="/library"
-                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 shadow-sm ${
-                      isMounted && pathname === '/library'
-                        ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
-                        : 'bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 hover:from-primary-50 hover:to-purple-50'
-                    }`}
-                  >
-                    <Library size={16} className={pathname === '/library' ? 'text-white' : 'text-primary-600'} />
-                    <span className="hidden sm:inline">{t('readingList.myLibrary')}</span>
-                  </Link>
-                ) : (
-                  <Link
-                    href="/user/login"
-                    className="flex items-center gap-1 px-3 py-2 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 text-xs font-medium text-gray-700 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm"
-                  >
-                    <LogIn size={16} className="text-primary-600" />
-                    <span className="hidden sm:inline">{t('userAuth.loginShort')}</span>
-                  </Link>
-                )
-              )}
-              {/* Language selector - Mobile */}
-              <div className="relative group">
-                <button className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 hover:from-primary-50 hover:to-purple-50 transition-all duration-300 shadow-sm">
-                  <Globe size={18} className="text-primary-600" />
-                  <span className="text-xs font-medium text-gray-700">
-                    {languages.find((l) => l.code === currentLangCode)?.flag}
-                  </span>
-                </button>
-                
-                {/* Language dropdown - Mobile */}
-                <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => handleLanguageChange(lang.code)}
-                      className={`w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg ${
-                        isMounted && currentLangCode === lang.code
-                          ? 'bg-primary-50 text-primary-700'
-                          : ''
-                      }`}
-                    >
-                      <span>{lang.flag}</span>
-                      <span className="text-sm">{lang.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Hamburger menu button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                {isMenuOpen ? <X size={24} className="text-gray-700" /> : <Menu size={24} className="text-gray-700" />}
-              </button>
             </div>
-          </div>
+          </Link>
 
-          {/* Mobile search bar */}
-          <form className="md:hidden mt-4" onSubmit={handleSearchSubmit} role="search">
-            <div className="relative flex items-center">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                size={20}
-                aria-hidden
-              />
+          <form
+            className="hidden min-w-0 flex-1 md:flex md:max-w-xl lg:max-w-2xl"
+            onSubmit={handleSearchSubmit}
+            role="search"
+          >
+            <div className="flex h-11 w-full items-center gap-2.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 transition-colors focus-within:border-accent focus-within:bg-[var(--bg-elev)]">
+              <Search size={16} className="shrink-0 text-ink-faint" aria-hidden />
               <input
                 type="search"
                 placeholder={placeholder}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="search-input pl-10 pr-20 flex-1"
+                className="min-w-0 flex-1 border-none bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
                 aria-label={placeholder}
               />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium"
-              >
-                {t('common.search')}
-              </button>
             </div>
           </form>
+
+          <div className="ml-auto flex items-center gap-2">
+            <div
+              className="hidden items-center rounded-full border border-[var(--border)] bg-[var(--surface)] p-0.5 sm:flex"
+              role="tablist"
+            >
+              {LANG_CODES.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => handleLanguageChange(code)}
+                  className={`h-[30px] rounded-full px-3 text-xs font-semibold tracking-wide transition-colors ${
+                    currentLangCode === code
+                      ? 'bg-ink text-cream'
+                      : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  {code.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {!authLoading &&
+              (user ? (
+                <Link
+                  href="/library"
+                  className={`hidden items-center gap-1.5 rounded-[11px] border px-3 py-2 text-sm font-medium transition-colors md:inline-flex ${
+                    pathname === '/library'
+                      ? 'border-accent bg-accent text-white'
+                      : 'border-[var(--border)] bg-[var(--surface)] text-ink hover:bg-[var(--surface-2)]'
+                  }`}
+                >
+                  <Library size={16} />
+                  <span className="hidden lg:inline">{t('readingList.myLibrary')}</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/user/login"
+                  className="hidden items-center gap-1.5 rounded-[11px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-[var(--surface-2)] md:inline-flex"
+                >
+                  <LogIn size={16} />
+                  <span className="hidden lg:inline">{t('userAuth.loginShort')}</span>
+                </Link>
+              ))}
+
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="grid h-[38px] w-[38px] place-items-center rounded-[11px] border border-[var(--border)] bg-[var(--surface)] text-ink lg:hidden"
+              aria-expanded={isMenuOpen}
+              aria-label={t('navigation.menu', 'Menü')}
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <nav className="lg:hidden py-4 border-t border-gray-100">
+        <nav className="hidden border-t border-[var(--border)] py-2 lg:block">
+          <ul className="flex flex-wrap items-center gap-1">
             {navigationItems.map((item) => (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={`block py-2 px-4 rounded-md transition-colors ${
-                  isMounted && pathname === item.href
-                    ? 'text-primary-600 bg-primary-50 font-medium'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
+              <li key={item.key}>
+                <Link
+                  href={item.href}
+                  className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                    pathname === item.href
+                      ? 'bg-ink text-cream'
+                      : 'text-ink-muted hover:bg-[var(--surface-2)] hover:text-ink'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
             ))}
-          </nav>
-        )}
+          </ul>
+        </nav>
       </div>
+
+      <form className="border-t border-[var(--border)] px-4 py-3 md:hidden" onSubmit={handleSearchSubmit} role="search">
+        <div className="flex h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3">
+          <Search size={16} className="shrink-0 text-ink-faint" />
+          <input
+            type="search"
+            placeholder={placeholder}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
+            aria-label={placeholder}
+          />
+          <button type="submit" className="shrink-0 text-sm font-semibold text-accent">
+            {t('common.search')}
+          </button>
+        </div>
+      </form>
+
+      {isMenuOpen && (
+        <nav className="border-t border-[var(--border)] bg-[var(--bg-elev)] px-4 py-3 lg:hidden">
+          <div className="mb-3 flex flex-wrap gap-1">
+            {LANG_CODES.map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => handleLanguageChange(code)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  currentLangCode === code ? 'bg-ink text-cream' : 'bg-[var(--surface-2)] text-ink-muted'
+                }`}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {navigationItems.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${
+                pathname === item.href ? 'bg-accent-soft text-accent' : 'text-ink hover:bg-[var(--surface-2)]'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+          {!authLoading && (
+            <div className="mt-2 border-t border-[var(--border)] pt-2">
+              {user ? (
+                <Link
+                  href="/library"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-ink"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Library size={16} />
+                  {t('readingList.myLibrary')}
+                </Link>
+              ) : (
+                <Link
+                  href="/user/login"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-ink"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <LogIn size={16} />
+                  {t('userAuth.loginShort')}
+                </Link>
+              )}
+            </div>
+          )}
+        </nav>
+      )}
     </header>
   );
 };

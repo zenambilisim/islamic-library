@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { Filter, Folder, X, Loader2 } from 'lucide-react';
+import { Folder, X, Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
 import { resolveAppLanguage } from '../../hooks/useSupabaseBooks';
 import type { SearchFilters } from '../../types';
@@ -10,7 +10,6 @@ interface FilterSidebarProps {
   onFiltersChange: (filters: SearchFilters) => void;
   isOpen: boolean;
   onToggle: () => void;
-  /** Kategori linkine tıklanınca (ör. mobil paneli kapatmak için) */
   onCategoryNavigate?: () => void;
 }
 
@@ -40,72 +39,51 @@ const FilterSidebar = ({
 
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onToggle}
-        />
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onToggle} aria-hidden />
       )}
 
-      {/* Filter Toggle Button - Mobile */}
-      <button
-        onClick={onToggle}
-        className="lg:hidden fixed bottom-6 right-6 bg-primary-600 text-white p-3 rounded-full shadow-lg z-30"
+      <aside
+        className={`
+          fixed right-0 top-0 z-50 h-full w-72 overflow-y-auto border-l border-[var(--border)] bg-[var(--bg-elev)] p-5 shadow-lift
+          transition-transform duration-300 lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:z-10 lg:h-fit lg:max-h-[calc(100vh-var(--header-h)-2rem)]
+          lg:w-64 lg:shrink-0 lg:translate-x-0 lg:rounded-editorial lg:border lg:shadow-soft
+          ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+        `}
       >
-        <Filter size={24} />
-      </button>
-
-      {/* Sidebar */}
-      <div className={`
-        fixed md:sticky top-0 md:top-20 right-0 h-full md:h-fit md:max-h-[calc(100vh-6rem)]
-        bg-white/90 backdrop-blur-lg shadow-2xl md:shadow-xl
-        w-80 md:w-80 p-6 md:p-6
-        transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:translate-x-0
-        transition-all duration-500 ease-in-out
-        z-50 md:z-10
-        overflow-y-auto md:rounded-2xl md:border md:border-white/20
-        bg-gradient-to-br from-white/95 to-blue-50/90
-      `}>
-        
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-primary-500 to-purple-500 p-2 rounded-xl">
-              <Filter size={20} className="text-white" />
-            </div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">{t('search.filters')}</h3>
-          </div>
-          
-          <div className="flex space-x-3">
+        <div className="mb-5 flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold tracking-tight text-ink">
+            {t('search.filters')}
+          </h3>
+          <div className="flex items-center gap-2">
             {hasActiveFilters && (
               <button
+                type="button"
                 onClick={clearAllFilters}
-                className="px-3 py-1 text-sm bg-red-100 text-red-600 hover:bg-red-200 font-medium rounded-lg transition-all duration-300"
+                className="text-xs text-ink-muted underline underline-offset-2"
               >
                 {t('search.clearFilters')}
               </button>
             )}
             <button
+              type="button"
               onClick={onToggle}
-              className="lg:hidden p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-300"
+              className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--border)] lg:hidden"
+              aria-label={t('common.close', 'Kapat')}
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Sort Filter */}
-        <div className="mb-8">
-          <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
-            <span>↕️</span>
-            <span>{t('search.sortBy')}</span>
-          </h4>
-
+        <div className="mb-6 border-b border-[var(--border)] pb-6">
+          <p className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+            {t('search.sortBy')}
+          </p>
           <select
             value={filters.sortBy ?? 'uploadDate'}
             onChange={(event) => handleSortChange(event.target.value as SearchFilters['sortBy'])}
-            className="w-full rounded-xl border-2 border-gray-100 bg-white/80 px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-300 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-ink outline-none focus:border-accent"
           >
             <option value="uploadDate">{t('search.sortUploadDate')}</option>
             <option value="alphabetical">{t('search.sortAlphabetical')}</option>
@@ -113,58 +91,47 @@ const FilterSidebar = ({
           </select>
         </div>
 
-        {/* Categories Filter */}
-        <div className="mb-8">
-          <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
-            <span>🏷️</span>
-            <span>{t('search.filterByCategory')}</span>
-          </h4>
-          
-          {/* Loading State */}
+        <div>
+          <p className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+            {t('search.filterByCategory')}
+          </p>
+
           {loading && (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-7 w-7 animate-spin text-accent" />
             </div>
           )}
-          
-          {/* Error State */}
+
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
             </div>
           )}
-          
-          {/* Categories List */}
+
           {!loading && !error && categories.length > 0 && (
-            <div className="space-y-3">
-              {categories.map((category, index) => (
-                <Link
-                  key={category.id}
-                  href={`/categories/${encodeURIComponent(category.slug)}`}
-                  onClick={() => onCategoryNavigate?.()}
-                  className="w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 transform hover:scale-[1.02] bg-white/70 hover:bg-white border-2 border-gray-100 hover:border-primary-200 hover:shadow-md"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-                    <Folder size={18} strokeWidth={1.75} aria-hidden />
-                  </div>
-                  <div className="flex-1">
-                    <span className="font-semibold text-sm">{category.name}</span>
-                  </div>
-                </Link>
+            <ul className="space-y-0.5">
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link
+                    href={`/categories/${encodeURIComponent(category.slug)}`}
+                    onClick={() => onCategoryNavigate?.()}
+                    className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-ink transition-colors hover:bg-[var(--surface-2)]"
+                  >
+                    <Folder size={16} className="shrink-0 text-accent" strokeWidth={1.75} />
+                    <span className="line-clamp-2 font-medium">{category.name}</span>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-          
-          {/* No Categories State */}
+
           {!loading && !error && categories.length === 0 && (
-            <div className="text-center p-6 bg-gray-50 rounded-xl">
-              <p className="text-gray-500 text-sm">{t('categories.noCategories')}</p>
-            </div>
+            <p className="rounded-xl bg-[var(--surface-2)] p-4 text-center text-sm text-ink-muted">
+              {t('categories.noCategories')}
+            </p>
           )}
         </div>
- 
-      </div>
+      </aside>
     </>
   );
 };

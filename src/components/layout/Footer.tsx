@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import SiteLogo from '@/components/layout/SiteLogo';
 
 const Footer = () => {
   const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -23,10 +23,9 @@ const Footer = () => {
 
   if (!isMounted) {
     return (
-      <footer className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 via-purple-600/10 to-blue-600/10" />
-        <div className="container relative mx-auto px-4 py-16">
-          <div className="h-40 w-full max-w-3xl animate-pulse rounded-2xl bg-white/5" />
+      <footer className="border-t border-[var(--border)] bg-ink text-cream">
+        <div className="mx-auto max-w-site px-4 py-12 md:px-6">
+          <div className="h-32 animate-pulse rounded-xl bg-white/5" />
         </div>
       </footer>
     );
@@ -35,46 +34,34 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 via-purple-600/10 to-blue-600/10"></div>
-      
-      <div className="container mx-auto px-4 py-16 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* Logo & Description */}
+    <footer className="border-t border-white/10 bg-ink text-cream">
+      <div className="mx-auto max-w-site px-4 py-12 md:px-6 md:py-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-4 mb-6">
-              {logoFailed ? (
-                <BookOpen className="shrink-0 text-primary-300" size={40} strokeWidth={1.75} />
-              ) : (
-                <img
-                  src="/images/logo/islamic-lib-logo.png"
-                  alt={t('common.logoAlt', 'Islamic Library')}
-                  width={180}
-                  height={180}
-                  className="h-14 w-auto shrink-0 object-contain drop-shadow-md sm:h-16 md:h-[4.5rem]"
-                  onError={() => setLogoFailed(true)}
-                />
-              )}
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-white/15 bg-white/10 p-1">
+                <SiteLogo size={36} className="h-full w-full" />
+              </div>
               <div>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Islamic Library</h3>
-                <p className="text-blue-200 text-sm font-medium">{t('footer.description')}</p>
+                <h3 className="font-display text-2xl font-semibold tracking-tight">Islamic Library</h3>
+                <p className="text-sm text-white/60">{t('footer.description')}</p>
               </div>
             </div>
-            <p className="text-gray-300 mb-8 max-w-lg text-lg leading-relaxed">
+            <p className="max-w-lg text-sm leading-relaxed text-white/70">
               {t('footer.detailedDescription')}
             </p>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">{t('footer.quickLinks')}</h4>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">
+              {t('footer.quickLinks')}
+            </h4>
             <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.key}>
                   <Link
                     href={link.href}
-                    className="text-gray-300 hover:text-primary-400 transition-colors"
+                    className="text-sm text-white/75 transition-colors hover:text-accent-300"
                   >
                     {link.label}
                   </Link>
@@ -83,25 +70,21 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">{t('footer.contact')}</h4>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3 text-gray-300">
-                <Mail size={16} />
-                <span>islamic.library@yahoo.com</span>
-              </div>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">
+              {t('footer.contact')}
+            </h4>
+            <div className="flex items-center gap-2 text-sm text-white/75">
+              <Mail size={16} className="shrink-0 text-accent-300" />
+              <span>islamic.library@yahoo.com</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © {currentYear} Islamic Library. {t('footer.copyright')}
-            </p>
-          </div>
+        <div className="mt-10 border-t border-white/10 pt-6">
+          <p className="text-center text-sm text-white/50 md:text-left">
+            © {currentYear} Islamic Library. {t('footer.copyright')}
+          </p>
         </div>
       </div>
     </footer>

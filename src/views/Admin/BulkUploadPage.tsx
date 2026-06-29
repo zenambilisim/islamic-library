@@ -202,7 +202,7 @@ const BulkUploadPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="admin-layout">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Klasörden toplu kitap yükle</h1>
       <div className="text-gray-600 mb-6">
         <ul className="list-disc list-inside space-y-1">

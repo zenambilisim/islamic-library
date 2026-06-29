@@ -23,7 +23,16 @@ function normalizeQueryLanguage(language?: string): string | null {
  * Sunucu API'sinden yazarları çeken custom hook
  * GET /api/authors – Supabase env sadece sunucuda (SUPABASE_URL, SUPABASE_ANON_KEY)
  */
-export function useSupabaseAuthors(language?: string): UseSupabaseAuthorsReturn {
+interface UseSupabaseAuthorsOptions {
+  /** false ise istek atılmaz (ör. ana sayfa araması kapalıyken). */
+  enabled?: boolean;
+}
+
+export function useSupabaseAuthors(
+  language?: string,
+  options?: UseSupabaseAuthorsOptions,
+): UseSupabaseAuthorsReturn {
+  const enabled = options?.enabled !== false;
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +45,12 @@ export function useSupabaseAuthors(language?: string): UseSupabaseAuthorsReturn 
   }, [searchQuery]);
 
   const fetchAuthors = useCallback(async () => {
+    if (!enabled) {
+      setAuthors([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -57,7 +72,7 @@ export function useSupabaseAuthors(language?: string): UseSupabaseAuthorsReturn 
     } finally {
       setLoading(false);
     }
-  }, [language, debouncedSearch]);
+  }, [language, debouncedSearch, enabled]);
 
   useEffect(() => {
     void fetchAuthors();

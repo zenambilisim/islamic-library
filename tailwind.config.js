@@ -1,41 +1,65 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f4f5ff',
-          100: '#ebeeff',
-          200: '#dde0ff',
-          300: '#c5cbff',
-          400: '#a8b2ff',
-          500: '#8b98ff',
-          600: '#818ff0',
-          700: '#6b7ae6',
-          800: '#5a68d4',
-          900: '#4c5cb8',
+        cream: {
+          DEFAULT: '#F7F5F0',
+          50: '#FAF8F3',
+          100: '#F7F5F0',
+          200: '#EFEBE2',
         },
-        secondary: {
-          50: '#faf5ff',
-          100: '#f3e8ff',
-          200: '#e9d5ff',
-          300: '#d8b4fe',
-          400: '#c084fc',
-          500: '#a855f7',
-          600: '#9333ea',
-          700: '#7c3aed',
-          800: '#6b21a8',
-          900: '#581c87',
-        }
+        ink: {
+          DEFAULT: '#14191E',
+          muted: '#5A6168',
+          faint: '#8A8F95',
+        },
+        accent: {
+          DEFAULT: '#0F766E',
+          fg: '#FFFFFF',
+          soft: '#D9F0EC',
+          50: '#ECFDF5',
+          100: '#D9F0EC',
+          200: '#99F6E4',
+          300: '#5EEAD4',
+          400: '#2DD4BF',
+          500: '#14B8A6',
+          600: '#0F766E',
+          700: '#0D5F58',
+          800: '#115E59',
+          900: '#134E4A',
+        },
+        primary: {
+          50: '#ECFDF5',
+          100: '#D9F0EC',
+          200: '#99F6E4',
+          300: '#5EEAD4',
+          400: '#2DD4BF',
+          500: '#14B8A6',
+          600: '#0F766E',
+          700: '#0D5F58',
+          800: '#115E59',
+          900: '#134E4A',
+        },
       },
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'arabic': ['Noto Sans Arabic', 'Arial', 'sans-serif'],
-      }
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        arabic: ['Amiri', 'serif'],
+      },
+      borderRadius: {
+        editorial: '20px',
+      },
+      boxShadow: {
+        soft: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)',
+        card: '0 1px 2px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08)',
+        lift: '0 20px 60px rgba(0,0,0,0.12)',
+      },
+      maxWidth: {
+        site: '1680px',
+      },
     },
   },
   plugins: [],
-}
+};

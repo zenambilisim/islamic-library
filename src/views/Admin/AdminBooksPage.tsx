@@ -4,12 +4,35 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
-import { BookPlus, FolderUp, Pencil, Search, Trash2 } from 'lucide-react';
+import { BookPlus, FolderUp, Pencil, Trash2 } from 'lucide-react';
 import type { Book, Language } from '@/types';
 import { useAdminBooksPaginated } from '@/hooks/useAdminBooksPaginated';
 import { useBookModal } from '@/contexts/BookModalContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { resolveAuthorDisplayName } from '@/lib/author-display-name';
+import AdminShell from '@/components/admin/AdminShell';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import AdminSearchField from '@/components/admin/AdminSearchField';
+import {
+  adminAlertError,
+  adminBtnDanger,
+  adminBtnIcon,
+  adminBtnIconDanger,
+  adminBtnPrimary,
+  adminBtnSecondary,
+  adminEmptyState,
+  adminLinkAccent,
+  adminLoadingState,
+  adminPaginationBar,
+  adminSelect,
+  adminSelectCompact,
+  adminTableWrap,
+  adminTd,
+  adminTdPrimary,
+  adminTh,
+  adminTheadRow,
+  adminTr,
+} from '@/components/admin/admin-classes';
 
 const DATA_LANGUAGES: Language[] = ['tr', 'en', 'ru', 'az'];
 
@@ -134,77 +157,53 @@ const AdminBooksPage = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700">
-          {error}
-        </div>
-      </div>
+      <AdminShell>
+        <div className={adminAlertError}>{error}</div>
+      </AdminShell>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('admin.books.title')}</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          {books.length > 0 && (
-            <button
-              type="button"
-              onClick={handleBulkDelete}
-              disabled={bulkDeleting || selectedIds.size === 0 || deletingId !== null}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Trash2 size={18} />
-              {bulkDeleting
-                ? t('admin.books.bulkDeleting')
-                : t('admin.books.bulkDeleteButton', { count: selectedIds.size })}
-            </button>
-          )}
-          <Link
-            href="/admin/books/new"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
+    <AdminShell>
+      <AdminPageHeader title={t('admin.books.title')}>
+        {books.length > 0 && (
+          <button
+            type="button"
+            onClick={() => void handleBulkDelete()}
+            disabled={bulkDeleting || selectedIds.size === 0 || deletingId !== null}
+            className={adminBtnDanger}
           >
-            <BookPlus size={18} />
-            {t('admin.books.addNew')}
-          </Link>
-          <Link
-            href="/admin/books/bulk"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
-          >
-            <FolderUp size={18} />
-            {t('admin.nav.bulkUpload')}
-          </Link>
-        </div>
-      </div>
+            <Trash2 size={18} />
+            {bulkDeleting
+              ? t('admin.books.bulkDeleting')
+              : t('admin.books.bulkDeleteButton', { count: selectedIds.size })}
+          </button>
+        )}
+        <Link
+          href="/admin/books/new"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={adminBtnPrimary}
+        >
+          <BookPlus size={18} />
+          {t('admin.books.addNew')}
+        </Link>
+        <Link href="/admin/books/bulk" className={adminBtnSecondary}>
+          <FolderUp size={18} />
+          {t('admin.nav.bulkUpload')}
+        </Link>
+      </AdminPageHeader>
 
-      {deleteError && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
-          {deleteError}
-        </div>
-      )}
+      {deleteError && <div className={adminAlertError}>{deleteError}</div>}
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label htmlFor="admin-books-search" className="sr-only">
-          {t('admin.books.searchLabel')}
-        </label>
-        <div className="relative max-w-md">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            size={18}
-            aria-hidden
-          />
-          <input
-            id="admin-books-search"
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('admin.books.searchPlaceholder')}
-            autoComplete="off"
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-          />
-        </div>
+        <AdminSearchField
+          id="admin-books-search"
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('admin.books.searchPlaceholder')}
+          label={t('admin.books.searchLabel')}
+        />
         <div className="min-w-[120px]">
           <label htmlFor="admin-books-data-language" className="sr-only">
             {t('common.language')}
@@ -213,7 +212,7 @@ const AdminBooksPage = () => {
             id="admin-books-data-language"
             value={dataLanguage}
             onChange={(e) => setDataLanguage(e.target.value as Language)}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            className={adminSelect}
           >
             {DATA_LANGUAGES.map((lang) => (
               <option key={lang} value={lang}>
@@ -230,7 +229,7 @@ const AdminBooksPage = () => {
             id="admin-books-category"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            className={adminSelect}
           >
             <option value="">{t('admin.books.allCategories')}</option>
             {categories.map((category) => (
@@ -242,13 +241,13 @@ const AdminBooksPage = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className={adminTableWrap}>
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-gray-500">
+          <div className={adminLoadingState}>
             <span>{t('admin.books.loading')}</span>
           </div>
         ) : books.length === 0 ? (
-          <div className="py-16 text-center text-gray-500">
+          <div className={adminEmptyState}>
             {debouncedSearch ? t('admin.books.noBooksMatch') : t('admin.books.noBooks')}
           </div>
         ) : (
@@ -256,8 +255,8 @@ const AdminBooksPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50/80">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-10">
+                  <tr className={adminTheadRow}>
+                    <th className={`${adminTh} w-10`}>
                       <input
                         type="checkbox"
                         checked={allOnPageSelected}
@@ -266,33 +265,18 @@ const AdminBooksPage = () => {
                         aria-label={t('admin.books.selectAll')}
                       />
                     </th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
-                      {t('admin.books.table.cover')}
-                    </th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      {t('admin.books.table.title')}
-                    </th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      {t('admin.books.table.author')}
-                    </th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
-                      {t('admin.books.table.category')}
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
-                      {t('admin.books.table.pages')}
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
-                      {t('admin.books.table.actions')}
-                    </th>
+                    <th className={`${adminTh} w-16`}>{t('admin.books.table.cover')}</th>
+                    <th className={adminTh}>{t('admin.books.table.title')}</th>
+                    <th className={adminTh}>{t('admin.books.table.author')}</th>
+                    <th className={`${adminTh} hidden sm:table-cell`}>{t('admin.books.table.category')}</th>
+                    <th className={`${adminTh} text-right w-20`}>{t('admin.books.table.pages')}</th>
+                    <th className={`${adminTh} text-right w-32`}>{t('admin.books.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {books.map((book: Book) => (
-                    <tr
-                      key={book.id}
-                      className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="py-2 px-4">
+                    <tr key={book.id} className={adminTr}>
+                      <td className={adminTd}>
                         <input
                           type="checkbox"
                           checked={selectedIds.has(book.id)}
@@ -301,11 +285,11 @@ const AdminBooksPage = () => {
                           aria-label={t('admin.books.selectOne', { title: book.title })}
                         />
                       </td>
-                      <td className="py-2 px-4">
+                      <td className={adminTd}>
                         <button
                           type="button"
                           onClick={() => openDetails(book)}
-                          className="block w-10 h-14 relative rounded overflow-hidden bg-gray-100 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="relative block h-14 w-10 shrink-0 overflow-hidden rounded border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:border-accent"
                         >
                           {book.coverImage ? (
                             <Image
@@ -316,44 +300,38 @@ const AdminBooksPage = () => {
                               className="object-cover w-full h-full"
                             />
                           ) : (
-                            <span className="flex items-center justify-center w-full h-full text-gray-400 text-xs">—</span>
+                            <span className="flex h-full w-full items-center justify-center text-xs text-ink-faint">—</span>
                           )}
                         </button>
                       </td>
-                      <td className="py-2 px-4">
+                      <td className={adminTdPrimary}>
                         <button
                           type="button"
                           onClick={() => openDetails(book)}
-                          className="font-medium text-primary-600 hover:text-primary-700 hover:underline text-left"
+                          className={`${adminLinkAccent} text-left`}
                         >
                           {book.title}
                         </button>
                       </td>
-                      <td className="py-2 px-4 text-gray-700">
-                        {resolveAuthorDisplayName(book.author, t)}
-                      </td>
-                      <td className="py-2 px-4 text-gray-600 hidden sm:table-cell">
-                        {book.category}
-                      </td>
-                      <td className="py-2 px-4 text-right text-gray-600 tabular-nums">
-                        {book.pages || '—'}
-                      </td>
-                      <td className="py-2 px-4 text-right">
+                      <td className={adminTd}>{resolveAuthorDisplayName(book.author, t)}</td>
+                      <td className={`${adminTd} hidden sm:table-cell`}>{book.category}</td>
+                      <td className={`${adminTd} text-right tabular-nums`}>{book.pages || '—'}</td>
+                      <td className={`${adminTd} text-right`}>
                         <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/admin/books/${book.id}/edit`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 inline-flex"
+                            className={adminBtnIcon}
                             title={t('admin.books.table.edit')}
                           >
                             <Pencil size={18} />
                           </Link>
                           <button
                             type="button"
-                            onClick={() => handleDelete(book)}
+                            onClick={() => void handleDelete(book)}
                             disabled={bulkDeleting || deletingId !== null}
-                            className="p-2 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={adminBtnIconDanger}
                             title={t('admin.books.table.delete')}
                           >
                             {deletingId === book.id ? (
@@ -371,27 +349,27 @@ const AdminBooksPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50">
-              <p className="text-sm text-gray-600">
+            <div className={adminPaginationBar}>
+              <p className="text-sm text-ink-muted">
                 {t('admin.books.pagination.total', { count: total })}
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <label htmlFor="per-page" className="text-sm text-gray-600 whitespace-nowrap">
+                  <label htmlFor="per-page" className="whitespace-nowrap text-sm text-ink-muted">
                     {t('admin.books.pagination.perPage')}
                   </label>
                   <select
                     id="per-page"
                     value={pageSize}
                     onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm bg-white"
+                    className={adminSelectCompact}
                   >
                     {[10, 20, 30, 50].map((n) => (
                       <option key={n} value={n}>{n}</option>
                     ))}
                   </select>
                 </div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-ink-muted">
                   {t('admin.books.pagination.pageOf', {
                     current: page + 1,
                     total: totalPages,
@@ -402,7 +380,7 @@ const AdminBooksPage = () => {
                     type="button"
                     onClick={() => setPage(Math.max(0, page - 1))}
                     disabled={page === 0}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={adminBtnSecondary}
                   >
                     {t('admin.books.pagination.prev')}
                   </button>
@@ -410,7 +388,7 @@ const AdminBooksPage = () => {
                     type="button"
                     onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                     disabled={page >= totalPages - 1}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={adminBtnSecondary}
                   >
                     {t('admin.books.pagination.next')}
                   </button>
@@ -420,7 +398,7 @@ const AdminBooksPage = () => {
           </>
         )}
       </div>
-    </div>
+    </AdminShell>
   );
 };
 

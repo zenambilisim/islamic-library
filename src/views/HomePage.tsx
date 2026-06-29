@@ -5,20 +5,36 @@ import { useTranslation } from 'react-i18next';
 import BookCard from '@/components/books/BookCard';
 import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import FilterSidebar from '@/components/books/FilterSidebar';
+import AuthorCard from '@/components/authors/AuthorCard';
+import AuthorsGridSkeleton from '@/components/authors/AuthorsGridSkeleton';
+import { AuthorDetailSection } from '@/components/authors/AuthorDetailSection';
+import HomeHero from '@/components/home/HomeHero';
+import FeaturedBooksSlider from '@/components/home/FeaturedBooksSlider';
+import HomeFiltersPanel from '@/components/home/HomeFiltersPanel';
+import CategoryTabs from '@/components/home/CategoryTabs';
 import { useSearch } from '@/contexts/SearchContext';
-import { useSupabaseBooks } from '@/hooks/useSupabaseBooks';
+import { useSupabaseBooks, resolveAppLanguage } from '@/hooks/useSupabaseBooks';
+import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
+import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
-import type { SearchFilters } from '@/types';
-import { resolveSearchLocale, textIncludesSearch, normalizeForSearch } from '@/lib/search-utils';
+import type { Author, SearchFilters } from '@/types';
+import {
+  authorMatchesSearch,
+  bookMatchesSearch,
+  normalizeForSearch,
+  resolveSearchLocale,
+} from '@/lib/search-utils';
 
 const HomePage = () => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [isMounted, setIsMounted] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
+  const [categorySlug, setCategorySlug] = useState<string | undefined>();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
   const isSearchMode = searchTerm.trim().length > 0;
-  
+
   const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } =
     useSupabaseBooks(filters.sortBy ?? 'uploadDate', { fetchAll: isSearchMode });
   const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
@@ -30,8 +46,8 @@ const HomePage = () => {
   });
 
   const activeLanguage = (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0];
+  const appLanguage = resolveAppLanguage(i18n.language);
 
-  /** Tüm dillerdeki toplam kitap sayısı (hero); /api/books COUNT (language filtresiz) */
   const [heroTotalBooks, setHeroTotalBooks] = useState<number | null>(null);
 
   const heroBooksLocaleTag =
@@ -42,6 +58,12 @@ const HomePage = () => {
         : activeLanguage === 'az'
           ? 'az-AZ'
           : 'en-US';
+
+  const { categories } = useSupabaseCategories(appLanguage);
+  const {
+    authors: supabaseAuthors,
+    loading: authorsLoading,
+  } = useSupabaseAuthors(appLanguage, { enabled: isSearchMode });
 
   useEffect(() => {
     let cancelled = false;
@@ -72,28 +94,6 @@ const HomePage = () => {
     };
   }, []);
 
-  // Dil bazlı banner resmi seç
-  const getBannerImage = () => {
-    const bannerImages: Record<string, string> = {
-      'tr': '/images/HomePage/Banner turkish.png',
-      'en': '/images/HomePage/Banner english.png',
-      'ru': '/images/HomePage/Banner russian.png',
-      'az': '/images/HomePage/Banner azerbaijani.png'
-    };
-    return bannerImages[activeLanguage] || bannerImages.en;
-  };
-
-  // Dil bazlı mockup resmi seç
-  const getMockupImage = () => {
-    const mockupImages: Record<string, string> = {
-      'tr': '/images/HomePage/iPad Pro Mockup turkish.png',
-      'en': '/images/HomePage/iPad Pro Mockup english.png',
-      'ru': '/images/HomePage/iPad Pro Mockup russian.png',
-      'az': '/images/HomePage/İPad Pro Mockup azerbaijani.png'
-    };
-    return mockupImages[activeLanguage] || mockupImages.en;
-  };
-
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -103,254 +103,231 @@ const HomePage = () => {
     setPlaceholder(t('search.booksPlaceholder'));
   }, [setSearchMode, setPlaceholder, t]);
 
-  // Scroll to books section with smooth animation
-  const scrollToBooks = () => {
-    const booksSection = document.getElementById('books-section');
-    if (booksSection) {
-      booksSection.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest'
-      });
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSelectedAuthorId(null);
     }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      category: categorySlug,
+    }));
+  }, [categorySlug]);
+
+  const scrollToBooks = () => {
+    document.getElementById('books-section')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   };
 
-  // Filter books based on search term and filters
   const filteredBooks = useMemo(() => {
     let books = supabaseBooks;
-
     const searchLocale = resolveSearchLocale(activeLanguage);
 
-    // Home sayfasinda arama yalnizca kitap adinda yapilir.
     if (searchTerm.trim()) {
-      books = books.filter((book) => textIncludesSearch(book.title, searchTerm, searchLocale));
+      books = books.filter((book) => bookMatchesSearch(book, searchTerm, searchLocale));
     }
 
-    // Apply category filter
-    if (filters.category) {
-      const fc = normalizeForSearch(filters.category, searchLocale);
+    if (categorySlug) {
+      const fc = normalizeForSearch(categorySlug, searchLocale);
       books = books.filter(
-        (book) =>
-          normalizeForSearch(book.categorySlug ?? '', searchLocale) === fc ||
-          normalizeForSearch(book.category, searchLocale) === fc
+        (book) => normalizeForSearch(book.categorySlug ?? '', searchLocale) === fc,
       );
     }
 
     return books;
-  }, [supabaseBooks, searchTerm, filters, activeLanguage]);
+  }, [supabaseBooks, searchTerm, categorySlug, activeLanguage]);
+
+  const filteredAuthors = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const searchLocale = resolveSearchLocale(activeLanguage);
+    return supabaseAuthors.filter((author) =>
+      authorMatchesSearch(author, searchTerm, searchLocale),
+    );
+  }, [supabaseAuthors, searchTerm, activeLanguage]);
+
+  const selectedAuthor = useMemo(
+    () => supabaseAuthors.find((a) => a.id === selectedAuthorId) ?? null,
+    [supabaseAuthors, selectedAuthorId],
+  );
 
   const awaitingFirstBooks = loading && supabaseBooks.length === 0;
+  const searchLoading = isSearchMode && (loading || authorsLoading);
+  const hasSearchResults = filteredBooks.length > 0 || filteredAuthors.length > 0;
 
   if (!isMounted) {
-    return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100" />;
+    return <div className="min-h-screen bg-cream" />;
+  }
+
+  if (selectedAuthor && isSearchMode) {
+    return (
+      <AuthorDetailSection
+        author={selectedAuthor}
+        onBack={() => setSelectedAuthorId(null)}
+      />
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Hero Section - Always visible unless searching */}
-      {!searchTerm && (
-        <div className="relative overflow-hidden">
-          {/* Background Banner Image - Desktop */}
-          <div className="absolute inset-0 hidden lg:block">
-            <img
-              src={getBannerImage()}
-              alt={t('hero.bannerAlt') || 'Islamic Library Banner'}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              fetchPriority="high"
-            />
-            {/* Blur overlay */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-600/30 via-purple-600/20 to-blue-600/30"></div>
-          </div>
+    <div className="min-h-screen bg-cream">
+      <div className="home-layout">
+        <div className="browse-column">
+          {!searchTerm && (
+            <>
+              <HomeHero
+                totalBooks={heroTotalBooks}
+                totalCategories={categories.length > 0 ? categories.length : null}
+                localeTag={heroBooksLocaleTag}
+                onExplore={scrollToBooks}
+              />
+              {supabaseBooks.length > 0 && <FeaturedBooksSlider books={supabaseBooks} />}
+            </>
+          )}
 
-          {/* Mobile Background - Banner Image with Better Styling */}
-          <div className="absolute inset-0 lg:hidden">
-            <img
-              src={getBannerImage()}
-              alt={t('hero.bannerAlt') || 'Islamic Library Banner'}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              fetchPriority="high"
-              style={{ 
-                filter: 'blur(1px) brightness(0.8)',
-                transform: 'scale(1.05)'
-              }}
-            />
-            {/* Enhanced gradient overlay for mobile */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-900/70 via-purple-900/60 to-blue-900/70"></div>
-          </div>
-          
-          <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              {/* Left Content */}
-              <div className="text-center lg:text-left order-1 lg:order-1">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-lg leading-tight">
-                  <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
-                    {t('hero.title')}
-                  </span>
-                </h1>
-                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-6 md:mb-8 leading-relaxed drop-shadow-md">
-                  {t('hero.subtitle')}
-                </p>
-                
-                {/* Stats Cards */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-3 md:gap-4 mb-6 md:mb-8">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
-                    <div className="text-xl md:text-2xl font-bold text-primary-600 tabular-nums">
-                      {heroTotalBooks === null
-                        ? '\u2026'
-                        : heroTotalBooks.toLocaleString(heroBooksLocaleTag)}
-                    </div>
-                    <div className="text-xs md:text-sm text-gray-600">{t('hero.booksCount')}</div>
-                  </div>
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
-                    <div className="text-xl md:text-2xl font-bold text-purple-600">4</div>
-                    <div className="text-xs md:text-sm text-gray-600">{t('hero.languagesCount')}</div>
-                  </div>
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 shadow-lg flex-shrink-0">
-                    <div className="text-xl md:text-2xl font-bold text-blue-600">∞</div>
-                    <div className="text-xs md:text-sm text-gray-600">{t('hero.knowledgeCount')}</div>
-                  </div>
-                </div>
-                
-                {/* CTA Button */}
-                <button 
-                  onClick={scrollToBooks}
-                  className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 w-full sm:w-auto"
-                >
-                  {t('hero.exploreButton')}
-                </button>
-              </div>
-              
-              {/* Right Image - Mockup */}
-              <div className="flex justify-center lg:justify-end order-2 lg:order-2">
-                <div className="relative w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
-                  <img
-                    src={getMockupImage()}
-                    alt={t('hero.mockupAlt') || 'Islamic Books'}
-                    className="w-full h-auto object-contain drop-shadow-2xl rounded-xl md:rounded-2xl"
-                    loading="lazy"
-                  />
-                  {/* Decorative glow */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl -z-10 scale-110"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="container mx-auto px-4 py-8" id="books-section">
-        <div className="flex gap-8">
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Search Results Header */}
-            <div className="mb-8">
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                    {searchTerm ? (
-                      t('search.resultsFor', {
-                        count: filteredBooks.length,
+          <section id="books-section">
+            <div className="section-head mb-4 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
+                  {searchTerm
+                    ? t('search.resultsFor', {
+                        count: filteredBooks.length + filteredAuthors.length,
                         word: searchTerm,
                       })
-                    ) : (
-                      t('common.allBooks')
-                    )}
-                  </h2>
-                  
-                  {/* Mobile Filter Toggle */}
-                  <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className="md:hidden flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                    </svg>
-                    <span className="text-sm font-medium">{t('search.filters')}</span>
-                  </button>
-                </div>
+                    : t('hero.catalogTitle', 'Katalog')}
+                </h2>
+                <p className="mt-1 text-[12.5px] text-ink-muted">
+                  {searchTerm
+                    ? undefined
+                    : t('hero.catalogSubtitle', { count: filteredBooks.length })}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {!searchTerm && categories.length > 0 && (
+                  <CategoryTabs
+                    categories={categories}
+                    value={categorySlug}
+                    onChange={setCategorySlug}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="inline-flex h-8 items-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 text-sm font-medium text-ink xl:hidden"
+                >
+                  {t('search.filters')}
+                </button>
               </div>
             </div>
 
             {error && supabaseBooks.length === 0 && !loading && (
-              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+              <div className="mb-6 rounded-editorial border border-red-200 bg-red-50 p-4 text-red-800">
                 <p className="mb-3 font-medium">{error}</p>
                 <button
                   type="button"
                   onClick={() => void refetch()}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  className="rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                 >
-                  Tekrar dene
+                  {t('common.retry', 'Tekrar dene')}
                 </button>
               </div>
             )}
 
-            {/* Books Grid */}
+            {searchTerm && (
+              <>
+                {authorsLoading ? (
+                  <div className="mb-8">
+                    <h3 className="mb-4 font-display text-lg font-medium tracking-tight text-ink">
+                      {t('search.matchingAuthors')}
+                    </h3>
+                    <AuthorsGridSkeleton count={3} />
+                  </div>
+                ) : filteredAuthors.length > 0 ? (
+                  <section className="mb-8">
+                    <h3 className="mb-4 font-display text-lg font-medium tracking-tight text-ink">
+                      {t('search.matchingAuthors')}
+                      <span className="ml-2 text-[13px] font-normal text-ink-muted tabular-nums">
+                        ({filteredAuthors.length})
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+                      {filteredAuthors.map((author: Author, index) => (
+                        <AuthorCard
+                          key={author.id}
+                          author={author}
+                          index={index}
+                          onClick={() => setSelectedAuthorId(author.id)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+              </>
+            )}
+
+            {searchTerm && filteredAuthors.length > 0 && (
+              <h3 className="mb-4 font-display text-lg font-medium tracking-tight text-ink">
+                {t('search.matchingBooks')}
+                {!loading && (
+                  <span className="ml-2 text-[13px] font-normal text-ink-muted tabular-nums">
+                    ({filteredBooks.length})
+                  </span>
+                )}
+              </h3>
+            )}
+
             {filteredBooks.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
+              <div className="books-grid grid grid-cols-2 gap-[18px] sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
                 {filteredBooks.map((book, index) => (
                   <div
                     key={book.id}
-                    className="animate-fade-in h-full min-h-0"
-                    style={{
-                      animationDelay: `${Math.min(index, 6) * 45}ms`,
-                    }}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                   >
-                    <BookCard book={book} />
+                    <BookCard book={book} variant="compact" />
                   </div>
                 ))}
               </div>
-            ) : awaitingFirstBooks ? (
+            ) : awaitingFirstBooks || searchLoading ? (
               <BookGridSkeleton count={10} />
-            ) : (searchTerm || Object.keys(filters).length > 0) && (
-              <div className="text-center py-20">
-                <div className="bg-gradient-to-br from-primary-100 to-purple-100 rounded-full w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-                  <div className="text-6xl">📚</div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  {t('search.noResults')}
-                </h3>
-                <p className="text-gray-600 text-lg mb-6">
-                  {t('search.tryDifferentKeywords')}
-                </p>
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl hover:from-primary-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                >
-                  {t('search.viewAllBooks')}
-                </button>
+            ) : (searchTerm || categorySlug) && !hasSearchResults ? (
+              <div className="py-16 text-center">
+                <p className="font-display text-xl font-medium text-ink">{t('search.noResults')}</p>
+                <p className="mt-2 text-ink-muted">{t('search.tryDifferentKeywords')}</p>
               </div>
-            )}
+            ) : null}
 
-            {hasMore && (
-              <div ref={booksLoadMoreRef} className="h-10 w-full shrink-0" aria-hidden />
-            )}
+            {hasMore && <div ref={booksLoadMoreRef} className="h-10 w-full shrink-0" aria-hidden />}
             {loadingMore && (
-              <div className="mt-8 text-center">
-                <div className="inline-flex items-center space-x-2 text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span className="text-sm">{t('common.loading')}...</span>
-                </div>
-              </div>
+              <p className="mt-8 text-center text-sm text-ink-muted">{t('common.loading')}…</p>
             )}
-          </div>
+          </section>
+        </div>
 
-          {/* Filter Sidebar - Right Side */}
-          <FilterSidebar 
+        {/* Sağ — Filtreler (masaüstü) */}
+        <div className="col-filters">
+          <HomeFiltersPanel
             filters={filters}
             onFiltersChange={setFilters}
-            isOpen={isFilterOpen}
-            onToggle={() => setIsFilterOpen(!isFilterOpen)}
-            onCategoryNavigate={() => setIsFilterOpen(false)}
+            activeCategorySlug={categorySlug}
+            onCategorySelect={setCategorySlug}
           />
         </div>
       </div>
+
+      {/* Mobil filtre çekmecesi */}
+      <div className="xl:hidden">
+        <FilterSidebar
+          filters={filters}
+          onFiltersChange={setFilters}
+          isOpen={isFilterOpen}
+          onToggle={() => setIsFilterOpen(!isFilterOpen)}
+          onCategoryNavigate={() => setIsFilterOpen(false)}
+        />
+      </div>
+
     </div>
   );
 };

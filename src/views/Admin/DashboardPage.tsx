@@ -2,88 +2,69 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Users, FolderTree, Globe } from 'lucide-react';
+import { BookOpen, FolderTree, Globe, Users } from 'lucide-react';
+import AdminShell from '@/components/admin/AdminShell';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { adminDashCard, adminDashCardIcon } from '@/components/admin/admin-classes';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
 
+  const cards = [
+    {
+      href: '/admin/traffic',
+      icon: Globe,
+      title: t('admin.dashboard.trafficCard'),
+      desc: t('admin.dashboard.trafficDesc'),
+      cta: t('admin.dashboard.goToTraffic'),
+    },
+    {
+      href: '/admin/books',
+      icon: BookOpen,
+      title: t('admin.dashboard.myBooksCard'),
+      desc: t('admin.dashboard.myBooksDesc'),
+      cta: t('admin.dashboard.goToBooks'),
+    },
+    {
+      href: '/admin/authors',
+      icon: Users,
+      title: t('admin.nav.authors'),
+      desc: t('admin.dashboard.authorsDesc'),
+      cta: t('admin.dashboard.goToAuthors'),
+    },
+    {
+      href: '/admin/categories',
+      icon: FolderTree,
+      title: t('admin.nav.categories'),
+      desc: t('admin.dashboard.categoriesDesc'),
+      cta: t('admin.dashboard.goToCategories'),
+    },
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-          {t('admin.dashboard.title')}
-        </h1>
-        <p className="text-gray-600 mb-8">
-          {t('admin.dashboard.welcome')}. {t('admin.dashboard.welcomeDesc')}
-        </p>
+    <AdminShell>
+      <AdminPageHeader
+        title={t('admin.dashboard.title')}
+        description={`${t('admin.dashboard.welcome')}. ${t('admin.dashboard.welcomeDesc')}`}
+      />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Link
-            href="/admin/traffic"
-            className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200">
-                <Globe size={22} />
-              </div>
-              <h2 className="font-semibold text-gray-900">{t('admin.dashboard.trafficCard')}</h2>
+      <div className="grid gap-[18px] sm:grid-cols-2">
+        {cards.map(({ href, icon: Icon, title, desc, cta }) => (
+          <Link key={href} href={href} className={adminDashCard}>
+            <div className="mb-3 flex items-center gap-3">
+              <span className={adminDashCardIcon}>
+                <Icon size={20} strokeWidth={1.75} />
+              </span>
+              <h2 className="font-display text-lg font-medium tracking-tight text-ink">{title}</h2>
             </div>
-            <p className="text-sm text-gray-500">{t('admin.dashboard.trafficDesc')}</p>
-            <span className="mt-3 text-sm font-medium text-primary-600 group-hover:underline">
-              {t('admin.dashboard.goToTraffic')} →
+            <p className="flex-1 text-[13px] leading-relaxed text-ink-muted">{desc}</p>
+            <span className="mt-4 text-[12.5px] font-medium text-accent group-hover:underline">
+              {cta} →
             </span>
           </Link>
-
-          <Link
-            href="/admin/books"
-            className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200">
-                <BookOpen size={22} />
-              </div>
-              <h2 className="font-semibold text-gray-900">{t('admin.dashboard.myBooksCard')}</h2>
-            </div>
-            <p className="text-sm text-gray-500">{t('admin.dashboard.myBooksDesc')}</p>
-            <span className="mt-3 text-sm font-medium text-primary-600 group-hover:underline">
-              {t('admin.dashboard.goToBooks')} →
-            </span>
-          </Link>
-
-          <Link
-            href="/admin/authors"
-            className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200">
-                <Users size={22} />
-              </div>
-              <h2 className="font-semibold text-gray-900">Yazarlar</h2>
-            </div>
-            <p className="text-sm text-gray-500">Yazar listesini yonetin ve yeni yazar ekleyin</p>
-            <span className="mt-3 text-sm font-medium text-primary-600 group-hover:underline">
-              Yazar sayfasina git →
-            </span>
-          </Link>
-
-          <Link
-            href="/admin/categories"
-            className="group flex flex-col p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-200 transition-all"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200">
-                <FolderTree size={22} />
-              </div>
-              <h2 className="font-semibold text-gray-900">Kategoriler</h2>
-            </div>
-            <p className="text-sm text-gray-500">Kategori listesi ve yeni kategori ekleme</p>
-            <span className="mt-3 text-sm font-medium text-primary-600 group-hover:underline">
-              Kategori sayfasina git →
-            </span>
-          </Link>
-        </div>
+        ))}
       </div>
-    </div>
+    </AdminShell>
   );
 };
 

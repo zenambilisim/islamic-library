@@ -95,19 +95,37 @@ Aşağıdaki yapıların Supabase'de mevcut olduğundan emin olun.
 
 ## Adım 2 — SQL kurulumu
 
-1. [Supabase Dashboard](https://supabase.com/dashboard) → projeniz → **SQL Editor**
-2. `docs/rag-setup.sql` dosyasının içeriğini kopyalayıp çalıştırın
+Kurulum **iki parça**: fonksiyon (hızlı) + vektör indeksi (yavaş).
 
-Bu script şunları yapar:
+### 2a — Fonksiyon (SQL Editor)
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) → projeniz → **SQL Editor**
+2. `docs/rag-setup.sql` içeriğini çalıştırın (birkaç saniye sürer)
+
+Bu script:
 
 - `pgvector` eklentisini etkinleştirir
-- Mevcut `book_files` satırlarını `pending` yapar
-- Vektör arama indeksini oluşturur
-- `match_book_chunks` fonksiyonunu tanımlar (chat API bunu kullanır)
+- `match_book_chunks` fonksiyonunu tanımlar
+
+### 2b — Vektör indeksi (psql, zorunlu)
+
+`book_file_chunks` tablosu büyükse indeks oluşturma **dakikalar** sürebilir. SQL Editor `upstream timeout` verir; **doğrudan veritabanı bağlantısı** kullanın:
+
+1. Dashboard → **Project Settings** → **Database** → **Connection string**
+2. **Session pooler**, port **5432** (URI'yi olduğu gibi kopyalayın)
+3. **Direct connection kullanmayın** — `db.*.supabase.co` birçok projede yalnızca IPv6'dır; ev/ISP ağında `Network is unreachable` verir
+4. Proje kökünde (Dashboard'dan kopyaladığınız URI ile):
+
+```bash
+psql "postgresql://postgres.[REF]:[ŞİFRE]@aws-0-[REGION].pooler.supabase.com:5432/postgres" \
+  -f docs/rag-setup-index.sql
+```
+
+İndeks bitince `analyze` otomatik çalışır. Chunk sayısına göre 2–30+ dakika bekleyebilirsiniz.
 
 ### Doğrulama
 
-SQL Editor'da şu sorguları çalıştırın:
+SQL Editor'da:
 
 ```sql
 -- pgvector aktif mi?
@@ -116,9 +134,14 @@ select * from pg_extension where extname = 'vector';
 -- Fonksiyon var mı?
 select proname from pg_proc where proname = 'match_book_chunks';
 
--- Kaç dosya index bekliyor?
-select indexing_status, count(*) from book_files group by indexing_status;
+-- HNSW indeksi var mı?
+select indexname, indexdef from pg_indexes where tablename = 'book_file_chunks';
+
+-- Kaç chunk?
+select count(*) from book_file_chunks;
 ```
+
+`indexdef` içinde `USING hnsw (embedding vector_cosine_ops)` görünmeli.
 
 ---
 
@@ -325,11 +348,11 @@ alter table book_files alter column indexing_status set default 'pending';
 npm install @napi-rs/canvas
 ```
 
-### `Vektör araması başarısız`
+### `Vektör araması başarısız` / `statement timeout` / SQL Editor `upstream timeout`
 
-- `docs/rag-setup.sql` çalıştırıldı mı?
-- `embedding` sütunu `vector(1536)` tipinde mi?
-- Service role key kullanılıyor mu?
+- **SQL Editor timeout:** İndeks oluşturmayı Editor'da değil, `docs/rag-setup-index.sql` dosyasını **psql** ile çalıştırın (bkz. [Adım 2b](#2b--vektör-indeksi-psql-zorunlu)).
+- `docs/rag-setup.sql` yalnızca fonksiyonu kurar; indeks olmadan arama yavaş kalır.
+- İndeks, indexleme **bittikten sonra** oluşturulmalı (boş tabloda oluşan indeks işe yaramaz).
 
 ### Index çok yavaş / pahalı
 

@@ -59,6 +59,35 @@ function formatDuration(ms) {
   return `${hours} sa ${remainMin} dk ${sec} sn`;
 }
 
+function formatEta(ms) {
+  if (!Number.isFinite(ms) || ms < 0) return '—';
+  if (ms < 1000) return '<1 sn';
+  return formatDuration(ms);
+}
+
+function pct(done, total) {
+  if (!total) return '0%';
+  return `${Math.min(100, Math.round((done / total) * 100))}%`;
+}
+
+function progressBar(done, total, width = 20) {
+  if (!total) return `[${' '.repeat(width)}]`;
+  const filled = Math.min(width, Math.round((done / total) * width));
+  return `[${'#'.repeat(filled)}${'-'.repeat(width - filled)}]`;
+}
+
+function logProgress(prefix, done, total, startedAt, extra = '') {
+  const elapsed = Date.now() - startedAt;
+  const rate = done > 0 ? elapsed / done : 0;
+  const remaining = total - done;
+  const eta = done > 0 && remaining > 0 ? rate * remaining : 0;
+  const suffix = extra ? ` ${extra}` : '';
+  console.log(
+    `${prefix} ${progressBar(done, total)} ${done}/${total} (${pct(done, total)})` +
+      ` | geçen ${formatDuration(elapsed)} | kalan ~${formatEta(eta)}${suffix}`
+  );
+}
+
 function loadDotEnv() {
   const envPath = resolve(process.cwd(), '.env');
   if (!existsSync(envPath)) return;
@@ -345,18 +374,28 @@ async function extractChunks(buffer, format) {
   throw new Error(`Desteklenmeyen format: ${format}`);
 }
 
-async function embedTexts(texts) {
+async function embedTexts(texts, onBatch) {
   if (!openai) throw new Error('OpenAI yapılandırılmamış');
   const embeddings = [];
+  const totalBatches = Math.ceil(texts.length / EMBEDDING_BATCH) || 0;
 
   for (let i = 0; i < texts.length; i += EMBEDDING_BATCH) {
     const batch = texts.slice(i, i + EMBEDDING_BATCH);
+    const batchNo = Math.floor(i / EMBEDDING_BATCH) + 1;
     const res = await openai.embeddings.create({
       model: EMBEDDING_MODEL,
       input: batch,
     });
     for (const item of res.data) {
       embeddings.push(item.embedding);
+    }
+    if (typeof onBatch === 'function') {
+      onBatch({
+        batchNo,
+        totalBatches,
+        done: Math.min(i + batch.length, texts.length),
+        total: texts.length,
+      });
     }
   }
 
@@ -435,10 +474,11 @@ async function fetchPendingFiles() {
   return data ?? [];
 }
 
-async function fetchAllBookFiles({ format, formats, select = 'book_id, indexing_status' }) {
+async function fetchAllBookFiles({ format, formats, select = 'book_id, indexing_status', label = 'dosyalar' }) {
   const rows = [];
   let from = 0;
 
+  console.log(`  ${label} listeleniyor…`);
   while (true) {
     let query = supabase
       .from('book_files')
@@ -454,15 +494,18 @@ async function fetchAllBookFiles({ format, formats, select = 'book_id, indexing_
     if (!data?.length) break;
 
     rows.push(...data);
+    console.log(`  ${label}: ${rows.length} kayıt yüklendi…`);
     if (data.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
 
+  console.log(`  ${label}: toplam ${rows.length}`);
   return rows;
 }
 
 async function fetchDocxTargetFiles() {
-  const pdfFiles = await fetchAllBookFiles({ format: 'pdf' });
+  console.log('DOCX hedefleri hazırlanıyor…');
+  const pdfFiles = await fetchAllBookFiles({ format: 'pdf', label: 'PDF' });
 
   const failedPdfBookIds = new Set(
     pdfFiles.filter((f) => f.indexing_status === 'failed').map((f) => f.book_id)
@@ -472,6 +515,7 @@ async function fetchDocxTargetFiles() {
   const docxFiles = await fetchAllBookFiles({
     formats: ['docx', 'doc'],
     select: 'id, book_id, format, file_url, content_hash, indexing_status',
+    label: 'DOCX',
   });
 
   let results = docxFiles.filter((f) => {
@@ -490,33 +534,76 @@ async function fetchDocxTargetFiles() {
   return results;
 }
 
-async function indexFile(file) {
+async function indexFile(file, { index, total, startedAt } = {}) {
+  const fileStartedAt = Date.now();
   const formatLabel = file.format === 'doc' ? 'docx' : file.format;
   const label = `${file.book_id} / ${file.id}`;
-  console.log(`\n→ İşleniyor (${formatLabel}): ${label}`);
+  const pos =
+    typeof index === 'number' && typeof total === 'number'
+      ? `[${index}/${total}] `
+      : '';
+
+  console.log(`\n→ ${pos}İşleniyor (${formatLabel}): ${label}`);
+  if (typeof index === 'number' && typeof total === 'number' && startedAt) {
+    logProgress('  Genel', index - 1, total, startedAt);
+  }
 
   if (!DRY_RUN) await setFileStatus(file.id, 'processing');
 
+  console.log('  [1/5] Dosya indiriliyor…');
+  const downloadStarted = Date.now();
   const buffer = await downloadBookFile(file.file_url);
   const hash = sha256(buffer);
+  console.log(
+    `  [1/5] İndirildi: ${(buffer.length / 1024 / 1024).toFixed(2)} MB` +
+      ` (${formatDuration(Date.now() - downloadStarted)})`
+  );
 
   if (!FORCE && file.indexing_status === 'completed' && file.content_hash === hash) {
     console.log('  Atlandı (içerik değişmemiş)');
     return { skipped: true };
   }
 
+  console.log('  [2/5] Metin çıkarılıyor…');
+  const extractStarted = Date.now();
   const chunks = await extractChunks(buffer, file.format);
-
-  console.log(`  ${chunks.length} parça, ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);
+  console.log(
+    `  [2/5] ${chunks.length} parça hazır` +
+      ` (${formatDuration(Date.now() - extractStarted)})`
+  );
 
   if (DRY_RUN) {
     console.log('  [dry-run] embedding ve DB yazımı atlandı');
     return { chunks: chunks.length, dryRun: true };
   }
 
+  console.log('  [3/5] Eski parçalar temizleniyor…');
   await deleteChunksForFile(file.id);
 
-  const embeddings = await embedTexts(chunks.map((c) => c.content));
+  const embedStarted = Date.now();
+  const totalEmbedBatches = Math.ceil(chunks.length / EMBEDDING_BATCH) || 0;
+  console.log(
+    `  [4/5] Embedding başlıyor (${chunks.length} parça, ${totalEmbedBatches} batch)…`
+  );
+  const embeddings = await embedTexts(
+    chunks.map((c) => c.content),
+    ({ batchNo, totalBatches, done, total: chunkTotal }) => {
+      if (
+        batchNo === 1 ||
+        batchNo === totalBatches ||
+        batchNo % 5 === 0 ||
+        totalBatches <= 5
+      ) {
+        console.log(
+          `       embedding ${progressBar(done, chunkTotal, 16)}` +
+            ` ${done}/${chunkTotal} (${pct(done, chunkTotal)})` +
+            ` · batch ${batchNo}/${totalBatches}` +
+            ` · ${formatDuration(Date.now() - embedStarted)}`
+        );
+      }
+    }
+  );
+  console.log(`  [4/5] Embedding tamam (${formatDuration(Date.now() - embedStarted)})`);
 
   const rows = chunks.map((chunk, i) => ({
     book_id: file.book_id,
@@ -527,14 +614,34 @@ async function indexFile(file) {
     embedding: embeddings[i],
   }));
 
-  for (let i = 0; i < rows.length; i += 100) {
-    const batch = rows.slice(i, i + 100);
+  const insertStarted = Date.now();
+  const insertBatchSize = 100;
+  const totalInsertBatches = Math.ceil(rows.length / insertBatchSize) || 0;
+  console.log(
+    `  [5/5] DB'ye yazılıyor (${rows.length} satır, ${totalInsertBatches} batch)…`
+  );
+  for (let i = 0; i < rows.length; i += insertBatchSize) {
+    const batch = rows.slice(i, i + insertBatchSize);
+    const batchNo = Math.floor(i / insertBatchSize) + 1;
     const { error: insError } = await supabase.from('book_file_chunks').insert(batch);
     if (insError) {
-      const batchNo = Math.floor(i / 100) + 1;
       throw new Error(`Parça eklenemedi (batch ${batchNo}): ${insError.message}`);
     }
+    if (
+      batchNo === 1 ||
+      batchNo === totalInsertBatches ||
+      batchNo % 10 === 0 ||
+      totalInsertBatches <= 5
+    ) {
+      const written = Math.min(i + batch.length, rows.length);
+      console.log(
+        `       insert ${progressBar(written, rows.length, 16)}` +
+          ` ${written}/${rows.length} (${pct(written, rows.length)})` +
+          ` · batch ${batchNo}/${totalInsertBatches}`
+      );
+    }
   }
+  console.log(`  [5/5] DB yazımı tamam (${formatDuration(Date.now() - insertStarted)})`);
 
   await setFileStatus(file.id, 'completed', {
     content_hash: hash,
@@ -546,7 +653,7 @@ async function indexFile(file) {
     await markPdfSkippedWhenDocxIndexed(file.book_id);
   }
 
-  console.log('  Tamamlandı');
+  console.log(`  Tamamlandı (${formatDuration(Date.now() - fileStartedAt)})`);
   return { chunks: chunks.length };
 }
 
@@ -557,16 +664,24 @@ async function main() {
   const logFile = resolve(logDir, `index-books-${new Date().toISOString().slice(0, 10)}.log`);
 
   console.log('Kitap indexleme başlıyor…');
+  console.log(`Başlangıç: ${new Date().toISOString()}`);
   if (DRY_RUN) console.log('(dry-run modu)');
   if (FORCE) console.log('(--force: tüm PDF dosyaları yeniden indexlenecek)');
   if (RETRY_PROCESSING) console.log('(--retry-processing: yarım kalmış dosyalar)');
   if (INDEX_DOCX) console.log('(--index-docx: PDF başarısız veya PDF’siz kitapların DOCX dosyaları)');
+  if (LIMIT > 0) console.log(`(--limit=${LIMIT})`);
+  if (BOOK_ID) console.log(`(--book-id=${BOOK_ID})`);
 
+  console.log('\nBekleyen dosyalar sorgulanıyor…');
   const files = await fetchPendingFiles();
   const formatLabel = INDEX_DOCX ? 'DOCX' : 'PDF';
-  console.log(`${files.length} ${formatLabel} dosyası bulundu.`);
-  if (INDEX_DOCX && files.length > 0) {
-    const pdfFiles = await fetchAllBookFiles({ format: 'pdf' });
+  console.log(`${files.length} ${formatLabel} dosyası kuyruğa alındı.`);
+  if (files.length === 0) {
+    console.log('İşlenecek dosya yok. Çıkılıyor.');
+    return;
+  }
+  if (INDEX_DOCX) {
+    const pdfFiles = await fetchAllBookFiles({ format: 'pdf', label: 'PDF (özet)' });
     const failedPdfBookIds = new Set(
       pdfFiles.filter((f) => f.indexing_status === 'failed').map((f) => f.book_id)
     );
@@ -579,12 +694,21 @@ async function main() {
   let ok = 0;
   let skipped = 0;
   let failed = 0;
+  let totalChunks = 0;
+  const total = files.length;
 
-  for (const file of files) {
+  console.log(`\nİşlem başlıyor: ${total} dosya\n`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const index = i + 1;
     try {
-      const result = await indexFile(file);
+      const result = await indexFile(file, { index, total, startedAt });
       if (result.skipped) skipped += 1;
-      else ok += 1;
+      else {
+        ok += 1;
+        if (result.chunks) totalChunks += result.chunks;
+      }
     } catch (err) {
       failed += 1;
       const msg = err instanceof Error ? err.message : String(err);
@@ -594,12 +718,29 @@ async function main() {
         await setFileStatus(file.id, 'failed').catch(() => {});
       }
     }
+
+    logProgress(
+      '  İlerleme',
+      index,
+      total,
+      startedAt,
+      `| ok=${ok} skip=${skipped} fail=${failed}`
+    );
   }
 
   const elapsed = Date.now() - startedAt;
-  console.log(`\nÖzet: ${ok} indexlendi, ${skipped} atlandı, ${failed} hata`);
-  console.log(`Süre: ${formatDuration(elapsed)}`);
-  if (failed > 0) console.log(`Hata logu: ${logFile}`);
+  console.log('\n========== ÖZET ==========');
+  logProgress('Toplam', total, total, startedAt);
+  console.log(`Indexlenen: ${ok}`);
+  console.log(`Atlanan:    ${skipped}`);
+  console.log(`Hata:       ${failed}`);
+  console.log(`Parça:      ${totalChunks}`);
+  console.log(`Süre:       ${formatDuration(elapsed)}`);
+  if (ok > 0) {
+    console.log(`Ort. süre:  ${formatDuration(elapsed / Math.max(ok + skipped + failed, 1))} / dosya`);
+  }
+  if (failed > 0) console.log(`Hata logu:  ${logFile}`);
+  console.log('==========================');
 }
 
 main().catch((err) => {

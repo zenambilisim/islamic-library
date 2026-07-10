@@ -9,9 +9,11 @@
     "start": "next start",
     "lint": "eslint .",
     "backfill:book-slugs": "node scripts/backfill-book-slugs.mjs",
-    "index:books": "node-22 scripts/index-books.mjs",
-    "index:books:dry-run": "node-22 scripts/index-books.mjs --dry-run --limit=5",
-    "index:books:status": "node-22 scripts/index-books-status.mjs"
+    "index:books": "node scripts/index-books.mjs",
+    "index:books:dry-run": "node scripts/index-books.mjs --dry-run --limit=5",
+    "index:books:status": "node scripts/index-books-status.mjs",
+    "index:vector-batches": "node scripts/build-vector-index-batches.mjs",
+    "index:vector-batches:dry-run": "node scripts/build-vector-index-batches.mjs --dry-run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.967.0",

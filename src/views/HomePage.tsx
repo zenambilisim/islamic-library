@@ -157,6 +157,8 @@ const HomePage = () => {
   const awaitingFirstBooks = loading && supabaseBooks.length === 0;
   const searchLoading = isSearchMode && (loading || authorsLoading);
   const hasSearchResults = filteredBooks.length > 0 || filteredAuthors.length > 0;
+  const showSearchEmptyState =
+    (searchTerm || categorySlug) && !hasSearchResults && !searchLoading;
 
   if (!isMounted) {
     return <div className="min-h-screen bg-cream" />;
@@ -292,7 +294,7 @@ const HomePage = () => {
               </div>
             ) : awaitingFirstBooks || searchLoading ? (
               <BookGridSkeleton count={10} />
-            ) : (searchTerm || categorySlug) && !hasSearchResults ? (
+            ) : showSearchEmptyState ? (
               <div className="py-16 text-center">
                 <p className="font-display text-xl font-medium text-ink">{t('search.noResults')}</p>
                 <p className="mt-2 text-ink-muted">{t('search.tryDifferentKeywords')}</p>

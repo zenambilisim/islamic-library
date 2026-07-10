@@ -95,19 +95,37 @@ Aşağıdaki yapıların Supabase'de mevcut olduğundan emin olun.
 
 ## Adım 2 — SQL kurulumu
 
-1. [Supabase Dashboard](https://supabase.com/dashboard) → projeniz → **SQL Editor**
-2. `docs/rag-setup.sql` dosyasının içeriğini kopyalayıp çalıştırın
+Kurulum **iki parça**: fonksiyon (hızlı) + vektör indeksi (yavaş).
 
-Bu script şunları yapar:
+### 2a — Fonksiyon (SQL Editor)
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) → projeniz → **SQL Editor**
+2. `docs/rag-setup.sql` içeriğini çalıştırın (birkaç saniye sürer)
+
+Bu script:
 
 - `pgvector` eklentisini etkinleştirir
-- Mevcut `book_files` satırlarını `pending` yapar
-- Vektör arama indeksini oluşturur
-- `match_book_chunks` fonksiyonunu tanımlar (chat API bunu kullanır)
+- `match_book_chunks` fonksiyonunu tanımlar
+
+### 2b — Vektör indeksi (psql, zorunlu)
+
+`book_file_chunks` tablosu büyükse indeks oluşturma **dakikalar** sürebilir. SQL Editor `upstream timeout` verir; **doğrudan veritabanı bağlantısı** kullanın:
+
+1. Dashboard → **Project Settings** → **Database** → **Connection string**
+2. **Session pooler**, port **5432** (URI'yi olduğu gibi kopyalayın)
+3. **Direct connection kullanmayın** — `db.*.supabase.co` birçok projede yalnızca IPv6'dır; ev/ISP ağında `Network is unreachable` verir
+4. Proje kökünde (Dashboard'dan kopyaladığınız URI ile):
+
+```bash
+psql "postgresql://postgres.[REF]:[ŞİFRE]@aws-0-[REGION].pooler.supabase.com:5432/postgres" \
+  -f docs/rag-setup-index.sql
+```
+
+İndeks bitince `analyze` otomatik çalışır. Chunk sayısına göre 2–30+ dakika bekleyebilirsiniz.
 
 ### Doğrulama
 
-SQL Editor'da şu sorguları çalıştırın:
+SQL Editor'da:
 
 ```sql
 -- pgvector aktif mi?
@@ -116,9 +134,14 @@ select * from pg_extension where extname = 'vector';
 -- Fonksiyon var mı?
 select proname from pg_proc where proname = 'match_book_chunks';
 
--- Kaç dosya index bekliyor?
-select indexing_status, count(*) from book_files group by indexing_status;
+-- HNSW indeksi var mı?
+select indexname, indexdef from pg_indexes where tablename = 'book_file_chunks';
+
+-- Kaç chunk?
+select count(*) from book_file_chunks;
 ```
+
+`indexdef` içinde `USING hnsw (embedding vector_cosine_ops)` görünmeli.
 
 ---
 
@@ -325,11 +348,67 @@ alter table book_files alter column indexing_status set default 'pending';
 npm install @napi-rs/canvas
 ```
 
-### `Vektör araması başarısız`
+### `Vektör araması başarısız` / `statement timeout` / SQL Editor `upstream timeout`
 
-- `docs/rag-setup.sql` çalıştırıldı mı?
-- `embedding` sütunu `vector(1536)` tipinde mi?
-- Service role key kullanılıyor mu?
+- **SQL Editor timeout:** İndeks oluşturmayı Editor'da değil, `docs/rag-setup-index.sql` dosyasını **psql** ile çalıştırın (bkz. [Adım 2b](#2b--vektör-indeksi-psql-zorunlu)).
+- `docs/rag-setup.sql` yalnızca fonksiyonu kurar; indeks olmadan arama yavaş kalır.
+- İndeks, indexleme **bittikten sonra** oluşturulmalı (boş tabloda oluşan indeks işe yaramaz).
+
+### `server closed the connection unexpectedly` (psql indeks sırasında)
+
+HNSW indeksi bellek veya pooler zaman aşımı yüzünden yarıda kesilmiş olabilir.
+
+1. SQL Editor'da durumu kontrol edin:
+
+```sql
+select indexname, indexdef from pg_indexes where tablename = 'book_file_chunks';
+
+select c.relname as index_name, i.indisvalid
+from pg_index i
+join pg_class c on c.oid = i.indexrelid
+join pg_class t on t.oid = i.indrelid
+where t.relname = 'book_file_chunks' and not i.indisvalid;
+```
+
+2. `indisvalid = false` satırı varsa veya yarım indeks görünüyorsa, güncel `docs/rag-setup-index.sql` tekrar çalıştırın (dosya önce `drop index` yapar).
+
+3. Yine koparsa **Direct connection** (`db.[ref].supabase.co:5432`) ile deneyin; pooler uzun DDL'de kopabilir.
+
+4. Hâlâ olmuyorsa yedek: `docs/rag-setup-index-ivfflat.sql` (daha az bellek, daha hızlı kurulur).
+
+### Parçalı HNSW (bellek / bağlantı kopması için önerilir)
+
+Tek seferde `CREATE INDEX` yerine kitapları ~5000 chunk'lık gruplara böler:
+
+1. SQL Editor'da `docs/rag-setup-batched.sql` çalıştırın.
+2. `.env` içine veya komuta `DATABASE_URL` ekleyin (psql URI'si).
+3. Windows:
+
+```bash
+export PSQL_PATH="/c/Program Files/PostgreSQL/18/bin/psql.exe"
+export DATABASE_URL="postgresql://postgres.[REF]:[ŞİFRE]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+npm run index:vector-batches
+```
+
+Koparsa kaldığı yerden:
+
+```bash
+npm run index:vector-batches -- --from-batch=3
+```
+
+İlerleme:
+
+```sql
+select batch_no, index_name, chunk_count, index_ready, indexed_at
+from chunk_index_batches
+order by batch_no;
+```
+
+**Windows psql yolu örneği:**
+
+```bash
+"/c/Program Files/PostgreSQL/18/bin/psql.exe" "postgresql://postgres.[REF]:[ŞİFRE]@aws-0-[REGION].pooler.supabase.com:5432/postgres" -f docs/rag-setup-index.sql
+```
 
 ### Index çok yavaş / pahalı
 

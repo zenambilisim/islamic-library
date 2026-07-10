@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Book, Language, SearchFilters } from '../types';
 
@@ -50,6 +50,15 @@ export function useSupabaseBooks(
   const pageRef = useRef(page);
   pageRef.current = page;
   const loadMoreInFlightRef = useRef(false);
+  const prevFetchAllRef = useRef(fetchAll);
+
+  // fetchAll değişince useEffect'ten önce loading=true; arama sırasında "sonuç yok" flaşı önlenir
+  useLayoutEffect(() => {
+    if (prevFetchAllRef.current !== fetchAll) {
+      prevFetchAllRef.current = fetchAll;
+      setLoading(true);
+    }
+  }, [fetchAll]);
 
   const fetchBooks = useCallback(async (isLoadMore: boolean = false) => {
     try {

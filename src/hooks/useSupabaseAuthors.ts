@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import type { Author } from '../types';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -43,6 +43,13 @@ export function useSupabaseAuthors(
     const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(id);
   }, [searchQuery]);
+
+  // enabled/açık arama tetiklenince useEffect'ten önce loading=true
+  useLayoutEffect(() => {
+    if (enabled) {
+      setLoading(true);
+    }
+  }, [enabled, language, debouncedSearch]);
 
   const fetchAuthors = useCallback(async () => {
     if (!enabled) {

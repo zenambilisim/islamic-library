@@ -6,7 +6,8 @@ const EMBEDDING_MODEL = 'text-embedding-3-small';
 const CHAT_MODEL = 'gpt-4o-mini';
 const MATCH_THRESHOLD = 0.35;
 const MATCH_COUNT = 6;
-const BATCH_SEARCH_CONCURRENCY = 6;
+const BATCH_SEARCH_CONCURRENCY = 4;
+const MAX_BATCH_TASKS = 12;
 const PER_BATCH_MATCH_LIMIT = MATCH_COUNT * 2;
 const MAX_MESSAGE_LEN = 2000;
 const MAX_HISTORY = 8;
@@ -125,24 +126,25 @@ async function loadBooksForLanguage(bookIds: string[], language: string): Promis
   const allowed = new Set<string>();
   if (!supabaseAdmin || bookIds.length === 0) return allowed;
 
-  for (let i = 0; i < bookIds.length; i += 100) {
-    const slice = bookIds.slice(i, i + 100);
-    const { data, error } = await supabaseAdmin
-      .from('books')
-      .select('id, language_code')
-      .in('id', slice);
-    if (error) throw new Error(`Kitap dili alınamadı: ${error.message}`);
+  const { data, error } = await supabaseAdmin
+    .from('books')
+    .select('id')
+    .in('id', bookIds)
+    .eq('language_code', language);
+  if (error) throw new Error(`Kitap dili alınamadı: ${error.message}`);
 
-    for (const row of data ?? []) {
-      const lang = normalizeLanguage(row.language_code as string);
-      if (lang === language) allowed.add(row.id as string);
-    }
+  for (const row of data ?? []) {
+    allowed.add(row.id as string);
   }
-
   return allowed;
 }
 
-async function fetchReadyIndexBatches(language: string | null): Promise<IndexBatchRow[]> {
+interface FetchBatchesResult {
+  batches: IndexBatchRow[];
+  allowedBooks?: Set<string>;
+}
+
+async function fetchReadyIndexBatches(language: string | null): Promise<FetchBatchesResult> {
   if (!supabaseAdmin) throw new Error('Supabase service role yapılandırılmamış');
 
   const { data, error } = await supabaseAdmin
@@ -152,16 +154,18 @@ async function fetchReadyIndexBatches(language: string | null): Promise<IndexBat
     .order('batch_no');
 
   if (error) {
-    if (/chunk_index_batches|could not find the table/i.test(error.message)) return [];
+    if (/chunk_index_batches|could not find the table/i.test(error.message))
+      return { batches: [] };
     throw new Error(`Batch listesi alınamadı: ${error.message}`);
   }
 
   let batches = (data ?? []) as IndexBatchRow[];
-  if (!language || batches.length === 0) return batches;
+  if (!language || batches.length === 0) return { batches };
 
   const bookIds = [...new Set(batches.flatMap((b) => b.book_ids))];
   const allowedBooks = await loadBooksForLanguage(bookIds, language);
-  return batches.filter((b) => b.book_ids.some((id) => allowedBooks.has(id)));
+  batches = batches.filter((b) => b.book_ids.some((id) => allowedBooks.has(id)));
+  return { batches, allowedBooks };
 }
 
 function rankMatchedChunks(
@@ -233,18 +237,10 @@ async function searchOneBatchTask(
 async function searchChunksInBatches(embedding: number[], language: string | null): Promise<MatchedChunk[]> {
   if (!supabaseAdmin) throw new Error('Supabase service role yapılandırılmamış');
 
-  const batches = await fetchReadyIndexBatches(language);
+  const { batches, allowedBooks } = await fetchReadyIndexBatches(language);
   if (batches.length === 0) return [];
 
-  const allowedBooks =
-    language != null
-      ? await loadBooksForLanguage(
-          [...new Set(batches.flatMap((b) => b.book_ids))],
-          language,
-        )
-      : undefined;
-
-  const tasks = expandBatchesToTasks(batches);
+  const tasks = expandBatchesToTasks(batches).slice(0, MAX_BATCH_TASKS);
   const candidates: MatchedChunk[] = [];
 
   for (let i = 0; i < tasks.length; i += BATCH_SEARCH_CONCURRENCY) {
@@ -254,7 +250,7 @@ async function searchChunksInBatches(embedding: number[], language: string | nul
     for (const rows of waveResults) candidates.push(...rows);
 
     const ranked = rankMatchedChunks(candidates, language, allowedBooks);
-    if (ranked.length >= MATCH_COUNT && i + BATCH_SEARCH_CONCURRENCY >= tasks.length * 0.4) {
+    if (ranked.length >= MATCH_COUNT) {
       return ranked;
     }
   }

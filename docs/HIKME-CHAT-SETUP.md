@@ -354,6 +354,62 @@ npm install @napi-rs/canvas
 - `docs/rag-setup.sql` yalnızca fonksiyonu kurar; indeks olmadan arama yavaş kalır.
 - İndeks, indexleme **bittikten sonra** oluşturulmalı (boş tabloda oluşan indeks işe yaramaz).
 
+### `server closed the connection unexpectedly` (psql indeks sırasında)
+
+HNSW indeksi bellek veya pooler zaman aşımı yüzünden yarıda kesilmiş olabilir.
+
+1. SQL Editor'da durumu kontrol edin:
+
+```sql
+select indexname, indexdef from pg_indexes where tablename = 'book_file_chunks';
+
+select c.relname as index_name, i.indisvalid
+from pg_index i
+join pg_class c on c.oid = i.indexrelid
+join pg_class t on t.oid = i.indrelid
+where t.relname = 'book_file_chunks' and not i.indisvalid;
+```
+
+2. `indisvalid = false` satırı varsa veya yarım indeks görünüyorsa, güncel `docs/rag-setup-index.sql` tekrar çalıştırın (dosya önce `drop index` yapar).
+
+3. Yine koparsa **Direct connection** (`db.[ref].supabase.co:5432`) ile deneyin; pooler uzun DDL'de kopabilir.
+
+4. Hâlâ olmuyorsa yedek: `docs/rag-setup-index-ivfflat.sql` (daha az bellek, daha hızlı kurulur).
+
+### Parçalı HNSW (bellek / bağlantı kopması için önerilir)
+
+Tek seferde `CREATE INDEX` yerine kitapları ~5000 chunk'lık gruplara böler:
+
+1. SQL Editor'da `docs/rag-setup-batched.sql` çalıştırın.
+2. `.env` içine veya komuta `DATABASE_URL` ekleyin (psql URI'si).
+3. Windows:
+
+```bash
+export PSQL_PATH="/c/Program Files/PostgreSQL/18/bin/psql.exe"
+export DATABASE_URL="postgresql://postgres.[REF]:[ŞİFRE]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+npm run index:vector-batches
+```
+
+Koparsa kaldığı yerden:
+
+```bash
+npm run index:vector-batches -- --from-batch=3
+```
+
+İlerleme:
+
+```sql
+select batch_no, index_name, chunk_count, index_ready, indexed_at
+from chunk_index_batches
+order by batch_no;
+```
+
+**Windows psql yolu örneği:**
+
+```bash
+"/c/Program Files/PostgreSQL/18/bin/psql.exe" "postgresql://postgres.[REF]:[ŞİFRE]@aws-0-[REGION].pooler.supabase.com:5432/postgres" -f docs/rag-setup-index.sql
+```
+
 ### Index çok yavaş / pahalı
 
 - `--limit=10` ile küçük gruplar halinde çalıştırın

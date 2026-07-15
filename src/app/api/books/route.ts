@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getBooks,
   getBooksByCategory,
+  getBooksByIds,
   createBook,
   type CreateBookPayload,
   type BookAuthorInput,
@@ -91,6 +92,20 @@ function parseSortByParam(raw: string | null): BookSortBy {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+
+    const idsParam = searchParams.get('ids');
+    if (idsParam) {
+      const ids = idsParam.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 50);
+      if (ids.length === 0) {
+        return NextResponse.json({ books: [] });
+      }
+      const result = await getBooksByIds(ids);
+      if (result.error) {
+        return NextResponse.json({ error: result.error.message }, { status: 500 });
+      }
+      return NextResponse.json({ books: result.books.map(convertSupabaseBookToBook) });
+    }
+
     const page = Math.max(0, parseInt(searchParams.get('page') || '0', 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const category = searchParams.get('category') || undefined;

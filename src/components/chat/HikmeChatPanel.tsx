@@ -10,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { Book } from '@/types';
 import { useBookModal } from '@/contexts/BookModalContext';
+import { useChatBooks } from '@/components/chat/GlobalHikmeChat';
 import { resolveAuthorDisplayName } from '@/lib/author-display-name';
 import {
   fetchChatResponse,
@@ -19,24 +20,79 @@ import {
 } from '@/lib/hikme-chat';
 
 interface HikmeChatPanelProps {
-  books: Book[];
   isMobile?: boolean;
   onClose?: () => void;
   className?: string;
 }
 
-function MessageBlocks({
-  blocks,
-  books,
+function BookCards({
+  bookIds,
   onOpenBook,
 }: {
-  blocks: ChatBlock[];
-  books: Book[];
+  bookIds: string[];
   onOpenBook: (book: Book) => void;
 }) {
   const { t } = useTranslation();
-  const bookMap = new Map(books.map((b) => [b.id, b]));
+  const { getBooksByIds } = useChatBooks();
+  const [books, setBooks] = useState<Book[]>([]);
 
+  useEffect(() => {
+    let cancelled = false;
+    getBooksByIds(bookIds).then((result) => {
+      if (!cancelled) setBooks(result);
+    });
+    return () => { cancelled = true; };
+  }, [bookIds, getBooksByIds]);
+
+  if (books.length === 0) return null;
+
+  return (
+    <div className="mt-2.5 flex flex-col gap-2">
+      {books.map((book) => (
+        <button
+          key={book.id}
+          type="button"
+          onClick={() => onOpenBook(book)}
+          className="cite-card flex w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elev)] p-2.5 text-left transition-all hover:-translate-y-px hover:border-[var(--border-strong)] hover:shadow-soft"
+        >
+          <div className="h-[60px] w-[44px] shrink-0 overflow-hidden rounded-md bg-[var(--surface-2)]">
+            <img
+              src={book.coverImage || '/placeholder-book.svg'}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-ink">
+              {book.title}
+            </p>
+            {book.author?.trim() && (
+              <p className="mt-0.5 line-clamp-1 text-[10.5px] text-ink-muted">
+                {resolveAuthorDisplayName(book.author, t)}
+              </p>
+            )}
+            {book.category && (
+              <span className="mt-1 inline-block rounded-full bg-accent-soft px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-accent">
+                {book.category}
+              </span>
+            )}
+          </div>
+          <span className="shrink-0 rounded-full bg-ink px-2.5 py-1.5 text-[11px] font-semibold text-cream">
+            {t('hikme.open')}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MessageBlocks({
+  blocks,
+  onOpenBook,
+}: {
+  blocks: ChatBlock[];
+  onOpenBook: (book: Book) => void;
+}) {
   return (
     <>
       {blocks.map((block, i) => {
@@ -65,45 +121,7 @@ function MessageBlocks({
           );
         }
         if (block.type === 'books') {
-          const cited = block.bookIds.map((id) => bookMap.get(id)).filter(Boolean) as Book[];
-          return (
-            <div key={i} className="mt-2.5 flex flex-col gap-2">
-              {cited.map((book) => (
-                <button
-                  key={book.id}
-                  type="button"
-                  onClick={() => onOpenBook(book)}
-                  className="cite-card flex w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elev)] p-2.5 text-left transition-all hover:-translate-y-px hover:border-[var(--border-strong)] hover:shadow-soft"
-                >
-                  <div className="h-[60px] w-[44px] shrink-0 overflow-hidden rounded-md bg-[var(--surface-2)]">
-                    <img
-                      src={book.coverImage || '/placeholder-book.svg'}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-ink">
-                      {book.title}
-                    </p>
-                    {book.author?.trim() && (
-                      <p className="mt-0.5 line-clamp-1 text-[10.5px] text-ink-muted">
-                        {resolveAuthorDisplayName(book.author, t)}
-                      </p>
-                    )}
-                    {book.category && (
-                      <span className="mt-1 inline-block rounded-full bg-accent-soft px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-accent">
-                        {book.category}
-                      </span>
-                    )}
-                  </div>
-                  <span className="shrink-0 rounded-full bg-ink px-2.5 py-1.5 text-[11px] font-semibold text-cream">
-                    {t('hikme.open')}
-                  </span>
-                </button>
-              ))}
-            </div>
-          );
+          return <BookCards key={i} bookIds={block.bookIds} onOpenBook={onOpenBook} />;
         }
         return null;
       })}
@@ -111,7 +129,7 @@ function MessageBlocks({
   );
 }
 
-const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatPanelProps) => {
+const HikmeChatPanel = ({ isMobile, onClose, className = '' }: HikmeChatPanelProps) => {
   const { t, i18n } = useTranslation();
   const { openDetails } = useBookModal();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -236,7 +254,7 @@ const HikmeChatPanel = ({ books, isMobile, onClose, className = '' }: HikmeChatP
           ) : (
             <div key={i} className="msg ai flex max-w-[92%] flex-col self-start">
               <div className="msg-bubble rounded-[18px] rounded-bl-md border border-[var(--border)] bg-[var(--chat-ai)] px-4 py-3 text-[13.5px] leading-relaxed text-ink">
-                <MessageBlocks blocks={msg.blocks} books={books} onOpenBook={openDetails} />
+                <MessageBlocks blocks={msg.blocks} onOpenBook={openDetails} />
               </div>
             </div>
           ),

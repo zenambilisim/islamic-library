@@ -8,6 +8,8 @@ const MATCH_THRESHOLD = 0.35;
 const MATCH_COUNT = 6;
 const BATCH_SEARCH_CONCURRENCY = 4;
 const MAX_BATCH_TASKS = 12;
+const PER_BATCH_TIMEOUT_MS = 4000;
+const TOTAL_SEARCH_BUDGET_MS = 10000;
 const PER_BATCH_MATCH_LIMIT = MATCH_COUNT * 2;
 const MAX_MESSAGE_LEN = 2000;
 const MAX_HISTORY = 8;
@@ -126,15 +128,24 @@ async function loadBooksForLanguage(bookIds: string[], language: string): Promis
   const allowed = new Set<string>();
   if (!supabaseAdmin || bookIds.length === 0) return allowed;
 
-  const { data, error } = await supabaseAdmin
-    .from('books')
-    .select('id')
-    .in('id', bookIds)
-    .eq('language_code', language);
-  if (error) throw new Error(`Kitap dili alınamadı: ${error.message}`);
+  const queries = [];
+  for (let i = 0; i < bookIds.length; i += 80) {
+    const slice = bookIds.slice(i, i + 80);
+    queries.push(
+      supabaseAdmin
+        .from('books')
+        .select('id')
+        .in('id', slice)
+        .eq('language_code', language),
+    );
+  }
 
-  for (const row of data ?? []) {
-    allowed.add(row.id as string);
+  const results = await Promise.all(queries);
+  for (const { data, error } of results) {
+    if (error) throw new Error(`Kitap dili alınamadı: ${error.message}`);
+    for (const row of data ?? []) {
+      allowed.add(row.id as string);
+    }
   }
   return allowed;
 }
@@ -180,6 +191,13 @@ function rankMatchedChunks(
     .slice(0, MATCH_COUNT);
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 async function searchOneBatchTask(
   embedding: number[],
   task: BatchSearchTask,
@@ -187,14 +205,23 @@ async function searchOneBatchTask(
   if (!supabaseAdmin) throw new Error('Supabase service role yapılandırılmamış');
 
   if (task.slice) {
-    const { data, error } = await supabaseAdmin.rpc('match_book_chunks_slice', {
-      query_embedding: embedding,
-      p_book_id: task.slice.book_id,
-      p_id_min: task.slice.id_min,
-      p_id_max: task.slice.id_max,
-      p_limit: PER_BATCH_MATCH_LIMIT,
-    });
+    const result = await withTimeout(
+      supabaseAdmin.rpc('match_book_chunks_slice', {
+        query_embedding: embedding,
+        p_book_id: task.slice.book_id,
+        p_id_min: task.slice.id_min,
+        p_id_max: task.slice.id_max,
+        p_limit: PER_BATCH_MATCH_LIMIT,
+      }),
+      PER_BATCH_TIMEOUT_MS,
+    );
 
+    if (!result) {
+      console.warn(`[chat-rag] batch ${task.batch_no} slice timeout (client), atlanıyor`);
+      return [];
+    }
+
+    const { data, error } = result;
     if (error) {
       if (/match_book_chunks_slice|could not find the function/i.test(error.message)) {
         throw new Error(
@@ -211,13 +238,22 @@ async function searchOneBatchTask(
     return (data ?? []) as MatchedChunk[];
   }
 
-  const { data, error } = await supabaseAdmin.rpc('match_book_chunks_batch', {
-    query_embedding: embedding,
-    p_book_ids: task.book_ids,
-    p_slice_filters: null,
-    p_limit: PER_BATCH_MATCH_LIMIT,
-  });
+  const result = await withTimeout(
+    supabaseAdmin.rpc('match_book_chunks_batch', {
+      query_embedding: embedding,
+      p_book_ids: task.book_ids,
+      p_slice_filters: null,
+      p_limit: PER_BATCH_MATCH_LIMIT,
+    }),
+    PER_BATCH_TIMEOUT_MS,
+  );
 
+  if (!result) {
+    console.warn(`[chat-rag] batch ${task.batch_no} timeout (client), atlanıyor`);
+    return [];
+  }
+
+  const { data, error } = result;
   if (error) {
     if (/match_book_chunks_batch|could not find the function/i.test(error.message)) {
       throw new Error(
@@ -242,8 +278,14 @@ async function searchChunksInBatches(embedding: number[], language: string | nul
 
   const tasks = expandBatchesToTasks(batches).slice(0, MAX_BATCH_TASKS);
   const candidates: MatchedChunk[] = [];
+  const searchStart = Date.now();
 
   for (let i = 0; i < tasks.length; i += BATCH_SEARCH_CONCURRENCY) {
+    if (Date.now() - searchStart > TOTAL_SEARCH_BUDGET_MS) {
+      console.warn(`[chat-rag] toplam arama bütçesi aşıldı, ${candidates.length} sonuçla durduruluyor`);
+      break;
+    }
+
     const wave = tasks.slice(i, i + BATCH_SEARCH_CONCURRENCY);
     const waveResults = await Promise.all(wave.map((task) => searchOneBatchTask(embedding, task)));
 

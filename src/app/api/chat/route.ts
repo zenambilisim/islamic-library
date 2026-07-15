@@ -48,6 +48,16 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Chat failed';
     console.error('[api/chat]', msg);
-    return NextResponse.json({ success: false, message: 'Failed to generate a response.' }, { status: 502 });
+
+    const isTimeout = msg.includes('statement timeout') || msg.includes('canceling statement');
+    return NextResponse.json(
+      {
+        success: false,
+        message: isTimeout
+          ? 'Search took too long. Please try a shorter or simpler question.'
+          : 'Failed to generate a response.',
+      },
+      { status: isTimeout ? 504 : 502 },
+    );
   }
 }

@@ -4,8 +4,8 @@ import type { ChatBlock } from '@/lib/hikme-chat';
 
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const CHAT_MODEL = 'gpt-4o-mini';
-const MATCH_THRESHOLD = 0.15;
-const MATCH_COUNT = 8;
+const MATCH_THRESHOLD = 0.35;
+const MATCH_COUNT = 6;
 const MAX_MESSAGE_LEN = 2000;
 const MAX_HISTORY = 8;
 

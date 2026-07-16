@@ -38,6 +38,7 @@ export function useSupabaseAuthors(
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const fetchGenerationRef = useRef(0);
 
   useEffect(() => {
     const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
@@ -53,11 +54,14 @@ export function useSupabaseAuthors(
 
   const fetchAuthors = useCallback(async () => {
     if (!enabled) {
+      fetchGenerationRef.current += 1;
       setAuthors([]);
       setLoading(false);
       setError(null);
       return;
     }
+    const generation = ++fetchGenerationRef.current;
+    const isStale = () => generation !== fetchGenerationRef.current;
     try {
       setLoading(true);
       setError(null);
@@ -67,6 +71,7 @@ export function useSupabaseAuthors(
       if (debouncedSearch) params.set('search', debouncedSearch);
       const qs = params.toString();
       const res = await fetch(`/api/authors${qs ? `?${qs}` : ''}`);
+      if (isStale()) return;
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || res.statusText);
@@ -74,10 +79,11 @@ export function useSupabaseAuthors(
       const data = await res.json();
       setAuthors(Array.isArray(data.authors) ? data.authors : []);
     } catch (err) {
+      if (isStale()) return;
       setError(err instanceof Error ? err.message : 'Yazarlar yüklenirken bir hata oluştu');
       setAuthors([]);
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
   }, [language, debouncedSearch, enabled]);
 

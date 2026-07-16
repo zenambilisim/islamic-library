@@ -51,6 +51,8 @@ export function useSupabaseBooks(
   pageRef.current = page;
   const loadMoreInFlightRef = useRef(false);
   const prevFetchAllRef = useRef(fetchAll);
+  /** Tam yenileme (fetchAll / dil / sıralama) için; eski isteklerin loading'i kapatmasını engeller */
+  const fetchGenerationRef = useRef(0);
 
   // fetchAll değişince useEffect'ten önce loading=true; arama sırasında "sonuç yok" flaşı önlenir
   useLayoutEffect(() => {
@@ -61,12 +63,16 @@ export function useSupabaseBooks(
   }, [fetchAll]);
 
   const fetchBooks = useCallback(async (isLoadMore: boolean = false) => {
+    let generation = fetchGenerationRef.current;
+    const isStale = () => generation !== fetchGenerationRef.current;
+
     try {
       if (isLoadMore) {
         if (loadMoreInFlightRef.current) return;
         loadMoreInFlightRef.current = true;
         setLoadingMore(true);
       } else {
+        generation = ++fetchGenerationRef.current;
         setLoading(true);
         setPage(0);
         pageRef.current = 0;
@@ -78,6 +84,7 @@ export function useSupabaseBooks(
         const collected: Book[] = [];
 
         while (true) {
+          if (isStale()) return;
           const params = new URLSearchParams({
             page: String(nextPage),
             limit: String(SEARCH_ITEMS_PER_PAGE),
@@ -85,6 +92,7 @@ export function useSupabaseBooks(
             sortBy: sortBy ?? 'uploadDate',
           });
           const res = await fetch(`/api/books?${params}`);
+          if (isStale()) return;
 
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
@@ -105,6 +113,7 @@ export function useSupabaseBooks(
           nextPage += 1;
         }
 
+        if (isStale()) return;
         setBooks(collected);
         setPage(0);
         pageRef.current = 0;
@@ -120,6 +129,7 @@ export function useSupabaseBooks(
         sortBy: sortBy ?? 'uploadDate',
       });
       const res = await fetch(`/api/books?${params}`);
+      if (isStale()) return;
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -127,7 +137,7 @@ export function useSupabaseBooks(
       }
 
       const data = await res.json();
-      const { books: nextBooks, total, hasMore: nextHasMore } = data;
+      const { books: nextBooks, hasMore: nextHasMore } = data;
 
       if (!Array.isArray(nextBooks)) {
         if (!isLoadMore) setBooks([]);
@@ -150,6 +160,7 @@ export function useSupabaseBooks(
           : nextBooks.length >= ITEMS_PER_PAGE
       );
     } catch (err) {
+      if (isStale()) return;
       const errorMessage = err instanceof Error ? err.message : 'Kitaplar yüklenirken bir hata oluştu';
       setError(errorMessage);
       if (!isLoadMore) setBooks([]);
@@ -157,7 +168,7 @@ export function useSupabaseBooks(
       if (isLoadMore) {
         loadMoreInFlightRef.current = false;
         setLoadingMore(false);
-      } else {
+      } else if (!isStale()) {
         setLoading(false);
       }
     }

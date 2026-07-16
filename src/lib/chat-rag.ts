@@ -194,9 +194,11 @@ function rankMatchedChunks(
     .slice(0, MATCH_COUNT);
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | null> {
+  // Supabase rpc() tipleri bazen Promise yerine thenable dönebildiği için
+  // Promise.resolve ile uyumlu hale getiriyoruz.
   return Promise.race([
-    promise,
+    Promise.resolve(promise),
     new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
   ]);
 }

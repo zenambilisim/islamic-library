@@ -4,6 +4,10 @@ import type { ChatHistoryTurn } from '@/lib/chat-rag';
 
 const MAX_MESSAGE_LEN = 2000;
 
+// Vercel'de default runtime bazen farklı davranabildiği için
+// OpenAI/supabase gibi Node tarafı bağımlılıkların sorunsuz çalışması için nodejs zorlayalım.
+export const runtime = 'nodejs';
+
 function parseHistory(raw: unknown): ChatHistoryTurn[] {
   if (!Array.isArray(raw)) return [];
   const out: ChatHistoryTurn[] = [];
@@ -31,7 +35,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'Invalid JSON body.' },
+        { status: 400 },
+      );
+    }
     const message = typeof body?.message === 'string' ? body.message.trim() : '';
     const language = typeof body?.language === 'string' ? body.language : undefined;
     const history = parseHistory(body?.history);
@@ -47,7 +59,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, blocks });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Chat failed';
-    console.error('[api/chat]', msg);
+    console.error('[api/chat] error:', err);
+    console.error('[api/chat] message:', msg);
 
     const isTimeout = msg.includes('statement timeout') || msg.includes('canceling statement');
     return NextResponse.json(

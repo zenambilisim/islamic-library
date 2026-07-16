@@ -88,11 +88,6 @@ const MyLibraryPage = () => {
               <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
                 {t(`readingList.status.${activeTab}`)}
               </h2>
-              {!isLoading && (
-                <p className="mt-1 text-[12.5px] text-ink-muted">
-                  {t('readingList.booksInList', { count: books.length })}
-                </p>
-              )}
             </div>
             <ReadingListTabs value={activeTab} onChange={setActiveTab} />
           </div>

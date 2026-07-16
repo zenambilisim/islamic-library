@@ -201,7 +201,7 @@ const HikmeChatPanel = ({ isMobile, onClose, className = '' }: HikmeChatPanelPro
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--bg-elev)] bg-green-500" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-[17px] font-semibold leading-tight text-ink">Hikme</p>
+          <p className="font-display text-[17px] font-semibold leading-tight text-ink">{t('hikme.name')}</p>
           <p className="text-[11px] tracking-wide text-ink-muted">{t('hikme.status')}</p>
         </div>
         <div className="flex gap-1.5">
@@ -232,9 +232,6 @@ const HikmeChatPanel = ({ isMobile, onClose, className = '' }: HikmeChatPanelPro
       >
         {messages.length === 0 && (
           <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] p-5">
-            <p className="font-arabic mb-1.5 text-[22px] leading-relaxed text-accent">
-              {t('hikme.greet.arabic')}
-            </p>
             <p className="font-display text-[19px] font-semibold tracking-tight text-ink">
               {t('hikme.greet.title')}
             </p>

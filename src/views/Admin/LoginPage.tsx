@@ -89,9 +89,6 @@ const LoginPage = () => {
         <section className="relative overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-6 shadow-soft md:p-8">
           <HeroPattern />
           <div className="relative">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-              {t('login.heroEyebrow', 'Yönetim')}
-            </p>
             <h1 className="font-display text-2xl font-medium tracking-tight text-ink">
               {t('login.pageTitle')}
             </h1>

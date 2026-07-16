@@ -41,9 +41,6 @@ export function CategoryDetailSection({ category }: { category: Category }) {
               <Folder size={24} strokeWidth={1.75} aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-                {t('categories.browseByCategory')}
-              </p>
               <h1 className="font-display text-3xl font-medium leading-[1.05] tracking-tight text-ink md:text-[2.25rem]">
                 {category.name}
               </h1>

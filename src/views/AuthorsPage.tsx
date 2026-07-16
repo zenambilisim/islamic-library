@@ -136,15 +136,6 @@ const AuthorsPage = () => {
                   })
                 : t('authors.pageTitle')}
             </h2>
-            {!isFilterMode && (
-              <p className="mt-1 text-[12.5px] text-ink-muted">{t('authors.browseByLetter')}</p>
-            )}
-            {isFilterMode && !searchTerm.trim() && selectedLetter && (
-              <p className="mt-1 text-[12.5px] text-ink-muted">
-                {filteredAuthors.length} {t('authors.authorsFound')} ({selectedLetter}{' '}
-                {t('authors.letterFilter')})
-              </p>
-            )}
           </div>
 
           {!searchTerm.trim() && (

@@ -109,11 +109,6 @@ const CategoriesPage = () => {
                     })
                   : t('categories.pageTitle')}
               </h2>
-              {!isSearchMode && (
-                <p className="mt-1 text-[12.5px] text-ink-muted">
-                  {t('categories.browseByCategory')}
-                </p>
-              )}
             </div>
           </div>
 

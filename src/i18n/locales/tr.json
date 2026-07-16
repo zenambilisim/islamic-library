@@ -20,14 +20,14 @@
     "close": "Kapat",
     "retry": "Tekrar dene",
     "logoAlt": "Islamic Library Logo",
-    "siteTagline": "İslami Dijital Kütüphane"
+    "siteTagline": "ISLAMIC DIGITAL LIBRARY"
   },
   "errors": {
     "downloadFailed": "İndirme başarısız oldu. Lütfen tekrar deneyin."
   },
   "navigation": {
     "home": "Ana Sayfa",
-    "categories": "Kategoriler", 
+    "categories": "Kategoriler",
     "authors": "Yazarlar",
     "usefulInfo": "Faydalı Bilgiler",
     "about": "Hakkımızda",
@@ -80,7 +80,7 @@
   },
   "formats": {
     "epub": "EPUB",
-    "pdf": "PDF", 
+    "pdf": "PDF",
     "doc": "DOC"
   },
   "authors": {
@@ -90,7 +90,7 @@
     "heroTitleLine1": "İslami eserlerin",
     "heroTitleEm": "yazarlarını keşfedin.",
     "alphabetSort": "Alfabetik Sıralama",
-    "browseByLetter": "Harflere Göre Gezin",
+    "browseByLetter": "Keşfet",
     "all": "Tümü",
     "noAuthorsFound": "Yazar bulunamadı",
     "booksCount": "kitap",
@@ -119,7 +119,7 @@
     "heroTitleLine1": "İslami ilimleri",
     "heroTitleEm": "kategorilere göre keşfedin.",
     "noCategories": "Henüz kategori bulunmuyor",
-    "browseByCategory": "Kategoriye göre gözat",
+    "browseByCategory": "Keşfet",
     "booksInCategory": "kitap",
     "goToCategory": "Kategoriye Git →",
     "backToCategories": "Kategorilere Dön",
@@ -138,18 +138,18 @@
     "totalBooks": "Toplam Kitap"
   },
   "hikme": {
+    "name": "Hikme",
     "status": "Kütüphanenin yapay zekâ rehberi · çevrimiçi",
     "newChat": "Yeni sohbet",
     "more": "Daha fazla",
     "open": "Aç",
     "openChat": "AI sohbetini aç",
-    "placeholder": "Soru sor — ayet, hadis, kitap…",
+    "placeholder": "Hikme-den sor",
     "footerNote": "Hikme klasik kaynaklara dayanır — önemli konuları âlimlere danış.",
     "allCategories": "Tümü",
     "greet": {
-      "arabic": "السَّلَامُ عَلَيْكُمْ",
-      "title": "Ben Hikme — kütüphane rehberin",
-      "text": "Ayetler, hadisler, fıkıh ya da kitap önerileri hakkında sor. Kaynakları gösterir, kataloğa doğrudan yönlendiririm."
+      "title": "Kütüphanemizdeki kitaplar hakkında soru sorun.",
+      "text": "Örneğin: \"İslam felsefesi üzerine kitaplar\", \"Hicap hakkında hadisler\", \"Sabır konusunu açıkla\"."
     },
     "prompts": {
       "explain-ayah": {
@@ -191,14 +191,14 @@
   "hero": {
     "title": "Geniş Dijital İslami Kütüphane",
     "eyebrow": "Islamic Library · dijital koleksiyon",
-    "titleLine1": "İslam düşüncesinin klasikleri —",
-    "titleEm": "tek bir katalogda.",
-    "subtitle": "Tefsir, hadis, fıkıh ve felsefe. Herhangi bir cihazda çevrimiçi veya çevrimdışı okuyun.",
+    "titleLine1": "Geniş Dijital İslami Kütüphane",
+    "titleEm": "",
+    "subtitle": "Herhangi bir cihazda çevrimiçi veya çevrimdışı okuyun.",
     "booksCount": "Kitap",
     "languagesCount": "Dil",
     "categoriesCount": "Kategori",
     "knowledgeCount": "Bilgi",
-    "exploreButton": "Kataloğu keşfet",
+    "exploreButton": "Keşfet",
     "catalogTitle": "Katalog",
     "catalogSubtitle": "Koleksiyondan {{count}} kitap",
     "featuredEyebrow": "Seçkiler · öne çıkanlar",

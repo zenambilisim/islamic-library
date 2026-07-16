@@ -129,7 +129,7 @@ const UserLoginPage = () => {
           <div>
             <p className="font-display text-xl font-semibold tracking-tight text-ink">Islamic Library</p>
             <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-ink-muted">
-              {t('common.siteTagline', 'İslami Dijital Kütüphane')}
+              ISLAMIC DIGITAL LIBRARY
             </p>
           </div>
         </Link>
@@ -137,9 +137,6 @@ const UserLoginPage = () => {
         <section className="relative w-full overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-6 shadow-soft md:p-8">
           <HeroPattern />
           <div className="relative mb-5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-              {t('userAuth.heroEyebrow', 'Hesabınız')}
-            </p>
             <h1 className="font-display text-2xl font-medium tracking-tight text-ink">
               {mode === 'login' ? t('userAuth.loginTitle') : t('userAuth.signupTitle')}
             </h1>

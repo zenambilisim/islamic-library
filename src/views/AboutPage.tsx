@@ -62,7 +62,6 @@ const AboutPage = () => {
             <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
               {t('about.featuresTitle', 'Neden Islamic Library?')}
             </h2>
-            <p className="mt-1 text-[12.5px] text-ink-muted">{t('about.featuresSubtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2 lg:grid-cols-3">

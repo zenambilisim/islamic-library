@@ -87,7 +87,7 @@
     "heroTitleLine1": "İslami əsərlərin",
     "heroTitleEm": "müəlliflərini kəşf edin.",
     "alphabetSort": "Əlifba sıralaması",
-    "browseByLetter": "Hərflərə görə gəzin",
+    "browseByLetter": "Kəşf et",
     "all": "Hamısı",
     "noAuthorsFound": "Müəllif tapılmadı",
     "booksCount": "kitab",
@@ -116,7 +116,7 @@
     "heroTitleLine1": "İslami elmləri",
     "heroTitleEm": "kateqoriyalara görə kəşf edin.",
     "noCategories": "Hələ kateqoriya yoxdur",
-    "browseByCategory": "Kateqoriyaya görə gəzin",
+    "browseByCategory": "Kəşf et",
     "booksInCategory": "kitab",
     "goToCategory": "Kateqoriyaya get →",
     "backToCategories": "Kateqoriyalara qayıt",
@@ -135,18 +135,18 @@
     "totalBooks": "Ümumi Kitab"
   },
   "hikme": {
+    "name": "Hikmə",
     "status": "Kitabxananın süni intellekt bələdçisi · onlayn",
     "newChat": "Yeni söhbət",
     "more": "Daha çox",
     "open": "Aç",
     "openChat": "AI söhbətini aç",
-    "placeholder": "Ayə, hədis və ya kitab haqqında soruş…",
-    "footerNote": "Hikme klassik mənbələrə əsaslanır — vacib məsələlərdə alimlərə müraciət edin.",
+    "placeholder": "Hikmə-dən soruş",
+    "footerNote": "Hikmə klassik mənbələrə əsaslanır — vacib məsələlərdə alimlərə müraciət edin.",
     "allCategories": "Hamısı",
     "greet": {
-      "arabic": "السَّلَامُ عَلَيْكُمْ",
-      "title": "Mən Hikməm — kitabxana bələdçiniz",
-      "text": "Ayələr, hədislər, fiqh və ya kitab tövsiyələri haqqında soruşun. Mənbələri göstərir, kataloqa yönləndirirəm."
+      "title": "Kitabxanamızdakı kitablar haqqında soruşun.",
+      "text": "Məsələn: \"İslam fəlsəfəsi üzrə kitablar\", \"Hicab haqqında hədislər\", \"Səbir mövzusunu izah et\"."
     },
     "prompts": {
       "explain-ayah": {
@@ -188,14 +188,14 @@
   "hero": {
     "title": "Geniş Rəqəmsal İslam Kitabxanası",
     "eyebrow": "Islamic Library · rəqəmsal kolleksiya",
-    "titleLine1": "İslam düşüncəsinin klassikləri —",
-    "titleEm": "tək kataloqda.",
-    "subtitle": "Təfsir, hədis, fiqh və fəlsəfə. İstənilən cihazda onlayn və ya oflayn oxuyun.",
+    "titleLine1": "Geniş Rəqəmsal İslam Kitabxanası",
+    "titleEm": "",
+    "subtitle": "İstənilən cihazda onlayn və ya oflayn oxuyun.",
     "booksCount": "Kitab",
     "languagesCount": "Dil",
     "categoriesCount": "Kateqoriya",
     "knowledgeCount": "Bilik",
-    "exploreButton": "Kataloqu kəşf et",
+    "exploreButton": "Kəşf et",
     "catalogTitle": "Kataloq",
     "catalogSubtitle": "Kolleksiyadan {{count}} kitab",
     "featuredEyebrow": "Seçilmiş · önə çıxanlar",

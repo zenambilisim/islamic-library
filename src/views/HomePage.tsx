@@ -11,7 +11,6 @@ import { AuthorDetailSection } from '@/components/authors/AuthorDetailSection';
 import HomeHero from '@/components/home/HomeHero';
 import FeaturedBooksSlider from '@/components/home/FeaturedBooksSlider';
 import HomeFiltersPanel from '@/components/home/HomeFiltersPanel';
-import CategoryTabs from '@/components/home/CategoryTabs';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseBooks, resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
@@ -190,39 +189,26 @@ const HomePage = () => {
           )}
 
           <section id="books-section">
-            <div className="section-head mb-4 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
-                  {searchTerm
-                    ? t('search.resultsFor', {
-                        count: filteredBooks.length + filteredAuthors.length,
-                        word: searchTerm,
-                      })
-                    : t('hero.catalogTitle', 'Katalog')}
-                </h2>
-                <p className="mt-1 text-[12.5px] text-ink-muted">
-                  {searchTerm
-                    ? undefined
-                    : t('hero.catalogSubtitle', { count: filteredBooks.length })}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {!searchTerm && categories.length > 0 && (
-                  <CategoryTabs
-                    categories={categories}
-                    value={categorySlug}
-                    onChange={setCategorySlug}
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="inline-flex h-8 items-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 text-sm font-medium text-ink xl:hidden"
-                >
-                  {t('search.filters')}
-                </button>
-              </div>
+            <div className="mb-4 flex justify-end xl:hidden">
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="inline-flex h-8 items-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 text-sm font-medium text-ink"
+              >
+                {t('search.filters')}
+              </button>
             </div>
+
+            {searchTerm && (
+              <div className="section-head mb-4">
+                <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
+                  {t('search.resultsFor', {
+                    count: filteredBooks.length + filteredAuthors.length,
+                    word: searchTerm,
+                  })}
+                </h2>
+              </div>
+            )}
 
             {error && supabaseBooks.length === 0 && !loading && (
               <div className="mb-6 rounded-editorial border border-red-200 bg-red-50 p-4 text-red-800">
@@ -308,7 +294,6 @@ const HomePage = () => {
           </section>
         </div>
 
-        {/* Sağ — Filtreler (masaüstü) */}
         <div className="col-filters">
           <HomeFiltersPanel
             filters={filters}
@@ -319,7 +304,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Mobil filtre çekmecesi */}
       <div className="xl:hidden">
         <FilterSidebar
           filters={filters}
@@ -329,7 +313,6 @@ const HomePage = () => {
           onCategoryNavigate={() => setIsFilterOpen(false)}
         />
       </div>
-
     </div>
   );
 };

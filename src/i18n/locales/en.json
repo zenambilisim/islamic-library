@@ -25,7 +25,7 @@
   "navigation": {
     "home": "Home",
     "categories": "Categories",
-    "authors": "Authors", 
+    "authors": "Authors",
     "usefulInfo": "Useful Information",
     "about": "About",
     "contact": "Contact"
@@ -87,7 +87,7 @@
     "heroTitleLine1": "Explore the authors",
     "heroTitleEm": "behind the collection.",
     "alphabetSort": "Alphabetical Sorting",
-    "browseByLetter": "Browse by Letter",
+    "browseByLetter": "Explore",
     "all": "All",
     "noAuthorsFound": "No authors found",
     "booksCount": "books",
@@ -116,7 +116,7 @@
     "heroTitleLine1": "Explore Islamic knowledge",
     "heroTitleEm": "by category.",
     "noCategories": "No categories available yet",
-    "browseByCategory": "Browse by category",
+    "browseByCategory": "Explore",
     "booksInCategory": "books",
     "goToCategory": "Go to Category →",
     "backToCategories": "Back to Categories",
@@ -135,18 +135,18 @@
     "totalBooks": "Total Books"
   },
   "hikme": {
+    "name": "Hikma",
     "status": "Your library AI guide · online",
     "newChat": "New chat",
     "more": "More",
     "open": "Open",
     "openChat": "Open AI chat",
-    "placeholder": "Ask about a verse, hadith, or book…",
-    "footerNote": "Hikme draws on classical sources — consult scholars on important matters.",
+    "placeholder": "Ask Hikma",
+    "footerNote": "Hikma draws on classical sources — consult scholars on important matters.",
     "allCategories": "All",
     "greet": {
-      "arabic": "السَّلَامُ عَلَيْكُمْ",
-      "title": "I'm Hikme — your library guide",
-      "text": "Ask about verses, hadith, fiqh, or book recommendations. I'll point you to sources in the catalog."
+      "title": "Ask about the books in our library.",
+      "text": "For example: \"Books on Islamic philosophy\", \"Hadiths about hijab\", \"Explain the topic of patience\"."
     },
     "prompts": {
       "explain-ayah": {
@@ -188,14 +188,14 @@
   "hero": {
     "title": "Extensive Digital Islamic Library",
     "eyebrow": "Islamic Library · digital collection",
-    "titleLine1": "Classics of Islamic thought —",
-    "titleEm": "in one catalog.",
-    "subtitle": "Tafsir, hadith, fiqh, and philosophy. Read online or offline on any device.",
+    "titleLine1": "Extensive Digital Islamic Library",
+    "titleEm": "",
+    "subtitle": "Read online or offline on any device.",
     "booksCount": "Books",
     "languagesCount": "Languages",
     "categoriesCount": "Categories",
     "knowledgeCount": "Knowledge",
-    "exploreButton": "Explore catalog",
+    "exploreButton": "Explore",
     "catalogTitle": "Catalog",
     "catalogSubtitle": "{{count}} books in the collection",
     "featuredEyebrow": "Featured · highlights",

@@ -22,9 +22,6 @@ const LibraryHero = ({ displayName, email, onLogout }: LibraryHeroProps) => {
       <HeroPattern />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-            {t('readingList.myLibrary')}
-          </p>
           {name ? (
             <h1 className="font-display text-3xl font-medium leading-[1.05] tracking-tight text-ink md:text-[2.375rem]">
               {name}

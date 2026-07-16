@@ -75,7 +75,7 @@ const Header = () => {
                 Islamic Library
               </div>
               <div className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-ink-muted">
-                {t('common.siteTagline', 'İslami Dijital Kütüphane')}
+                ISLAMIC DIGITAL LIBRARY
               </div>
             </div>
           </Link>

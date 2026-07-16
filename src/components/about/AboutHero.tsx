@@ -13,9 +13,6 @@ const AboutHero = ({ onBrowse }: AboutHeroProps) => {
   return (
     <section className="relative overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-7 md:p-8 shadow-soft">
       <HeroPattern />
-      <p className="relative mb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-        {t('about.heroEyebrow')}
-      </p>
       <h1 className="font-display relative text-3xl font-medium leading-[1.05] tracking-tight text-ink md:text-[2.375rem]">
         {t('about.heroTitleLine1')}
         <br />

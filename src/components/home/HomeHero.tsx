@@ -21,13 +21,14 @@ const HomeHero = ({ totalBooks, totalCategories, localeTag, onExplore }: HomeHer
   return (
     <section className="relative overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-7 md:p-8 shadow-soft">
       <HeroPattern />
-      <p className="relative mb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-        {t('hero.eyebrow')}
-      </p>
       <h1 className="font-display relative text-3xl font-medium leading-[1.05] tracking-tight text-ink md:text-[2.375rem]">
         {t('hero.titleLine1')}
-        <br />
-        <em className="font-normal not-italic text-accent">{t('hero.titleEm')}</em>
+        {t('hero.titleEm') ? (
+          <>
+            <br />
+            <em className="font-normal not-italic text-accent">{t('hero.titleEm')}</em>
+          </>
+        ) : null}
       </h1>
       <p className="relative mt-3 max-w-xl text-sm leading-relaxed text-ink-muted md:text-[15px]">
         {t('hero.subtitle')}

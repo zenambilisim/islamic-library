@@ -28,6 +28,8 @@ export default function PublicBookDetailPage({ book }: PublicBookDetailPageProps
           bookId={book.id}
           bookSlug={book.slug}
           bookLanguage={book.language}
+          bookTitle={book.title}
+          coverImage={book.coverImage}
           variant="solid"
         />
       </div>

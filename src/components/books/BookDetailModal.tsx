@@ -33,6 +33,8 @@ const BookDetailModal = () => {
               bookId={book.id}
               bookSlug={book.slug}
               bookLanguage={book.language}
+              bookTitle={book.title}
+              coverImage={book.coverImage}
             />
             <button
               type="button"

@@ -118,26 +118,42 @@ function buildWhereClause(bookIds, sliceFilters) {
 }
 
 async function fetchBookChunkSlices(supabase, bookId, maxChunks) {
-  const { data, error } = await supabase.rpc('plan_book_chunk_slices', {
-    p_book_id: bookId,
-    p_max_chunks: maxChunks,
-  });
-
-  if (error) {
-    if (/plan_book_chunk_slices|function.*does not exist|could not find the function/i.test(error.message)) {
-      throw new Error(
-        'plan_book_chunk_slices bulunamadı. Script psql ile otomatik kurar; DATABASE_URL ve PSQL_PATH tanımlı olmalı.'
-      );
-    }
-    throw new Error(`Kitap slice planı alınamadı (${bookId}): ${error.message}`);
+  // RPC yerine doğrudan sorgu ile slice hesapla
+  const allIds = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('book_file_chunks')
+      .select('id')
+      .eq('book_id', bookId)
+      .order('id', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(`Chunk ID'leri okunamadı (${bookId}): ${error.message}`);
+    if (!data?.length) break;
+    for (const row of data) allIds.push(row.id);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
 
-  return (data ?? []).map((row) => ({
-    book_id: bookId,
-    id_min: row.id_min,
-    id_max: row.id_max,
-    chunk_count: Number(row.chunk_count),
-  }));
+  if (allIds.length === 0) return [];
+
+  const numSlices = Math.max(1, Math.ceil(allIds.length / maxChunks));
+  const sliceSize = Math.ceil(allIds.length / numSlices);
+  const slices = [];
+
+  for (let i = 0; i < numSlices; i++) {
+    const start = i * sliceSize;
+    const end = Math.min(start + sliceSize, allIds.length) - 1;
+    if (start > end) break;
+    slices.push({
+      book_id: bookId,
+      id_min: allIds[start],
+      id_max: allIds[end],
+      chunk_count: end - start + 1,
+    });
+  }
+
+  return slices;
 }
 
 async function buildBatches(supabase, bookCounts, maxChunks) {
@@ -364,15 +380,7 @@ async function main() {
 
   const needsSlices = bookCounts.some((row) => row.chunkCount > CHUNKS_PER_BATCH);
   if (needsSlices) {
-    if (!DB_URL) {
-      console.error('Büyük kitaplar var; .env içinde DATABASE_URL gerekli.');
-      process.exit(1);
-    }
-    if (!psqlPath) {
-      console.error('Büyük kitaplar var; psql gerekli (PSQL_PATH).');
-      process.exit(1);
-    }
-    ensureSlicePlanner(psqlPath, DB_URL);
+    console.log(`Büyük kitaplar mevcut (>${CHUNKS_PER_BATCH} chunk) — dilimlere bölünecek.`);
   }
 
   const batches = await buildBatches(supabase, bookCounts, CHUNKS_PER_BATCH);

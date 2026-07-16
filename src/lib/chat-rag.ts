@@ -6,7 +6,7 @@ const EMBEDDING_MODEL = 'text-embedding-3-small';
 const CHAT_MODEL = 'gpt-4o-mini';
 const MATCH_THRESHOLD = 0.35;
 const MATCH_COUNT = 6;
-const BATCH_SEARCH_CONCURRENCY = 4;
+const BATCH_SEARCH_CONCURRENCY = 8;
 const MAX_BATCH_TASKS = 12;
 const PER_BATCH_TIMEOUT_MS = 4000;
 const TOTAL_SEARCH_BUDGET_MS = 10000;
@@ -184,9 +184,12 @@ function rankMatchedChunks(
   language: string | null,
   allowedBooks?: Set<string>,
 ) {
-  return rows
-    .filter((row) => row.similarity > MATCH_THRESHOLD)
-    .filter((row) => !language || !allowedBooks || allowedBooks.has(row.book_id))
+  const aboveThreshold = rows.filter((row) => row.similarity > MATCH_THRESHOLD);
+  const afterLang = aboveThreshold.filter(
+    (row) => !language || !allowedBooks || allowedBooks.has(row.book_id),
+  );
+
+  return afterLang
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, MATCH_COUNT);
 }
@@ -292,7 +295,10 @@ async function searchChunksInBatches(embedding: number[], language: string | nul
     for (const rows of waveResults) candidates.push(...rows);
 
     const ranked = rankMatchedChunks(candidates, language, allowedBooks);
-    if (ranked.length >= MATCH_COUNT) {
+    if (
+      ranked.length >= MATCH_COUNT &&
+      i + BATCH_SEARCH_CONCURRENCY >= Math.max(1, Math.ceil(tasks.length * 0.25))
+    ) {
       return ranked;
     }
   }
@@ -326,10 +332,29 @@ async function searchChunks(embedding: number[], language: string | null): Promi
   if (!supabaseAdmin) throw new Error('Supabase service role yapılandırılmamış');
 
   if (await hasReadyIndexBatches()) {
-    return searchChunksInBatches(embedding, language);
+    const batchResults = await searchChunksInBatches(embedding, language);
+    if (batchResults.length > 0) return batchResults;
+
+    console.warn('[chat-rag] Batch sonuç vermedi, legacy fallback');
   }
 
-  return searchChunksLegacy(embedding, language);
+  try {
+    return await searchChunksLegacy(embedding, language);
+  } catch (err) {
+    if (err instanceof Error && isTimeoutError(err.message)) {
+      console.warn('[chat-rag] Legacy timeout, dilsiz tekrar deneniyor');
+      try {
+        return await searchChunksLegacy(embedding, null);
+      } catch (err2) {
+        if (err2 instanceof Error && isTimeoutError(err2.message)) {
+          console.warn('[chat-rag] Legacy dilsiz de timeout');
+          return [];
+        }
+        throw err2;
+      }
+    }
+    throw err;
+  }
 }
 
 async function fetchBookMeta(bookIds: string[]): Promise<Map<string, BookMeta>> {
@@ -396,12 +421,12 @@ function trimHistory(history: ChatHistoryTurn[]): ChatHistoryTurn[] {
 function noSourcesBlocks(language: string | null): ChatBlock[] {
   const text =
     language === 'en'
-      ? 'I could not find indexed passages in the library for this question yet. Try rephrasing, or browse the catalog directly.'
+      ? 'I couldn\'t find a specific answer to this question in the library. You can try rephrasing your question or browse our catalog to find related books.'
       : language === 'ru'
-        ? 'По этому вопросу в библиотеке пока нет проиндексированных фрагментов. Попробуйте переформулировать или откройте каталог.'
+        ? 'К сожалению, я не смог найти точный ответ на этот вопрос в библиотеке. Попробуйте переформулировать вопрос или загляните в каталог — возможно, там есть подходящие книги.'
         : language === 'az'
-          ? 'Bu sual üçün kitabxanada hələ indekslənmiş parçalar tapılmadı. Sualı yenidən formalaşdırın və ya kataloqa baxın.'
-          : 'Bu soru için kütüphanede henüz indekslenmiş bir pasaj bulamadım. Soruyu farklı kelimelerle deneyebilir veya kataloğa göz atabilirsiniz.';
+          ? 'Təəssüf ki, bu suala kitabxanada dəqiq cavab tapa bilmədim. Sualı fərqli şəkildə formalaşdırmağı və ya kataloqumuza göz atmağı tövsiyə edirəm.'
+          : 'Maalesef bu soruya kütüphanede tam bir cevap bulamadım. Sorunuzu farklı kelimelerle tekrar deneyebilir veya kataloğumuza göz atarak ilgili kitaplara ulaşabilirsiniz.';
 
   return [{ type: 'text', content: text }];
 }

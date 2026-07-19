@@ -21,6 +21,9 @@ interface UseSupabaseBooksReturn {
 interface UseSupabaseBooksOptions {
   /** Aramada tüm sonuçları getirmek için tüm sayfaları otomatik çeker. */
   fetchAll?: boolean;
+  /** SSR ilk sayfa — ilk fetch atlanır; dil/sıralama değişince yeniden çekilir */
+  initialBooks?: Book[];
+  initialHasMore?: boolean;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -40,13 +43,18 @@ export function useSupabaseBooks(
   const { i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
   const fetchAll = options?.fetchAll === true;
+  const initialBooks = options?.initialBooks;
+  const hasSeed = initialBooks != null;
+  const skipFetchRef = useRef(hasSeed);
 
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [books, setBooks] = useState<Book[]>(() => initialBooks ?? []);
+  const [loading, setLoading] = useState<boolean>(() => !hasSeed);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(() =>
+    hasSeed ? Boolean(options?.initialHasMore) : true
+  );
+  const [page, setPage] = useState<number>(() => (hasSeed ? 1 : 0));
   const pageRef = useRef(page);
   pageRef.current = page;
   const loadMoreInFlightRef = useRef(false);
@@ -179,8 +187,12 @@ export function useSupabaseBooks(
     await fetchBooks(true);
   }, [fetchAll, loading, loadingMore, hasMore, fetchBooks]);
 
-  // Dil veya mount: listeyi baştan çek
+  // Dil veya mount: listeyi baştan çek (SSR seed varsa ilk sefer atla)
   useEffect(() => {
+    if (skipFetchRef.current) {
+      skipFetchRef.current = false;
+      return;
+    }
     fetchBooks(false);
   }, [fetchBooks]);
 
@@ -198,16 +210,24 @@ export function useSupabaseBooks(
 /**
  * Belirli bir kategoriye göre kitapları API'den sayfalı çeker (seçili dil).
  */
-export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksReturn {
+export function useSupabaseBooksByCategory(
+  category: string,
+  options?: { initialBooks?: Book[]; initialHasMore?: boolean }
+): UseSupabaseBooksReturn {
   const { i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
+  const initialBooks = options?.initialBooks;
+  const hasSeed = initialBooks != null;
+  const skipFetchRef = useRef(hasSeed);
 
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [books, setBooks] = useState<Book[]>(() => initialBooks ?? []);
+  const [loading, setLoading] = useState<boolean>(() => !hasSeed);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(() =>
+    hasSeed ? Boolean(options?.initialHasMore) : true
+  );
+  const [page, setPage] = useState<number>(() => (hasSeed ? 1 : 0));
   const pageRef = useRef(page);
   pageRef.current = page;
   const loadMoreInFlightRef = useRef(false);
@@ -282,7 +302,12 @@ export function useSupabaseBooksByCategory(category: string): UseSupabaseBooksRe
   );
 
   useEffect(() => {
-    if (category) void fetchBooks(false);
+    if (!category) return;
+    if (skipFetchRef.current) {
+      skipFetchRef.current = false;
+      return;
+    }
+    void fetchBooks(false);
   }, [category, fetchBooks]);
 
   const loadMore = useCallback(async () => {

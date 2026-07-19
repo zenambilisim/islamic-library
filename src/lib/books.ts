@@ -576,6 +576,29 @@ export async function createCategory(payload: CreateCategoryPayload) {
   return { category: data, error: null }
 }
 
+/** Slug (+ isteğe bağlı dil) ile tek kategori */
+export async function getCategoryBySlug(slug: string, language?: string) {
+  const trimmed = slug.trim();
+  if (!trimmed) return { category: null, error: new Error('slug zorunludur') };
+
+  let query = supabase.from('categories').select('*').eq('slug', trimmed);
+  if (language?.trim()) {
+    query = query.eq('language_code', language.trim().toLowerCase());
+  }
+  const { data, error } = await query.maybeSingle();
+
+  if (error) return { category: null, error };
+  if (!data) return { category: null, error: null };
+
+  const { data: rels } = await supabase
+    .from('book_categories')
+    .select('category_id')
+    .eq('category_id', data.id);
+  const book_count = rels?.length ?? 0;
+
+  return { category: { ...data, book_count }, error: null };
+}
+
 export async function getCategoryById(id: string) {
   const { data, error } = await supabase.from('categories').select('*').eq('id', id).maybeSingle()
   if (error) return { category: null, error }

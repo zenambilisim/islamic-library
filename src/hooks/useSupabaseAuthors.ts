@@ -26,6 +26,8 @@ function normalizeQueryLanguage(language?: string): string | null {
 interface UseSupabaseAuthorsOptions {
   /** false ise istek atılmaz (ör. ana sayfa araması kapalıyken). */
   enabled?: boolean;
+  /** SSR ilk liste — ilk fetch atlanır */
+  initialAuthors?: Author[];
 }
 
 export function useSupabaseAuthors(
@@ -33,8 +35,12 @@ export function useSupabaseAuthors(
   options?: UseSupabaseAuthorsOptions,
 ): UseSupabaseAuthorsReturn {
   const enabled = options?.enabled !== false;
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialAuthors = options?.initialAuthors;
+  const hasSeed = initialAuthors != null;
+  const skipFetchRef = useRef(hasSeed && enabled);
+
+  const [authors, setAuthors] = useState<Author[]>(() => initialAuthors ?? []);
+  const [loading, setLoading] = useState(() => !(hasSeed && enabled));
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -47,7 +53,7 @@ export function useSupabaseAuthors(
 
   // enabled/açık arama tetiklenince useEffect'ten önce loading=true
   useLayoutEffect(() => {
-    if (enabled) {
+    if (enabled && !skipFetchRef.current) {
       setLoading(true);
     }
   }, [enabled, language, debouncedSearch]);
@@ -88,8 +94,13 @@ export function useSupabaseAuthors(
   }, [language, debouncedSearch, enabled]);
 
   useEffect(() => {
+    if (skipFetchRef.current && enabled && !debouncedSearch) {
+      skipFetchRef.current = false;
+      return;
+    }
+    skipFetchRef.current = false;
     void fetchAuthors();
-  }, [fetchAuthors]);
+  }, [fetchAuthors, enabled, debouncedSearch]);
 
   return {
     authors,

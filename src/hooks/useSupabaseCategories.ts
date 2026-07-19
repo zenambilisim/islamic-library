@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Category } from '../types';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -22,9 +22,16 @@ function normalizeQueryLanguage(language?: string): string | null {
 /**
  * Sunucu API'sinden kategorileri çeker – GET /api/categories
  */
-export function useSupabaseCategories(language?: string): UseSupabaseCategoriesReturn {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useSupabaseCategories(
+  language?: string,
+  options?: { initialCategories?: Category[] }
+): UseSupabaseCategoriesReturn {
+  const initialCategories = options?.initialCategories;
+  const hasSeed = initialCategories != null;
+  const skipFetchRef = useRef(hasSeed);
+
+  const [categories, setCategories] = useState<Category[]>(() => initialCategories ?? []);
+  const [loading, setLoading] = useState(() => !hasSeed);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -59,8 +66,14 @@ export function useSupabaseCategories(language?: string): UseSupabaseCategoriesR
   }, [language, debouncedSearch]);
 
   useEffect(() => {
+    // Sunucu araması yokken seed ile ilk yüklemeyi atla; client search/dil değişince çek
+    if (skipFetchRef.current && !debouncedSearch) {
+      skipFetchRef.current = false;
+      return;
+    }
+    skipFetchRef.current = false;
     void fetchCategories();
-  }, [fetchCategories]);
+  }, [fetchCategories, debouncedSearch]);
 
   return {
     categories,

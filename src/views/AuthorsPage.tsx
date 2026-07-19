@@ -12,8 +12,13 @@ import AuthorCard from '@/components/authors/AuthorCard';
 import AuthorsGridSkeleton from '@/components/authors/AuthorsGridSkeleton';
 import AuthorsAlphabetFilter from '@/components/authors/AuthorsAlphabetFilter';
 import { AuthorDetailSection } from '@/components/authors/AuthorDetailSection';
+import type { Author } from '@/types';
 
-const AuthorsPage = () => {
+export type AuthorsPageProps = {
+  initialAuthors: Author[];
+};
+
+const AuthorsPage = ({ initialAuthors }: AuthorsPageProps) => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
   const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
@@ -25,7 +30,7 @@ const AuthorsPage = () => {
     loading: authorsLoading,
     error: authorsError,
     refetch,
-  } = useSupabaseAuthors(currentLang);
+  } = useSupabaseAuthors(currentLang, { initialAuthors });
 
   const localeTag =
     currentLang === 'tr'

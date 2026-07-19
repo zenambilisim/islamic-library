@@ -1,43 +1,32 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// Dil dosyalarını import et
 import tr from './locales/tr.json';
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import az from './locales/az.json';
-
-const supportedLanguages = ['tr', 'en', 'ru', 'az'] as const;
-type SupportedLanguage = typeof supportedLanguages[number];
-
-const isSupportedLanguage = (value: string): value is SupportedLanguage =>
-  supportedLanguages.includes(value as SupportedLanguage);
+import {
+  isSupportedLanguage,
+  normalizeLanguage,
+  readLanguageCookieFromDocument,
+  type SupportedLanguage,
+} from '@/lib/locale';
 
 const detectInitialLanguage = (): SupportedLanguage => {
   if (typeof window === 'undefined') {
     return 'tr';
   }
 
-  const storedLanguage = window.localStorage.getItem('language');
-  if (storedLanguage && isSupportedLanguage(storedLanguage)) {
-    return storedLanguage;
-  }
+  const fromCookie = readLanguageCookieFromDocument();
+  if (fromCookie) return fromCookie;
 
-  const browserLanguages = window.navigator.languages?.length
-    ? window.navigator.languages
-    : [window.navigator.language];
-
-  for (const lang of browserLanguages) {
-    const normalizedLang = lang.toLowerCase();
-
-    if (isSupportedLanguage(normalizedLang)) {
-      return normalizedLang;
+  try {
+    const storedLanguage = window.localStorage.getItem('language');
+    if (storedLanguage && isSupportedLanguage(storedLanguage)) {
+      return storedLanguage;
     }
-
-    const baseLang = normalizedLang.split('-')[0];
-    if (isSupportedLanguage(baseLang)) {
-      return baseLang;
-    }
+  } catch {
+    /* ignore */
   }
 
   return 'tr';
@@ -50,28 +39,29 @@ const resources = {
   az: { translation: az },
 };
 
-i18n
-  .use(initReactI18next) // React-i18next plugin'ini kullan
-  .init({
+if (!i18n.isInitialized) {
+  i18n.use(initReactI18next).init({
     resources,
-    lng: detectInitialLanguage(), // Varsayılan dil: kayıtlı tercih veya tarayıcı dili
-    fallbackLng: 'en', // Yedek dil İngilizce
-
+    lng: detectInitialLanguage(),
+    fallbackLng: 'en',
     interpolation: {
-      escapeValue: false, // React zaten XSS'e karşı korumalı
+      escapeValue: false,
     },
-
-    // Debug modunu development'ta aç
     debug: typeof window !== 'undefined' && process.env.NODE_ENV === 'development',
   });
+}
 
 i18n.on('languageChanged', (lang) => {
-  if (typeof window !== 'undefined' && isSupportedLanguage(lang)) {
-    window.localStorage.setItem('language', lang);
+  const code = normalizeLanguage(lang);
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem('language', code);
+    } catch {
+      /* ignore */
+    }
   }
-
   if (typeof document !== 'undefined') {
-    document.documentElement.lang = lang;
+    document.documentElement.lang = code;
   }
 });
 

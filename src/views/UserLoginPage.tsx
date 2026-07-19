@@ -24,6 +24,7 @@ import {
   adminLinkBack,
 } from '@/components/admin/admin-classes';
 import type { Language } from '@/types';
+import { setLanguageCookie } from '@/lib/locale';
 
 type Mode = 'login' | 'signup';
 
@@ -107,7 +108,10 @@ const UserLoginPage = () => {
             <button
               key={code}
               type="button"
-              onClick={() => i18n.changeLanguage(code)}
+              onClick={() => {
+                setLanguageCookie(code);
+                void i18n.changeLanguage(code);
+              }}
               className={`h-7 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
                 currentLang === code ? 'bg-ink text-cream' : 'text-ink-muted hover:text-ink'
               }`}

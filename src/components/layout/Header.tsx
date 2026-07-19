@@ -1,32 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
 import { useUserAuth } from '@/contexts/UserAuthContext';
 import SiteLogo from '@/components/layout/SiteLogo';
 import type { Language } from '../../types';
+import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
 
 const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
 
 const Header = () => {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const { user, isLoading: authLoading } = useUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const { searchInput, setSearchInput, submitSearch, clearSearch, placeholder } = useSearch();
 
   const pathname = usePathname();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const currentLangCode =
-    (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0] ?? 'en';
+  const currentLangCode = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
   const navigationItems = [
     { key: 'home', label: t('navigation.home'), href: '/' },
@@ -38,7 +34,10 @@ const Header = () => {
   ];
 
   const handleLanguageChange = (langCode: Language) => {
-    i18n.changeLanguage(langCode);
+    setLanguageCookie(langCode);
+    void i18n.changeLanguage(langCode).then(() => {
+      router.refresh();
+    });
   };
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -51,16 +50,6 @@ const Header = () => {
     clearSearch();
     setIsMenuOpen(false);
   };
-
-  if (!isMounted) {
-    return (
-      <header className="sticky top-0 z-50 h-[var(--header-h)] border-b border-[var(--border)] bg-cream/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-full max-w-site items-center px-4 md:px-6">
-          <div className="h-9 w-48 animate-pulse rounded-lg bg-[var(--surface-3)]" />
-        </div>
-      </header>
-    );
-  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-cream/80 backdrop-blur-xl backdrop-saturate-150">

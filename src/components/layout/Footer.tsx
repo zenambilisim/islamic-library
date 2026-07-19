@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
@@ -8,11 +7,6 @@ import SiteLogo from '@/components/layout/SiteLogo';
 
 const Footer = () => {
   const { t } = useTranslation();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const quickLinks = [
     { key: 'home', label: t('navigation.home'), href: '/' },
@@ -20,16 +14,6 @@ const Footer = () => {
     { key: 'authors', label: t('navigation.authors'), href: '/authors' },
     { key: 'about', label: t('navigation.about'), href: '/about' },
   ];
-
-  if (!isMounted) {
-    return (
-      <footer className="border-t border-[var(--border)] bg-ink text-cream">
-        <div className="mx-auto max-w-site px-4 py-12 md:px-6">
-          <div className="h-32 animate-pulse rounded-xl bg-white/5" />
-        </div>
-      </footer>
-    );
-  }
 
   const currentYear = new Date().getFullYear();
 

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import type { Language } from '@/types';
+import { setLanguageCookie, normalizeLanguage } from '@/lib/locale';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
@@ -20,26 +21,18 @@ type LanguageSelectorProps = {
 
 export function LanguageSelector({ variant = 'default', className = '' }: LanguageSelectorProps) {
   const { t, i18n } = useTranslation();
-  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const currentLangCode =
-    (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0] ?? 'en';
+  const currentLangCode = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
   const currentFlag = LANGUAGES.find((l) => l.code === currentLangCode)?.flag;
 
   const handleLanguageChange = (langCode: Language) => {
-    void i18n.changeLanguage(langCode);
+    setLanguageCookie(langCode);
+    void i18n.changeLanguage(langCode).then(() => {
+      router.refresh();
+    });
   };
-
-  if (!isMounted) {
-    return (
-      <div className={`h-10 w-28 rounded-xl bg-gray-100/80 ${className}`} aria-hidden />
-    );
-  }
 
   return (
     <div className={`relative group ${className}`}>

@@ -16,7 +16,8 @@ import { useSupabaseBooks, resolveAppLanguage } from '@/hooks/useSupabaseBooks';
 import { useSupabaseAuthors } from '@/hooks/useSupabaseAuthors';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
-import type { Author, SearchFilters } from '@/types';
+import { deserializeBook, type SerializedBook } from '@/lib/serialize-book';
+import type { Author, Book, Category, SearchFilters } from '@/types';
 import {
   authorMatchesSearch,
   bookMatchesSearch,
@@ -24,18 +25,38 @@ import {
   resolveSearchLocale,
 } from '@/lib/search-utils';
 
-const HomePage = () => {
+export type HomePageProps = {
+  initialBooks: SerializedBook[];
+  initialHasMore: boolean;
+  initialCategories: Category[];
+  initialTotalBooks: number;
+};
+
+const HomePage = ({
+  initialBooks,
+  initialHasMore,
+  initialCategories,
+  initialTotalBooks,
+}: HomePageProps) => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
-  const [isMounted, setIsMounted] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
   const [categorySlug, setCategorySlug] = useState<string | undefined>();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
   const isSearchMode = searchTerm.trim().length > 0;
 
+  const seededBooks = useMemo(
+    () => initialBooks.map((b) => deserializeBook(b)),
+    [initialBooks],
+  );
+
   const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } =
-    useSupabaseBooks(filters.sortBy ?? 'uploadDate', { fetchAll: isSearchMode });
+    useSupabaseBooks(filters.sortBy ?? 'uploadDate', {
+      fetchAll: isSearchMode,
+      initialBooks: seededBooks,
+      initialHasMore,
+    });
   const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
     hasMore,
     loading,
@@ -47,8 +68,6 @@ const HomePage = () => {
   const activeLanguage = (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0];
   const appLanguage = resolveAppLanguage(i18n.language);
 
-  const [heroTotalBooks, setHeroTotalBooks] = useState<number | null>(null);
-
   const heroBooksLocaleTag =
     activeLanguage === 'tr'
       ? 'tr-TR'
@@ -58,44 +77,13 @@ const HomePage = () => {
           ? 'az-AZ'
           : 'en-US';
 
-  const { categories } = useSupabaseCategories(appLanguage);
+  const { categories } = useSupabaseCategories(appLanguage, {
+    initialCategories,
+  });
   const {
     authors: supabaseAuthors,
     loading: authorsLoading,
   } = useSupabaseAuthors(appLanguage, { enabled: isSearchMode });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const params = new URLSearchParams({
-          page: '0',
-          limit: '1',
-          sortBy: 'uploadDate',
-          withTotal: '1',
-        });
-        const res = await fetch(`/api/books?${params}`);
-        if (!res.ok) {
-          if (!cancelled) setHeroTotalBooks(0);
-          return;
-        }
-        const data = (await res.json()) as { total?: number };
-        if (cancelled) return;
-        setHeroTotalBooks(typeof data.total === 'number' ? data.total : 0);
-      } catch {
-        if (!cancelled) setHeroTotalBooks(0);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     setSearchMode('books');
@@ -123,7 +111,7 @@ const HomePage = () => {
   };
 
   const filteredBooks = useMemo(() => {
-    let books = supabaseBooks;
+    let books: Book[] = supabaseBooks;
     const searchLocale = resolveSearchLocale(activeLanguage);
 
     if (searchTerm.trim()) {
@@ -159,10 +147,6 @@ const HomePage = () => {
   const showSearchEmptyState =
     (searchTerm || categorySlug) && !hasSearchResults && !searchLoading;
 
-  if (!isMounted) {
-    return <div className="min-h-screen bg-cream" />;
-  }
-
   if (selectedAuthor && isSearchMode) {
     return (
       <AuthorDetailSection
@@ -179,7 +163,7 @@ const HomePage = () => {
           {!searchTerm && (
             <>
               <HomeHero
-                totalBooks={heroTotalBooks}
+                totalBooks={initialTotalBooks}
                 totalCategories={categories.length > 0 ? categories.length : null}
                 localeTag={heroBooksLocaleTag}
                 onExplore={scrollToBooks}
@@ -300,6 +284,7 @@ const HomePage = () => {
             onFiltersChange={setFilters}
             activeCategorySlug={categorySlug}
             onCategorySelect={setCategorySlug}
+            initialCategories={initialCategories}
           />
         </div>
       </div>
@@ -311,6 +296,7 @@ const HomePage = () => {
           isOpen={isFilterOpen}
           onToggle={() => setIsFilterOpen(!isFilterOpen)}
           onCategoryNavigate={() => setIsFilterOpen(false)}
+          initialCategories={initialCategories}
         />
       </div>
     </div>

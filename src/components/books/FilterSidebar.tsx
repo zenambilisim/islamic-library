@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Folder, X, Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
 import { resolveAppLanguage } from '../../hooks/useSupabaseBooks';
-import type { SearchFilters } from '../../types';
+import type { Category, SearchFilters } from '../../types';
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -11,6 +11,7 @@ interface FilterSidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   onCategoryNavigate?: () => void;
+  initialCategories?: Category[];
 }
 
 const FilterSidebar = ({
@@ -19,10 +20,13 @@ const FilterSidebar = ({
   isOpen,
   onToggle,
   onCategoryNavigate,
+  initialCategories,
 }: FilterSidebarProps) => {
   const { t, i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
-  const { categories, loading, error } = useSupabaseCategories(language);
+  const { categories, loading, error } = useSupabaseCategories(language, {
+    initialCategories,
+  });
 
   const clearAllFilters = () => {
     onFiltersChange({});

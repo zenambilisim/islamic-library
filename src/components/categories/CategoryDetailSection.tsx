@@ -8,13 +8,22 @@ import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
 import BookCard from '@/components/books/BookCard';
 import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import HeroPattern from '@/components/home/HeroPattern';
-import type { Category } from '@/types';
+import type { Book, Category } from '@/types';
 
 /** Tek kategori görünümü: kitaplar sayfalı yüklenir (kaydırınca devam). */
-export function CategoryDetailSection({ category }: { category: Category }) {
+export function CategoryDetailSection({
+  category,
+  initialBooks,
+  initialHasMore,
+}: {
+  category: Category;
+  initialBooks?: Book[];
+  initialHasMore?: boolean;
+}) {
   const { t } = useTranslation();
   const { books, loading, error, loadMore, hasMore, loadingMore } = useSupabaseBooksByCategory(
     category.slug,
+    { initialBooks, initialHasMore },
   );
   const booksLoadMoreRef = useLoadMoreOnScroll(loadMore, {
     hasMore,

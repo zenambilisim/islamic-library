@@ -1,5 +1,6 @@
 'use client';
 
+import { useLayoutEffect } from 'react';
 import { SearchProvider } from '@/contexts/SearchContext';
 import { BookModalProvider } from '@/contexts/BookModalContext';
 import { UserAuthProvider } from '@/contexts/UserAuthContext';
@@ -11,7 +12,8 @@ import {
   GlobalHikmeChatSidebar,
   HikmeChatBooksProvider,
 } from '@/components/chat/GlobalHikmeChat';
-import '@/i18n';
+import i18n from '@/i18n';
+import { normalizeLanguage, type SupportedLanguage } from '@/lib/locale';
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   return (
@@ -32,7 +34,26 @@ function ShellInner({ children }: { children: React.ReactNode }) {
  * Sadece provider + Header/Footer ve modallar için client sınırı.
  * children (sayfa içeriği) sunucuda render edilir, SEO tam kalır.
  */
-export default function PublicClientShell({ children }: { children: React.ReactNode }) {
+export default function PublicClientShell({
+  children,
+  initialLang,
+}: {
+  children: React.ReactNode;
+  initialLang: SupportedLanguage;
+}) {
+  // Cookie dilini i18n ile hizala (SSR + hydrate)
+  if (normalizeLanguage(i18n.language) !== initialLang) {
+    void i18n.changeLanguage(initialLang);
+  }
+
+  useLayoutEffect(() => {
+    document.documentElement.lang = initialLang;
+    const current = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+    if (current !== initialLang) {
+      void i18n.changeLanguage(initialLang);
+    }
+  }, [initialLang]);
+
   return (
     <UserAuthProvider>
       <SearchProvider>

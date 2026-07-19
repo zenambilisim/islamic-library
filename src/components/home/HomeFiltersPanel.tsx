@@ -5,13 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
-import type { SearchFilters } from '@/types';
+import type { Category, SearchFilters } from '@/types';
 
 interface HomeFiltersPanelProps {
   filters: SearchFilters;
   onFiltersChange: (filters: SearchFilters) => void;
   activeCategorySlug?: string;
   onCategorySelect: (slug: string | undefined) => void;
+  initialCategories?: Category[];
 }
 
 const HomeFiltersPanel = ({
@@ -19,10 +20,13 @@ const HomeFiltersPanel = ({
   onFiltersChange,
   activeCategorySlug,
   onCategorySelect,
+  initialCategories,
 }: HomeFiltersPanelProps) => {
   const { t, i18n } = useTranslation();
   const language = resolveAppLanguage(i18n.language);
-  const { categories, loading, error } = useSupabaseCategories(language);
+  const { categories, loading, error } = useSupabaseCategories(language, {
+    initialCategories,
+  });
 
   const clearAll = () => {
     onCategorySelect(undefined);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Grid3X3 } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
@@ -10,8 +10,17 @@ import { resolveSearchLocale, textIncludesSearch } from '@/lib/search-utils';
 import CategoriesHero from '@/components/categories/CategoriesHero';
 import CategoryCard from '@/components/categories/CategoryCard';
 import CategoriesGridSkeleton from '@/components/categories/CategoriesGridSkeleton';
+import type { Category } from '@/types';
 
-const CategoriesPage = () => {
+export type CategoriesPageProps = {
+  initialCategories: Category[];
+  initialTotalBooks: number;
+};
+
+const CategoriesPage = ({
+  initialCategories,
+  initialTotalBooks,
+}: CategoriesPageProps) => {
   const { t, i18n } = useTranslation();
   const { searchTerm, setSearchMode, setPlaceholder } = useSearch();
 
@@ -21,9 +30,7 @@ const CategoriesPage = () => {
     loading: categoriesLoading,
     error: categoriesError,
     refetch,
-  } = useSupabaseCategories(activeLanguage);
-
-  const [totalBooksCount, setTotalBooksCount] = useState<number | null>(null);
+  } = useSupabaseCategories(activeLanguage, { initialCategories });
 
   const localeTag =
     activeLanguage === 'tr'
@@ -38,30 +45,6 @@ const CategoriesPage = () => {
     setSearchMode('categories');
     setPlaceholder(t('search.categoriesPlaceholder') || 'Kategori ara...');
   }, [setSearchMode, setPlaceholder, t]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const lang = resolveAppLanguage(i18n.language);
-    const params = new URLSearchParams({
-      withTotal: '1',
-      page: '0',
-      limit: '1',
-      language: lang,
-    });
-    fetch(`/api/books?${params}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        if (typeof data.total === 'number') setTotalBooksCount(data.total);
-        else setTotalBooksCount(null);
-      })
-      .catch(() => {
-        if (!cancelled) setTotalBooksCount(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [i18n.language]);
 
   const filteredCategories = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -92,7 +75,7 @@ const CategoriesPage = () => {
         {!isSearchMode && (
           <CategoriesHero
             totalCategories={categoriesLoading ? null : supabaseCategories.length}
-            totalBooks={totalBooksCount}
+            totalBooks={initialTotalBooks}
             localeTag={localeTag}
             onBrowse={scrollToGrid}
           />

@@ -11,40 +11,9 @@ interface ShareBookLinkButtonProps {
   /** Slug ile birlikte dil (kitabın language_code değeri) */
   bookLanguage?: string;
   bookTitle?: string;
-  /** Kapak görseli — native paylaşımda eklenmeye çalışılır; OG için sayfa meta’sı kullanılır */
-  coverImage?: string | null;
   /** Örn. modal: outline; sayfa: solid */
   variant?: 'outline' | 'solid';
   className?: string;
-}
-
-function resolveAbsoluteCover(coverImage: string): string | null {
-  const trimmed = coverImage.trim();
-  if (!trimmed || trimmed.includes('placeholder-book')) return null;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  if (typeof window === 'undefined') return null;
-  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-  return `${window.location.origin}${path}`;
-}
-
-async function tryBuildCoverFile(coverImage: string | null | undefined): Promise<File | null> {
-  if (!coverImage) return null;
-  const abs = resolveAbsoluteCover(coverImage);
-  if (!abs) return null;
-  try {
-    const res = await fetch(abs);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    if (!blob.type.startsWith('image/') || blob.size < 32) return null;
-    const ext = blob.type.includes('png')
-      ? 'png'
-      : blob.type.includes('webp')
-        ? 'webp'
-        : 'jpg';
-    return new File([blob], `cover.${ext}`, { type: blob.type || 'image/jpeg' });
-  } catch {
-    return null;
-  }
 }
 
 export default function ShareBookLinkButton({
@@ -52,7 +21,6 @@ export default function ShareBookLinkButton({
   bookSlug,
   bookLanguage = 'tr',
   bookTitle,
-  coverImage,
   variant = 'outline',
   className = '',
 }: ShareBookLinkButtonProps) {
@@ -79,21 +47,8 @@ export default function ShareBookLinkButton({
     setBusy(true);
     setCopied(false);
     try {
+      // URL paylaş: kapak OG meta ile önizlenir; dosya paylaşımı sadece görsel gönderir, link olmaz
       if (navigator.share) {
-        const coverFile = await tryBuildCoverFile(coverImage);
-        if (coverFile && navigator.canShare?.({ files: [coverFile] })) {
-          try {
-            await navigator.share({
-              title,
-              text: shareText,
-              files: [coverFile],
-            });
-            return;
-          } catch (e) {
-            if ((e as Error).name === 'AbortError') return;
-            // files+text bazı ortamlarda reddedilir; URL paylaşımına düş
-          }
-        }
         await navigator.share({ title, text: shareText, url });
         return;
       }

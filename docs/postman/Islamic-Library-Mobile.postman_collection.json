@@ -1,0 +1,553 @@
+{
+  "info": {
+    "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "name": "Islamic Library — Mobile API",
+    "description": "Okuyucu mobil uygulaması için public katalog + kullanıcı auth + okuma listesi.\n\n1. Environment: Islamic Library Mobile seçin\n2. baseUrl ve password ayarlayın (Environment → password, tip: secret)\n3. Auth → Login çalıştırın (token otomatik kaydolur)\n\nDokümantasyon: docs/MOBILE_API.md",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.session?.access_token) pm.environment.set('access_token', j.session.access_token);",
+                  "  if (j.session?.refresh_token) pm.environment.set('refresh_token', j.session.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"displayName\": \"Okuyucu\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/auth/signup",
+            "description": "Yeni okuyucu hesabı. password ≥ 6, displayName zorunlu.\nYanıt: { user, session } — access_token environment'a yazılır."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login OK', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.session?.access_token) pm.environment.set('access_token', j.session.access_token);",
+                  "  if (j.session?.refresh_token) pm.environment.set('refresh_token', j.session.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/auth/login",
+            "description": "Giriş. session.access_token + refresh_token saklanır.\nMobil: Authorization header ile access_token gönderin."
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.session?.access_token) pm.environment.set('access_token', j.session.access_token);",
+                  "  if (j.session?.refresh_token) pm.environment.set('refresh_token', j.session.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/auth/refresh",
+            "description": "access_token süresi dolunca yeni session alır."
+          }
+        },
+        {
+          "name": "Session (profile)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/user/session",
+            "description": "Auth ile mevcut profil. Token yoksa { user: null }."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/user/auth/logout",
+            "description": "Web cookie temizler. Mobilde token'ları istemciden silin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Catalog — Books",
+      "item": [
+        {
+          "name": "List books",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.books?.length) {",
+                  "    pm.environment.set('bookId', j.books[0].id);",
+                  "    if (j.books[0].slug) pm.environment.set('bookSlug', j.books[0].slug);",
+                  "    const f = j.books[0].formats?.pdf || j.books[0].formats?.epub || j.books[0].formats?.doc;",
+                  "    if (f) pm.environment.set('filePathOrUrl', f);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books?page=0&limit=20&language={{language}}&sortBy=uploadDate&withTotal=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "limit", "value": "20" },
+                { "key": "language", "value": "{{language}}" },
+                { "key": "sortBy", "value": "uploadDate" },
+                { "key": "withTotal", "value": "1" },
+                { "key": "category", "value": "{{categorySlug}}", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            },
+            "description": "sayfalı katalog. İlk kitabın id / formats → environment."
+          }
+        },
+        {
+          "name": "Search books",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books?page=0&limit=20&language={{language}}&search=kuran&withTotal=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "limit", "value": "20" },
+                { "key": "language", "value": "{{language}}" },
+                { "key": "search", "value": "kuran" },
+                { "key": "withTotal", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Books by ids",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books?ids={{bookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books"],
+              "query": [
+                { "key": "ids", "value": "{{bookId}}" }
+              ]
+            },
+            "description": "Virgüllü UUID listesi (max 50). Chat blocks.bookIds sonrası için."
+          }
+        },
+        {
+          "name": "Get book by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const b = pm.response.json();",
+                  "  if (b.id) pm.environment.set('bookId', b.id);",
+                  "  const f = b.formats?.pdf || b.formats?.epub || b.formats?.doc;",
+                  "  if (f) pm.environment.set('filePathOrUrl', f);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/books/{{bookId}}",
+            "description": "Tek kitap detayı (sarmalayıcı yok)."
+          }
+        },
+        {
+          "name": "Signed download URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pathOrUrl\": \"{{filePathOrUrl}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/books/signed-url",
+            "description": "formats.pdf/epub/doc path → fetch edilebilir url."
+          }
+        },
+        {
+          "name": "Download log",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{bookId}}\",\n  \"format\": \"pdf\"\n}"
+            },
+            "url": "{{baseUrl}}/api/download-log",
+            "description": "İndirme sonrası sayaç artışı."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Catalog — Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.categories?.length) {",
+                  "    pm.environment.set('categoryId', j.categories[0].id);",
+                  "    pm.environment.set('categorySlug', j.categories[0].slug);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?language={{language}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"],
+              "query": [
+                { "key": "language", "value": "{{language}}" },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get category by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Books in category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books?page=0&limit=20&language={{language}}&category={{categorySlug}}&withTotal=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "limit", "value": "20" },
+                { "key": "language", "value": "{{language}}" },
+                { "key": "category", "value": "{{categorySlug}}" },
+                { "key": "withTotal", "value": "1" }
+              ]
+            },
+            "description": "category = slug (id değil)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Catalog — Authors",
+      "item": [
+        {
+          "name": "List authors",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.authors?.length) {",
+                  "    pm.environment.set('authorId', j.authors[0].id);",
+                  "    pm.environment.set('authorName', j.authors[0].name);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/authors?language={{language}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "authors"],
+              "query": [
+                { "key": "language", "value": "{{language}}" },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get author by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/authors/by-id/{{authorId}}"
+          }
+        },
+        {
+          "name": "Books by author id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/authors/by-id/{{authorId}}/books"
+          }
+        },
+        {
+          "name": "Books by author name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/authors/{{authorName}}/books?language={{language}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "authors", "{{authorName}}", "books"],
+              "query": [
+                { "key": "language", "value": "{{language}}" }
+              ]
+            },
+            "description": "name URL-encode edilir (Postman otomatik)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Reading list",
+      "item": [
+        {
+          "name": "List my reading list",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/reading-list?status=reading",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "reading-list"],
+              "query": [
+                { "key": "status", "value": "reading", "description": "want_to_read | reading | read" }
+              ]
+            },
+            "description": "Auth zorunlu. status opsiyonel."
+          }
+        },
+        {
+          "name": "Status map for bookIds",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/reading-list?bookIds={{bookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "reading-list"],
+              "query": [
+                { "key": "bookIds", "value": "{{bookId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get single book status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/reading-list?bookId={{bookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "reading-list"],
+              "query": [
+                { "key": "bookId", "value": "{{bookId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{bookId}}\",\n  \"status\": \"want_to_read\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/reading-list",
+            "description": "status: want_to_read | reading | read"
+          }
+        },
+        {
+          "name": "Remove from list",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/reading-list?bookId={{bookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "reading-list"],
+              "query": [
+                { "key": "bookId", "value": "{{bookId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Chat & Contact",
+      "item": [
+        {
+          "name": "Chat (RAG)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hadis kitapları öner\",\n  \"language\": \"tr\",\n  \"history\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/chat",
+            "description": "message ≤ 2000. Yanıt: { success, blocks } — text / books."
+          }
+        },
+        {
+          "name": "Contact form",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"subject\": \"book-request\",\n  \"message\": \"Merhaba, mobil uygulamadan test mesajı.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contact"
+          }
+        }
+      ]
+    }
+  ]
+}

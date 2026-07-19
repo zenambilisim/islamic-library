@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/user/reading-list?status=want_to_read|reading|read&bookIds=id1,id2
  * - status: filtreli liste + kitap detayları
  * - bookIds: sadece durum haritası (kartlar için)
+ * Auth: Bearer token veya sb-user-token cookie.
  */
 export async function GET(request: NextRequest) {
   const auth = await getUserFromRequest(request);

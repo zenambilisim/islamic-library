@@ -6,6 +6,10 @@ import { ensureUserProfile } from '@/lib/user-profile';
 /**
  * POST /api/user/auth/login
  * Body: { email, password }
+ *
+ * Yanıt: { user, session } — mobil istemci `session.access_token` saklayıp
+ * korumalı isteklerde `Authorization: Bearer <access_token>` göndermelidir.
+ * Web için ayrıca httpOnly cookie set edilir.
  */
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured) {

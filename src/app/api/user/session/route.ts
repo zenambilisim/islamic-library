@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/user/session
+ * Auth: `Authorization: Bearer <access_token>` veya `sb-user-token` cookie.
  */
 export async function GET(request: NextRequest) {
   const result = await getUserFromRequest(request);

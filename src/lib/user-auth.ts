@@ -27,8 +27,20 @@ export function clearUserAuthCookie(res: NextResponse) {
   res.cookies.set(USER_AUTH_COOKIE, '', { ...COOKIE_OPTIONS, maxAge: 0 });
 }
 
+/** `Authorization: Bearer <jwt>` — mobil istemciler için */
+export function getBearerTokenFromRequest(request: NextRequest): string | undefined {
+  const header = request.headers.get('authorization') ?? request.headers.get('Authorization');
+  if (!header) return undefined;
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  const token = match?.[1]?.trim();
+  return token || undefined;
+}
+
+/**
+ * Okuyucu JWT: önce Bearer (mobil), yoksa httpOnly cookie (web).
+ */
 export function getUserTokenFromRequest(request: NextRequest): string | undefined {
-  return request.cookies.get(USER_AUTH_COOKIE)?.value;
+  return getBearerTokenFromRequest(request) ?? request.cookies.get(USER_AUTH_COOKIE)?.value;
 }
 
 export async function getUserFromRequest(

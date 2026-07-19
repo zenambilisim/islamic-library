@@ -28,10 +28,7 @@ interface FeaturedBooksSliderProps {
 const FeaturedBooksSlider = ({ books }: FeaturedBooksSliderProps) => {
   const { t } = useTranslation();
   const { openDetails, openReader } = useBookModal();
-  const featured = useMemo(
-    () => books.filter((b) => b.coverImage).slice(0, 5),
-    [books],
-  );
+  const featured = useMemo(() => books.slice(0, 5), [books]);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -113,13 +110,15 @@ const FeaturedBooksSlider = ({ books }: FeaturedBooksSliderProps) => {
               </div>
             </div>
 
-            <div className="relative z-10 hidden justify-end self-center md:flex">
-              <img
-                src={book.coverImage}
-                alt=""
-                className="w-[200px] rotate-3 rounded-lg shadow-[0_24px_50px_rgba(0,0,0,0.35)]"
-              />
-            </div>
+            {book.coverImage ? (
+              <div className="relative z-10 hidden justify-end self-center md:flex">
+                <img
+                  src={book.coverImage}
+                  alt=""
+                  className="w-[200px] rotate-3 rounded-lg shadow-[0_24px_50px_rgba(0,0,0,0.35)]"
+                />
+              </div>
+            ) : null}
           </div>
         );
       })}

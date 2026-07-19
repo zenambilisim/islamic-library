@@ -27,6 +27,7 @@ import {
 
 export type HomePageProps = {
   initialBooks: SerializedBook[];
+  initialFeaturedBooks: SerializedBook[];
   initialHasMore: boolean;
   initialCategories: Category[];
   initialTotalBooks: number;
@@ -34,6 +35,7 @@ export type HomePageProps = {
 
 const HomePage = ({
   initialBooks,
+  initialFeaturedBooks,
   initialHasMore,
   initialCategories,
   initialTotalBooks,
@@ -49,6 +51,10 @@ const HomePage = ({
   const seededBooks = useMemo(
     () => initialBooks.map((b) => deserializeBook(b)),
     [initialBooks],
+  );
+  const featuredBooks = useMemo(
+    () => initialFeaturedBooks.map((b) => deserializeBook(b)),
+    [initialFeaturedBooks],
   );
 
   const { books: supabaseBooks, loading, error, loadingMore, loadMore, hasMore, refetch } =
@@ -168,7 +174,7 @@ const HomePage = ({
                 localeTag={heroBooksLocaleTag}
                 onExplore={scrollToBooks}
               />
-              {supabaseBooks.length > 0 && <FeaturedBooksSlider books={supabaseBooks} />}
+              {featuredBooks.length > 0 && <FeaturedBooksSlider books={featuredBooks} />}
             </>
           )}
 

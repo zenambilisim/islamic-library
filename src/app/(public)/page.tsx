@@ -1,13 +1,27 @@
+import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import HomePage from '@/views/HomePage';
 import { getBooks, getCategories } from '@/lib/books';
 import { convertSupabaseBookToBook, convertSupabaseCategoryToCategory } from '@/lib/converters-server';
 import { getRequestLanguage } from '@/lib/locale';
+import {
+  DEFAULT_DESCRIPTION,
+  SITE_NAME,
+  SITE_TAGLINE,
+  absoluteUrl,
+  buildWebsiteJsonLd,
+} from '@/lib/seo';
 import { serializeBook } from '@/lib/serialize-book';
 import type { SupabaseBook } from '@/lib/supabase';
 
 const HOME_PAGE_SIZE = 10;
 const FEATURED_BOOKS_COUNT = 5;
+
+export const metadata: Metadata = {
+  title: { absolute: `${SITE_NAME} - ${SITE_TAGLINE}` },
+  description: DEFAULT_DESCRIPTION,
+  alternates: { canonical: absoluteUrl('/') },
+};
 
 export default async function Page() {
   const cookieStore = await cookies();
@@ -32,14 +46,22 @@ export default async function Page() {
   const initialTotalBooks =
     typeof totalResult.total === 'number' ? totalResult.total : initialBooks.length;
 
+  const websiteJsonLd = buildWebsiteJsonLd();
+
   return (
-    <HomePage
-      key={lang}
-      initialBooks={initialBooks}
-      initialFeaturedBooks={initialFeaturedBooks}
-      initialHasMore={Boolean(booksResult.hasMore)}
-      initialCategories={initialCategories}
-      initialTotalBooks={initialTotalBooks}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <HomePage
+        key={lang}
+        initialBooks={initialBooks}
+        initialFeaturedBooks={initialFeaturedBooks}
+        initialHasMore={Boolean(booksResult.hasMore)}
+        initialCategories={initialCategories}
+        initialTotalBooks={initialTotalBooks}
+      />
+    </>
   );
 }

@@ -1,12 +1,10 @@
-'use client';
+import type { Metadata } from 'next';
+import UserLayoutClient from './UserLayoutClient';
 
-import { UserAuthProvider } from '@/contexts/UserAuthContext';
-import '@/i18n';
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <UserAuthProvider>
-      <div className="flex min-h-screen flex-col bg-cream">{children}</div>
-    </UserAuthProvider>
-  );
+  return <UserLayoutClient>{children}</UserLayoutClient>;
 }

@@ -1,8 +1,17 @@
+import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import CategoriesPage from '@/views/CategoriesPage';
 import { getBooks, getCategories } from '@/lib/books';
 import { convertSupabaseCategoryToCategory } from '@/lib/converters-server';
 import { getRequestLanguage } from '@/lib/locale';
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Kategoriler',
+  description:
+    'Kuran, hadis, tefsir, fıkıh, tasavvuf ve diğer İslami ilimleri kategorilere göre keşfedin.',
+  path: '/categories',
+});
 
 export default async function Page() {
   const cookieStore = await cookies();

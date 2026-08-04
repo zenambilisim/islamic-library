@@ -13,7 +13,13 @@ import {
   HikmeChatBooksProvider,
 } from '@/components/chat/GlobalHikmeChat';
 import i18n from '@/i18n';
-import { normalizeLanguage, type SupportedLanguage } from '@/lib/locale';
+import {
+  normalizeLanguage,
+  readLanguageCookieFromDocument,
+  resolveClientLanguage,
+  setLanguageCookie,
+  type SupportedLanguage,
+} from '@/lib/locale';
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   return (
@@ -41,16 +47,27 @@ export default function PublicClientShell({
   children: React.ReactNode;
   initialLang: SupportedLanguage;
 }) {
-  // Cookie dilini i18n ile hizala (SSR + hydrate)
-  if (normalizeLanguage(i18n.language) !== initialLang) {
-    void i18n.changeLanguage(initialLang);
-  }
-
   useLayoutEffect(() => {
-    document.documentElement.lang = initialLang;
-    const current = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
-    if (current !== initialLang) {
-      void i18n.changeLanguage(initialLang);
+    const cookieLang = readLanguageCookieFromDocument();
+
+    // Kullanıcı dil seçti, router.refresh henüz yeni cookie’yi SSR’a taşımadı:
+    // stale initialLang ile geri zorlama.
+    if (cookieLang && cookieLang !== initialLang) {
+      document.documentElement.lang = cookieLang;
+      if (normalizeLanguage(i18n.resolvedLanguage || i18n.language) !== cookieLang) {
+        void i18n.changeLanguage(cookieLang);
+      }
+      return;
+    }
+
+    const target = resolveClientLanguage(initialLang);
+    if (!cookieLang) {
+      setLanguageCookie(target);
+    }
+
+    document.documentElement.lang = target;
+    if (normalizeLanguage(i18n.resolvedLanguage || i18n.language) !== target) {
+      void i18n.changeLanguage(target);
     }
   }, [initialLang]);
 

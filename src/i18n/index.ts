@@ -6,9 +6,9 @@ import en from './locales/en.json';
 import ru from './locales/ru.json';
 import az from './locales/az.json';
 import {
-  isSupportedLanguage,
   normalizeLanguage,
-  readLanguageCookieFromDocument,
+  resolveClientLanguage,
+  setLanguageCookie,
   type SupportedLanguage,
 } from '@/lib/locale';
 
@@ -16,20 +16,7 @@ const detectInitialLanguage = (): SupportedLanguage => {
   if (typeof window === 'undefined') {
     return 'tr';
   }
-
-  const fromCookie = readLanguageCookieFromDocument();
-  if (fromCookie) return fromCookie;
-
-  try {
-    const storedLanguage = window.localStorage.getItem('language');
-    if (storedLanguage && isSupportedLanguage(storedLanguage)) {
-      return storedLanguage;
-    }
-  } catch {
-    /* ignore */
-  }
-
-  return 'tr';
+  return resolveClientLanguage('tr');
 };
 
 const resources = {
@@ -43,7 +30,7 @@ if (!i18n.isInitialized) {
   i18n.use(initReactI18next).init({
     resources,
     lng: detectInitialLanguage(),
-    fallbackLng: 'en',
+    fallbackLng: 'tr',
     interpolation: {
       escapeValue: false,
     },
@@ -54,11 +41,8 @@ if (!i18n.isInitialized) {
 i18n.on('languageChanged', (lang) => {
   const code = normalizeLanguage(lang);
   if (typeof window !== 'undefined') {
-    try {
-      window.localStorage.setItem('language', code);
-    } catch {
-      /* ignore */
-    }
+    // Her dil değişiminde cookie + localStorage birlikte güncellenir
+    setLanguageCookie(code);
   }
   if (typeof document !== 'undefined') {
     document.documentElement.lang = code;

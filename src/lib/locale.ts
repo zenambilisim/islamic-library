@@ -34,12 +34,42 @@ export function readLanguageCookieFromDocument(): SupportedLanguage | null {
   return isSupportedLanguage(raw) ? raw : null;
 }
 
-/** Client: dil cookie yaz (1 yıl) */
+function readLanguageFromLocalStorage(): SupportedLanguage | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = window.localStorage.getItem('language');
+    if (stored && isSupportedLanguage(stored)) return stored;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/**
+ * Client dil kaynağı: cookie → localStorage → SSR/fallback.
+ * Cookie yoksa localStorage tercihi geri yüklenir (middleware’in tr basması eski davranışı).
+ */
+export function resolveClientLanguage(
+  fallback: SupportedLanguage = 'tr'
+): SupportedLanguage {
+  if (typeof window === 'undefined') return fallback;
+  return (
+    readLanguageCookieFromDocument() ??
+    readLanguageFromLocalStorage() ??
+    fallback
+  );
+}
+
+/** Client: dil cookie + localStorage yaz (1 yıl) */
 export function setLanguageCookie(lang: Language): void {
   if (typeof document === 'undefined') return;
   const code = normalizeLanguage(lang);
   const maxAge = 60 * 60 * 24 * 365;
-  document.cookie = `${LANG_COOKIE}=${encodeURIComponent(code)}; path=/; max-age=${maxAge}; samesite=lax`;
+  const secure =
+    typeof window !== 'undefined' && window.location.protocol === 'https:'
+      ? '; secure'
+      : '';
+  document.cookie = `${LANG_COOKIE}=${encodeURIComponent(code)}; path=/; max-age=${maxAge}; samesite=lax${secure}`;
   try {
     window.localStorage.setItem('language', code);
   } catch {

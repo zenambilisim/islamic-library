@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Home, KeyRound, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import SiteLogo from '@/components/layout/SiteLogo';
+import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
 import type { Language } from '@/types';
 
 const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
@@ -15,7 +16,12 @@ const AdminNavbar = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const currentLang = ((i18n.resolvedLanguage || i18n.language || 'tr').split('-')[0] as Language) || 'tr';
+  const currentLang = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+
+  const handleLanguageChange = (code: Language) => {
+    setLanguageCookie(code);
+    void i18n.changeLanguage(code);
+  };
 
   const handleLogout = async () => {
     setIsMenuOpen(false);
@@ -80,7 +86,7 @@ const AdminNavbar = () => {
                 <button
                   key={code}
                   type="button"
-                  onClick={() => i18n.changeLanguage(code)}
+                  onClick={() => handleLanguageChange(code)}
                   className={`h-7 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
                     currentLang === code ? 'bg-ink text-cream' : 'text-ink-muted hover:text-ink'
                   }`}
@@ -125,7 +131,7 @@ const AdminNavbar = () => {
                 <button
                   key={code}
                   type="button"
-                  onClick={() => i18n.changeLanguage(code)}
+                  onClick={() => handleLanguageChange(code)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
                     currentLang === code ? 'bg-ink text-cream' : 'bg-[var(--surface-2)] text-ink-muted'
                   }`}

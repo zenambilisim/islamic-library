@@ -22,13 +22,15 @@ const BookDetailModal = () => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-screen overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center gap-3 z-10">
-          <h2 className="text-xl font-bold text-gray-900 truncate min-w-0">{t('book.details')}</h2>
-          <div className="flex items-center gap-2 shrink-0">
+      <div className="max-h-screen w-full max-w-4xl overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--bg-elev)] shadow-lift">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-elev)] px-6 py-4">
+          <h2 className="min-w-0 truncate font-display text-xl font-semibold text-ink">
+            {t('book.details')}
+          </h2>
+          <div className="flex shrink-0 items-center gap-2">
             <ShareBookLinkButton
               bookId={book.id}
               bookSlug={book.slug}
@@ -38,7 +40,7 @@ const BookDetailModal = () => {
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+              className="rounded-lg p-2 text-ink-faint transition-colors hover:bg-[var(--surface-2)] hover:text-ink"
             >
               <X size={20} />
             </button>

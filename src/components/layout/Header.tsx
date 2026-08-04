@@ -8,6 +8,7 @@ import { Search, Menu, X, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
 import { useUserAuth } from '@/contexts/UserAuthContext';
 import SiteLogo from '@/components/layout/SiteLogo';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import type { Language } from '../../types';
 import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
 
@@ -52,7 +53,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-cream/80 backdrop-blur-xl backdrop-saturate-150">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--bg)_80%,transparent)] backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto max-w-site px-4 md:px-6">
         <div className="flex h-[var(--header-h)] items-center gap-4 md:gap-6">
           <Link href="/" onClick={handleLogoClick} className="flex shrink-0 items-center gap-3">
@@ -114,7 +115,7 @@ const Header = () => {
                   href="/library"
                   className={`hidden items-center gap-1.5 rounded-[11px] border px-3 py-2 text-sm font-medium transition-colors md:inline-flex ${
                     pathname === '/library'
-                      ? 'border-accent bg-accent text-white'
+                      ? 'border-accent bg-accent text-accent-fg'
                       : 'border-[var(--border)] bg-[var(--surface)] text-ink hover:bg-[var(--surface-2)]'
                   }`}
                 >
@@ -130,6 +131,8 @@ const Header = () => {
                   <span className="hidden lg:inline">{t('userAuth.loginShort')}</span>
                 </Link>
               ))}
+
+            <ThemeToggle />
 
             <button
               type="button"
@@ -182,7 +185,7 @@ const Header = () => {
 
       {isMenuOpen && (
         <nav className="border-t border-[var(--border)] bg-[var(--bg-elev)] px-4 py-3 lg:hidden">
-          <div className="mb-3 flex flex-wrap gap-1">
+          <div className="mb-3 flex flex-wrap gap-1 sm:hidden">
             {LANG_CODES.map((code) => (
               <button
                 key={code}

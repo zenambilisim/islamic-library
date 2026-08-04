@@ -19,7 +19,7 @@ export default function PublicBookDetailPage({ book }: PublicBookDetailPageProps
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-primary-700 hover:text-primary-800 font-medium text-sm transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-accent transition-colors hover:opacity-90"
         >
           <ArrowLeft size={18} aria-hidden />
           {t('book.backToHome')}
@@ -33,7 +33,7 @@ export default function PublicBookDetailPage({ book }: PublicBookDetailPageProps
         />
       </div>
 
-      <article className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+      <article className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elev)] shadow-card">
         <div className="p-6 sm:p-8">
           <BookDetailContent book={book} />
         </div>

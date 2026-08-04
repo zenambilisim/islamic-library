@@ -19,12 +19,12 @@ export default function AdminLayoutClient({
   const isLoginPage = pathname === '/admin/login';
 
   if (isLoginPage) {
-    return <div className="min-h-screen bg-cream">{children}</div>;
+    return <div className="relative z-[1] min-h-screen bg-cream">{children}</div>;
   }
 
   return (
     <BookModalProvider>
-      <div className="min-h-screen bg-cream">
+      <div className="relative z-[1] min-h-screen bg-cream">
         <AdminNavbar />
         <main className="admin-content">{children}</main>
         <BookDetailModal />

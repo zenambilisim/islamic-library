@@ -22,6 +22,11 @@
     "logoAlt": "Islamic Library Logo",
     "siteTagline": "ISLAMIC DIGITAL LIBRARY"
   },
+  "theme": {
+    "toggle": "Temayı değiştir",
+    "light": "Açık tema",
+    "dark": "Koyu tema"
+  },
   "errors": {
     "downloadFailed": "İndirme başarısız oldu. Lütfen tekrar deneyin."
   },

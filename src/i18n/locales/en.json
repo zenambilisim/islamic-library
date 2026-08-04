@@ -19,6 +19,11 @@
     "showMore": "Show More",
     "close": "Close"
   },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light theme",
+    "dark": "Dark theme"
+  },
   "errors": {
     "downloadFailed": "Download failed. Please try again."
   },

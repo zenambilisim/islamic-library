@@ -18,26 +18,26 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-white/10 bg-ink text-cream">
+    <footer className="relative z-[1] border-t border-[#14191e]/10 bg-[#14191e] text-[#F7F5F0] dark:border-[var(--border)] dark:bg-[var(--surface-3)] dark:text-[var(--ink)]">
       <div className="mx-auto max-w-site px-4 py-12 md:px-6 md:py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-white/15 bg-white/10 p-1">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-white/15 bg-white/10 p-1 dark:border-[var(--border)] dark:bg-[var(--surface)]">
                 <SiteLogo size={36} className="h-full w-full" />
               </div>
               <div>
                 <h3 className="font-display text-2xl font-semibold tracking-tight">Islamic Library</h3>
-                <p className="text-sm text-white/60">{t('footer.description')}</p>
+                <p className="text-sm text-white/60 dark:text-ink-muted">{t('footer.description')}</p>
               </div>
             </div>
-            <p className="max-w-lg text-sm leading-relaxed text-white/70">
+            <p className="max-w-lg text-sm leading-relaxed text-white/70 dark:text-ink-muted">
               {t('footer.detailedDescription')}
             </p>
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50 dark:text-ink-faint">
               {t('footer.quickLinks')}
             </h4>
             <ul className="space-y-2">
@@ -45,7 +45,7 @@ const Footer = () => {
                 <li key={link.key}>
                   <Link
                     href={link.href}
-                    className="text-sm text-white/75 transition-colors hover:text-accent-300"
+                    className="text-sm text-white/75 transition-colors hover:text-accent-300 dark:text-ink-muted dark:hover:text-accent"
                   >
                     {link.label}
                   </Link>
@@ -55,18 +55,18 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50 dark:text-ink-faint">
               {t('footer.contact')}
             </h4>
-            <div className="flex items-center gap-2 text-sm text-white/75">
-              <Mail size={16} className="shrink-0 text-accent-300" />
+            <div className="flex items-center gap-2 text-sm text-white/75 dark:text-ink-muted">
+              <Mail size={16} className="shrink-0 text-accent-300 dark:text-accent" />
               <span>islamic.library@yahoo.com</span>
             </div>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/10 pt-6">
-          <p className="text-center text-sm text-white/50 md:text-left">
+        <div className="mt-10 border-t border-white/10 pt-6 dark:border-[var(--border)]">
+          <p className="text-center text-sm text-white/50 dark:text-ink-faint md:text-left">
             © {currentYear} Islamic Library. {t('footer.copyright')}
           </p>
         </div>

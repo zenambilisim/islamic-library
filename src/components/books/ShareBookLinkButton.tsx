@@ -30,8 +30,8 @@ export default function ShareBookLinkButton({
 
   const baseClass =
     variant === 'solid'
-      ? 'bg-primary-600 hover:bg-primary-700 text-white border-transparent'
-      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200';
+      ? 'bg-accent hover:opacity-90 text-accent-fg border-transparent'
+      : 'bg-[var(--surface)] hover:bg-[var(--surface-2)] text-ink border border-[var(--border)]';
 
   const handleClick = async () => {
     if (typeof window === 'undefined') return;

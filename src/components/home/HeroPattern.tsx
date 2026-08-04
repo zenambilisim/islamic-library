@@ -1,6 +1,6 @@
 const HeroPattern = () => (
   <svg
-    className="pointer-events-none absolute -right-10 -top-10 h-60 w-60 opacity-60"
+    className="hero-pattern pointer-events-none absolute -right-10 -top-10 h-60 w-60 opacity-60"
     viewBox="0 0 200 200"
     fill="none"
     aria-hidden

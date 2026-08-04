@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertCircle, ArrowLeft, CheckCircle, Lock, LogIn, Mail } from 'lucide-react';
 import HeroPattern from '@/components/home/HeroPattern';
 import SiteLogo from '@/components/layout/SiteLogo';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 
 const inputClassName =
   'w-full rounded-full border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-10 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent';
@@ -69,7 +70,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 md:py-16">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 md:py-16">
+      <div className="absolute right-4 top-4 z-10 md:right-6 md:top-6">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md space-y-6">
         <Link
           href="/"
@@ -100,18 +104,20 @@ const LoginPage = () => {
               <div
                 className={`flex items-start gap-3 rounded-[var(--radius-md)] border p-4 ${
                   status.type === 'success'
-                    ? 'border-green-200 bg-green-50'
-                    : 'border-red-200 bg-red-50'
+                    ? 'border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-950/40'
+                    : 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/40'
                 }`}
               >
                 {status.type === 'success' ? (
-                  <CheckCircle className="shrink-0 text-green-600" size={20} />
+                  <CheckCircle className="shrink-0 text-green-600 dark:text-green-400" size={20} />
                 ) : (
-                  <AlertCircle className="shrink-0 text-red-600" size={20} />
+                  <AlertCircle className="shrink-0 text-red-600 dark:text-red-400" size={20} />
                 )}
                 <p
                   className={`text-sm ${
-                    status.type === 'success' ? 'text-green-800' : 'text-red-800'
+                    status.type === 'success'
+                      ? 'text-green-800 dark:text-green-300'
+                      : 'text-red-800 dark:text-red-300'
                   }`}
                 >
                   {status.message}

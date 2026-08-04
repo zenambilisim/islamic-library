@@ -11,9 +11,9 @@ const STATUS_CONFIG: {
   icon: typeof Bookmark;
   colorActive: string;
 }[] = [
-  { status: 'want_to_read', icon: Bookmark, colorActive: 'bg-amber-100 text-amber-800 border-amber-300' },
-  { status: 'reading', icon: BookMarked, colorActive: 'bg-blue-100 text-blue-800 border-blue-300' },
-  { status: 'read', icon: CheckCircle, colorActive: 'bg-green-100 text-green-800 border-green-300' },
+  { status: 'want_to_read', icon: Bookmark, colorActive: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800' },
+  { status: 'reading', icon: BookMarked, colorActive: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-800' },
+  { status: 'read', icon: CheckCircle, colorActive: 'bg-green-100 text-green-800 border-green-300 dark:bg-green-950/40 dark:text-green-200 dark:border-green-800' },
 ];
 
 interface ReadingListControlsProps {
@@ -28,16 +28,16 @@ const ReadingListControls = ({ bookId, compact = false }: ReadingListControlsPro
   if (isLoading) {
     return (
       <div className={compact ? 'flex h-9 items-center' : 'flex h-12 items-center justify-center'}>
-        <Loader2 className="animate-spin text-gray-400" size={compact ? 18 : 22} />
+        <Loader2 className="animate-spin text-ink-faint" size={compact ? 18 : 22} />
       </div>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <p className={`text-sm text-gray-600 ${compact ? '' : 'rounded-lg border border-dashed border-gray-200 p-3'}`}>
+      <p className={`text-sm text-ink-muted ${compact ? '' : 'rounded-lg border border-dashed border-[var(--border)] p-3'}`}>
         {t('readingList.loginPrompt')}{' '}
-        <Link href="/user/login" className="font-medium text-primary-600 hover:underline">
+        <Link href="/user/login" className="font-medium text-accent hover:underline">
           {t('readingList.loginLink')}
         </Link>
       </p>
@@ -47,7 +47,7 @@ const ReadingListControls = ({ bookId, compact = false }: ReadingListControlsPro
   return (
     <div className={compact ? 'space-y-1' : 'space-y-2'}>
       {!compact && (
-        <p className="text-sm font-medium text-gray-700">{t('readingList.addToList')}</p>
+        <p className="text-sm font-medium text-ink-muted">{t('readingList.addToList')}</p>
       )}
       <div className="flex flex-wrap gap-2">
         {STATUS_CONFIG.map(({ status: s, icon: Icon, colorActive }) => {
@@ -61,7 +61,7 @@ const ReadingListControls = ({ bookId, compact = false }: ReadingListControlsPro
               className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-60 ${
                 active
                   ? colorActive
-                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  : 'border-[var(--border)] bg-[var(--surface-2)] text-ink-muted hover:bg-[var(--surface-3)] hover:text-ink'
               } ${compact ? 'px-2 py-1 text-xs' : ''}`}
             >
               {isSaving && active ? (

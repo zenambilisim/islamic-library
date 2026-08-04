@@ -23,9 +23,9 @@ import {
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-cream">
+    <div className="relative flex min-h-screen flex-col bg-cream">
       <Header />
-      <div className="site-chat-layout flex-1">
+      <div className="site-chat-layout relative z-[1] flex-1">
         <GlobalHikmeChatSidebar />
         <main className="site-chat-main flex flex-1 flex-col">{children}</main>
       </div>

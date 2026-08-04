@@ -33,7 +33,7 @@ const SiteLogo = ({ size = 38, className = '', imageClassName = '' }: SiteLogoPr
       alt={t('common.logoAlt', 'Islamic Library Logo')}
       width={size}
       height={size}
-      className={`object-contain ${imageClassName} ${className}`}
+      className={`object-contain dark:brightness-110 dark:contrast-[1.05] ${imageClassName} ${className}`}
       onError={() => setFailed(true)}
     />
   );

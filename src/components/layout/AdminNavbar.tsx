@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Home, KeyRound, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import SiteLogo from '@/components/layout/SiteLogo';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
 import type { Language } from '@/types';
 
@@ -51,7 +52,7 @@ const AdminNavbar = () => {
     }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-cream/90 backdrop-blur-xl backdrop-saturate-150">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--bg)_90%,transparent)] backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto max-w-[1280px] px-4 md:px-6">
         <div className="flex h-14 items-center justify-between gap-4 md:h-16">
           <Link href="/admin/dashboard" className="flex shrink-0 items-center gap-2.5">
@@ -96,6 +97,8 @@ const AdminNavbar = () => {
               ))}
             </div>
 
+            <ThemeToggle size="sm" />
+
             <Link
               href="/"
               className="hidden items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-ink-muted transition-colors hover:text-ink md:inline-flex"
@@ -107,7 +110,7 @@ const AdminNavbar = () => {
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 md:inline-flex"
+              className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 md:inline-flex"
             >
               <LogOut size={15} />
               <span className="hidden lg:inline">{t('admin.nav.logout')}</span>
@@ -126,7 +129,7 @@ const AdminNavbar = () => {
 
         {isMenuOpen && (
           <nav className="border-t border-[var(--border)] py-3 lg:hidden">
-            <div className="mb-3 flex flex-wrap gap-1">
+            <div className="mb-3 flex flex-wrap gap-1 sm:hidden">
               {LANG_CODES.map((code) => (
                 <button
                   key={code}
@@ -167,7 +170,7 @@ const AdminNavbar = () => {
               <button
                 type="button"
                 onClick={() => void handleLogout()}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 dark:text-red-400"
               >
                 <LogOut size={16} />
                 {t('admin.nav.logout')}

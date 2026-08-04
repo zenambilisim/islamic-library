@@ -15,29 +15,29 @@ const CategoryCard = ({ category, onClick }: CategoryCardProps) => {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
             <Folder size={22} strokeWidth={1.75} aria-hidden />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+            <h3 className="text-xl font-semibold text-ink transition-colors group-hover:text-accent">
               {category.name}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-ink-faint">
               {category.bookCount} kitap
             </p>
           </div>
         </div>
         <ArrowRight
           size={20}
-          className="text-gray-400 group-hover:text-primary-600 group-hover:transform group-hover:translate-x-1 transition-all duration-300"
+          className="text-ink-faint transition-all duration-300 group-hover:translate-x-1 group-hover:transform group-hover:text-accent"
         />
       </div>
 
-      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+      <p className="mb-4 text-sm leading-relaxed text-ink-muted">
         {category.description}
       </p>
 
-      <div className="flex items-center text-primary-600 font-medium">
+      <div className="flex items-center font-medium text-accent">
         <BookOpen size={16} className="mr-2" />
         <span>Kitapları Görüntüle</span>
       </div>
@@ -56,8 +56,8 @@ const CategoryGrid = ({ categories, onCategorySelect }: CategoryGridProps) => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('common.categories')}</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <h2 className="mb-4 font-display text-3xl font-semibold text-ink">{t('common.categories')}</h2>
+        <p className="mx-auto max-w-2xl text-ink-muted">
           İslami kitapları kategorilere göre keşfedin. Her kategori farklı konularda derin bilgiler içerir.
         </p>
       </div>

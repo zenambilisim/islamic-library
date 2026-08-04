@@ -31,7 +31,8 @@ export default async function Page() {
     getBooks(0, HOME_PAGE_SIZE, lang),
     getBooks(0, FEATURED_BOOKS_COUNT, lang, { sortBy: 'mostDownloaded' }),
     getCategories(lang),
-    getBooks(0, 1, lang, { includeTotal: true }),
+    // Hero'daki toplam kitap sayısı tüm dilleri kapsar
+    getBooks(0, 1, undefined, { includeTotal: true }),
   ]);
 
   const initialBooks = (booksResult.books as SupabaseBook[]).map((b) =>

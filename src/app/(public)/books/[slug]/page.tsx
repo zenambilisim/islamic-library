@@ -54,9 +54,6 @@ export async function generateMetadata({
   }
 
   const desc = bookDescription(model);
-  const coverAbs = isUsableCover(model.coverImage)
-    ? absoluteAssetUrl(model.coverImage)
-    : undefined;
 
   const pathSeg = encodeURIComponent(slug);
   const langQs = lang ? `?lang=${encodeURIComponent(lang)}` : '';
@@ -68,6 +65,8 @@ export async function generateMetadata({
     (model.author
       ? model.author.split(',').map((s) => s.trim()).filter(Boolean)
       : []);
+
+  // og:image → `opengraph-image.tsx` (kapaklı paylaşım kartı)
 
   return {
     title: model.title,
@@ -81,22 +80,11 @@ export async function generateMetadata({
       url: pageUrl,
       siteName: SITE_NAME,
       locale: 'tr_TR',
-      ...(coverAbs
-        ? {
-            images: [
-              {
-                url: coverAbs,
-                alt: model.title,
-              },
-            ],
-          }
-        : {}),
     },
     twitter: {
-      card: coverAbs ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title: model.title,
       description: desc,
-      ...(coverAbs ? { images: [coverAbs] } : {}),
     },
   };
 }

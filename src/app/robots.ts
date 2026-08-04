@@ -8,7 +8,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: ['/', '/api/storage/'],
+        // /api/storage/ açık: WhatsApp/Telegram OG crawler’ları kapak görseline erişebilsin
         disallow: ['/admin/', '/user/', '/library', '/api/'],
       },
     ],

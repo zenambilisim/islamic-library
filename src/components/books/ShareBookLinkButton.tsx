@@ -42,14 +42,14 @@ export default function ShareBookLinkButton({
     const langQs = hasSlug ? `?lang=${encodeURIComponent(bookLanguage)}` : '';
     const url = `${window.location.origin}/books/${pathSeg}${langQs}`;
     const title = bookTitle?.trim() || document.title;
-    const shareText = `${title}\n${url}`;
 
     setBusy(true);
     setCopied(false);
     try {
-      // URL paylaş: kapak OG meta ile önizlenir; dosya paylaşımı sadece görsel gönderir, link olmaz
+      // Sadece sayfa URL’si: WhatsApp/Telegram OG kartını (kapak + başlık) çeker.
+      // text içine URL koymayın — bazı uygulamalarda önizleme bozulur / çift link olur.
       if (navigator.share) {
-        await navigator.share({ title, text: shareText, url });
+        await navigator.share({ title, text: title, url });
         return;
       }
 

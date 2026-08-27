@@ -43,11 +43,9 @@ export const supabaseAdmin =
 let adminWriteOk: boolean | null = supabaseAdmin ? null : false;
 
 if (supabaseAdmin) {
-  void supabaseAdmin
-    .from('books')
-    .select('id')
-    .limit(1)
-    .then(({ error }) => {
+  void (async () => {
+    try {
+      const { error } = await supabaseAdmin.from('books').select('id').limit(1);
       if (error) {
         adminWriteOk = false;
         console.error(
@@ -57,11 +55,11 @@ if (supabaseAdmin) {
       } else {
         adminWriteOk = true;
       }
-    })
-    .catch((err) => {
+    } catch (err) {
       adminWriteOk = false;
       console.error('[supabase-server] SERVICE_ROLE health check failed:', err);
-    });
+    }
+  })();
 }
 
 /**
@@ -69,7 +67,7 @@ if (supabaseAdmin) {
  * Service role geçersizse (Unregistered API key) anon client’a düşer — aksi halde tüm POST /api/books 500 olur.
  */
 export function getDb() {
-  if (supabaseAdmin && adminWriteOk === true) return supabaseAdmin;
+  if (supabaseAdmin && adminWriteOk !== false) return supabaseAdmin;
   return supabase;
 }
 

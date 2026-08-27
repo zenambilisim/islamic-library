@@ -247,34 +247,91 @@ async function markTrack(bookId, kind, storageKey, patch) {
   if (error) console.warn(`  track update uyarısı: ${error.message}`);
 }
 
+async function fetchAllRows(table, cols, buildQuery) {
+  const rows = [];
+  let from = 0;
+  const size = 1000;
+  for (;;) {
+    let query = supabase.from(table).select(cols).range(from, from + size - 1);
+    if (buildQuery) query = buildQuery(query);
+    const { data, error } = await query;
+    if (error) throw new Error(`${table}: ${error.message}`);
+    if (!data?.length) break;
+    rows.push(...data);
+    if (data.length < size) break;
+    from += size;
+  }
+  return rows;
+}
+
 async function printStatus() {
   if (!trackingEnabled) {
     console.log('Takip tablosu yok; --status için docs/storage-migration-table.sql çalıştırın.');
     return;
   }
-  const { data, error } = await supabase.from('storage_migration_items').select('status');
-  if (error) throw new Error(error.message);
+  const data = await fetchAllRows('storage_migration_items', 'status,kind,book_id,storage_key,error');
   const counts = new Map();
-  for (const row of data ?? []) {
+  const failed = [];
+  for (const row of data) {
     counts.set(row.status, (counts.get(row.status) ?? 0) + 1);
+    if (row.status === 'failed') failed.push(row);
   }
   console.log('Migration durumu:');
   for (const [status, n] of [...counts.entries()].sort()) {
     console.log(`  ${status.padEnd(12)} ${n}`);
   }
-  console.log(`  ${'toplam'.padEnd(12)} ${(data ?? []).length}`);
+  console.log(`  ${'toplam'.padEnd(12)} ${data.length}`);
+  if (failed.length) {
+    console.log(`\nFailed (${failed.length}):`);
+    for (const row of failed) {
+      console.log(`  ${row.kind} ${row.book_id} ${row.storage_key}`);
+      if (row.error) console.log(`    → ${row.error}`);
+    }
+    console.log('\nTekrar dene: node scripts/migrate-r2-to-supabase.mjs --retry-failed --limit=20');
+  }
+}
+
+async function fetchFailedBookIds() {
+  const rows = await fetchAllRows(
+    'storage_migration_items',
+    'book_id',
+    (q) => q.eq('status', 'failed')
+  );
+  const ids = [...new Set(rows.map((r) => r.book_id).filter(Boolean))];
+  return ids.slice(OFFSET, OFFSET + LIMIT);
 }
 
 async function fetchBookBatch() {
-  let query = supabase
+  if (BOOK_ID) {
+    const { data, error } = await supabase
+      .from('books')
+      .select('id, title, cover_image_url, language_code')
+      .eq('id', BOOK_ID);
+    if (error) throw new Error(`books: ${error.message}`);
+    return data ?? [];
+  }
+
+  if (RETRY_FAILED) {
+    if (!trackingEnabled) {
+      throw new Error('--retry-failed için storage_migration_items tablosu gerekli.');
+    }
+    const ids = await fetchFailedBookIds();
+    if (!ids.length) return [];
+    const { data, error } = await supabase
+      .from('books')
+      .select('id, title, cover_image_url, language_code')
+      .in('id', ids);
+    if (error) throw new Error(`books: ${error.message}`);
+    // failed list sırasını koru
+    const byId = new Map((data ?? []).map((b) => [b.id, b]));
+    return ids.map((id) => byId.get(id)).filter(Boolean);
+  }
+
+  const { data, error } = await supabase
     .from('books')
     .select('id, title, cover_image_url, language_code')
     .order('created_at', { ascending: true })
     .range(OFFSET, OFFSET + LIMIT - 1);
-
-  if (BOOK_ID) query = query.eq('id', BOOK_ID);
-
-  const { data, error } = await query;
   if (error) throw new Error(`books: ${error.message}`);
   return data ?? [];
 }
@@ -466,6 +523,7 @@ async function main() {
   console.log(`Bucket hedef: ${BUCKET}`);
   if (DRY_RUN) console.log('(dry-run)');
   if (BOOK_ID) console.log(`book-id=${BOOK_ID}`);
+  if (RETRY_FAILED) console.log('mod: yalnızca status=failed kayıtlar');
   console.log(`limit=${LIMIT} offset=${OFFSET}`);
   console.log(`log: ${logFile}`);
 
@@ -479,7 +537,11 @@ async function main() {
   const books = await fetchBookBatch();
   console.log(`\n${books.length} kitap işlenecek.\n`);
   if (books.length === 0) {
-    console.log('Kitap yok. --offset artırın veya filtreyi değiştirin.');
+    if (RETRY_FAILED) {
+      console.log('Failed kayıt yok (veya offset dışında). yarn migrate:r2:status ile bakın.');
+    } else {
+      console.log('Kitap yok. --offset artırın veya filtreyi değiştirin.');
+    }
     return;
   }
 

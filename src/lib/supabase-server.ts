@@ -39,6 +39,40 @@ export const supabaseAdmin =
     ? createClient(url, serviceRoleKey)
     : null;
 
+/** null = henüz kontrol edilmedi; true/false = service role sağlık sonucu */
+let adminWriteOk: boolean | null = supabaseAdmin ? null : false;
+
+if (supabaseAdmin) {
+  void supabaseAdmin
+    .from('books')
+    .select('id')
+    .limit(1)
+    .then(({ error }) => {
+      if (error) {
+        adminWriteOk = false;
+        console.error(
+          '[supabase-server] SUPABASE_SERVICE_ROLE_KEY kullanılamıyor; katalog yazmaları ANON key ile yapılacak:',
+          error.message
+        );
+      } else {
+        adminWriteOk = true;
+      }
+    })
+    .catch((err) => {
+      adminWriteOk = false;
+      console.error('[supabase-server] SERVICE_ROLE health check failed:', err);
+    });
+}
+
+/**
+ * Katalog yazmaları (books, book_files, …).
+ * Service role geçersizse (Unregistered API key) anon client’a düşer — aksi halde tüm POST /api/books 500 olur.
+ */
+export function getDb() {
+  if (supabaseAdmin && adminWriteOk === true) return supabaseAdmin;
+  return supabase;
+}
+
 export const STORAGE_BUCKETS = {
   BOOK_ASSETS: 'book-assets',
   COVERS: 'book-assets/covers',

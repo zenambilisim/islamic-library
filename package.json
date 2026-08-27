@@ -13,7 +13,10 @@
     "index:books:dry-run": "node scripts/index-books.mjs --dry-run --limit=5",
     "index:books:status": "node scripts/index-books-status.mjs",
     "index:vector-batches": "node scripts/build-vector-index-batches.mjs",
-    "index:vector-batches:dry-run": "node scripts/build-vector-index-batches.mjs --dry-run"
+    "index:vector-batches:dry-run": "node scripts/build-vector-index-batches.mjs --dry-run",
+    "migrate:r2": "node scripts/migrate-r2-to-supabase.mjs",
+    "migrate:r2:dry-run": "node scripts/migrate-r2-to-supabase.mjs --dry-run --limit=5",
+    "migrate:r2:status": "node scripts/migrate-r2-to-supabase.mjs --status"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.967.0",

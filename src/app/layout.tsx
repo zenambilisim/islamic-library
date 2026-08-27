@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getRequestTheme, THEME_INIT_SCRIPT } from '@/lib/theme';
 import { rootMetadata } from '@/lib/seo';
+import YandexMetrika from '@/components/analytics/YandexMetrika';
 import './globals.css';
 
 export const metadata: Metadata = rootMetadata();
@@ -27,6 +28,7 @@ export default async function RootLayout({
       </head>
       <body>
         <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
+        <YandexMetrika />
       </body>
     </html>
   );

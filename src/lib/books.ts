@@ -3,10 +3,10 @@ import sharp from 'sharp'
 import { countPdfPages } from './pdf-page-count'
 import { normalizeLanguageCode, slugifyAuthorName, slugifyBookTitle } from './author-db'
 import { isR2Configured, r2DeleteBookObjects, r2DeleteKeys, r2PutObject, tryExtractStorageKey } from './r2-storage'
-import { supabase, supabaseAdmin } from './supabase-server'
+import { supabase, supabaseAdmin, getDb } from './supabase-server'
 
-/** Yazma işlemleri için: service role varsa RLS bypass, yoksa anon (RLS gerekir). */
-const db = () => supabaseAdmin ?? supabase
+/** Yazma: geçerli service role varsa o, yoksa anon. */
+const db = () => getDb()
 
 async function resolveOrCreateAuthorId(
   client: ReturnType<typeof db>,

@@ -43,6 +43,7 @@
     "authorsPlaceholder": "Поиск авторов...",
     "categoriesPlaceholder": "Поиск категорий...",
     "noResults": "Не найдено книг, соответствующих вашим критериям поиска",
+    "searching": "Идёт поиск «{{word}}»…",
     "resultsFor": "Для запроса «{{word}}» найдено результатов: {{count}}",
     "tryDifferentKeywords": "Попробуйте другие ключевые слова",
     "viewAllBooks": "Вернуться к Книгам",

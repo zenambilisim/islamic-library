@@ -43,6 +43,7 @@
     "authorsPlaceholder": "Müəllif axtarın...",
     "categoriesPlaceholder": "Kateqoriya axtarın...",
     "noResults": "Axtarış kriteriyalarınıza uyğun kitab tapılmadı",
+    "searching": "\"{{word}}\" axtarılır…",
     "resultsFor": "\"{{word}}\" üçün {{count}} nəticə",
     "tryDifferentKeywords": "Fərqli açar sözlər sınayın",
     "viewAllBooks": "Bütün Kitabları Göstər",

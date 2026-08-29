@@ -46,6 +46,7 @@
     "authorsPlaceholder": "Yazar ara...",
     "categoriesPlaceholder": "Kategori ara...",
     "noResults": "Arama kriterlerinize uygun kitap bulunamadı",
+    "searching": "\"{{word}}\" aranıyor…",
     "resultsFor": "{{word}} için {{count}} adet sonuç bulundu",
     "tryDifferentKeywords": "Farklı anahtar kelimeler deneyebilirsiniz",
     "viewAllBooks": "Tüm kitapları görüntüle",

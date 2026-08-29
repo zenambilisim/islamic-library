@@ -151,7 +151,7 @@ const HomePage = ({
   const searchLoading = isSearchMode && (loading || authorsLoading);
   const hasSearchResults = filteredBooks.length > 0 || filteredAuthors.length > 0;
   const showSearchEmptyState =
-    (searchTerm || categorySlug) && !hasSearchResults && !searchLoading;
+    isSearchMode && !hasSearchResults && !searchLoading;
 
   if (selectedAuthor && isSearchMode) {
     return (
@@ -192,10 +192,12 @@ const HomePage = ({
             {searchTerm && (
               <div className="section-head mb-4">
                 <h2 className="font-display text-[22px] font-medium tracking-tight text-ink">
-                  {t('search.resultsFor', {
-                    count: filteredBooks.length + filteredAuthors.length,
-                    word: searchTerm,
-                  })}
+                  {searchLoading
+                    ? t('search.searching', { word: searchTerm })
+                    : t('search.resultsFor', {
+                        count: filteredBooks.length + filteredAuthors.length,
+                        word: searchTerm,
+                      })}
                 </h2>
               </div>
             )}
@@ -269,8 +271,20 @@ const HomePage = ({
                 ))}
               </div>
             ) : awaitingFirstBooks || searchLoading ? (
-              <BookGridSkeleton count={10} />
+              <div>
+                {isSearchMode && (
+                  <p className="mb-4 text-sm text-ink-muted" aria-live="polite">
+                    {t('search.searching', { word: searchTerm })}
+                  </p>
+                )}
+                <BookGridSkeleton count={10} />
+              </div>
             ) : showSearchEmptyState ? (
+              <div className="py-16 text-center">
+                <p className="font-display text-xl font-medium text-ink">{t('search.noResults')}</p>
+                <p className="mt-2 text-ink-muted">{t('search.tryDifferentKeywords')}</p>
+              </div>
+            ) : categorySlug && !hasSearchResults && !loading ? (
               <div className="py-16 text-center">
                 <p className="font-display text-xl font-medium text-ink">{t('search.noResults')}</p>
                 <p className="mt-2 text-ink-muted">{t('search.tryDifferentKeywords')}</p>

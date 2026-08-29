@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Author } from '../types';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -45,18 +45,26 @@ export function useSupabaseAuthors(
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const fetchGenerationRef = useRef(0);
+  const [prevEnabled, setPrevEnabled] = useState(enabled);
+  const [prevLang, setPrevLang] = useState(language);
+  const [prevDebounced, setPrevDebounced] = useState(debouncedSearch);
 
   useEffect(() => {
     const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(id);
   }, [searchQuery]);
 
-  // enabled/açık arama tetiklenince useEffect'ten önce loading=true
-  useLayoutEffect(() => {
-    if (enabled && !skipFetchRef.current) {
-      setLoading(true);
-    }
-  }, [enabled, language, debouncedSearch]);
+  // enabled / dil / arama değişince aynı render'da loading=true
+  if (
+    enabled !== prevEnabled ||
+    language !== prevLang ||
+    debouncedSearch !== prevDebounced
+  ) {
+    setPrevEnabled(enabled);
+    setPrevLang(language);
+    setPrevDebounced(debouncedSearch);
+    if (enabled && !skipFetchRef.current) setLoading(true);
+  }
 
   const fetchAuthors = useCallback(async () => {
     if (!enabled) {

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '@/hooks/useSupabaseCategories';
 import { resolveAppLanguage } from '@/hooks/useSupabaseBooks';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 import type { Category, SearchFilters } from '@/types';
 
 interface HomeFiltersPanelProps {
@@ -23,6 +24,7 @@ const HomeFiltersPanel = ({
   initialCategories,
 }: HomeFiltersPanelProps) => {
   const { t, i18n } = useTranslation();
+  const { lp } = useLocalizedPath();
   const language = resolveAppLanguage(i18n.language);
   const { categories, loading, error } = useSupabaseCategories(language, {
     initialCategories,
@@ -144,7 +146,7 @@ const HomeFiltersPanel = ({
 
         {categories.length > 0 && (
           <Link
-            href="/categories"
+            href={lp('/categories')}
             className="mt-4 block text-center text-xs font-medium text-accent hover:underline"
           >
             {t('navigation.categories')} →

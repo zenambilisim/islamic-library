@@ -1,6 +1,12 @@
 import type { MetadataRoute } from 'next';
 import { getSiteBaseUrl } from '@/lib/site-url';
 import { supabase } from '@/lib/supabase-server';
+import {
+  DEFAULT_LANG,
+  SUPPORTED_LANGS,
+  isSupportedLanguage,
+  localizedPath,
+} from '@/lib/locale';
 
 const STATIC_PATHS = [
   '/',
@@ -36,13 +42,14 @@ async function fetchAllBookEntries(
     for (const row of rows) {
       const slug = typeof row.slug === 'string' ? row.slug.trim() : '';
       if (!slug) continue;
-      const lang =
+      const rawLang =
         typeof row.language_code === 'string' && row.language_code.trim()
           ? row.language_code.trim().toLowerCase()
-          : 'tr';
+          : DEFAULT_LANG;
+      const lang = isSupportedLanguage(rawLang) ? rawLang : DEFAULT_LANG;
       const lastMod = row.updated_at || row.created_at;
       entries.push({
-        url: `${base}/books/${encodeURIComponent(slug)}?lang=${encodeURIComponent(lang)}`,
+        url: `${base}${localizedPath(lang, `/books/${encodeURIComponent(slug)}`)}`,
         lastModified: lastMod ? new Date(lastMod) : undefined,
         changeFrequency: 'weekly',
         priority: 0.8,
@@ -69,30 +76,34 @@ async function fetchCategoryEntries(
     return [];
   }
 
-  return (data ?? [])
-    .map((row) => {
-      const slug = typeof row.slug === 'string' ? row.slug.trim() : '';
-      if (!slug) return null;
-      return {
-        url: `${base}/categories/${encodeURIComponent(slug)}`,
+  const entries: MetadataRoute.Sitemap = [];
+  for (const row of data ?? []) {
+    const slug = typeof row.slug === 'string' ? row.slug.trim() : '';
+    if (!slug) continue;
+    for (const lang of SUPPORTED_LANGS) {
+      entries.push({
+        url: `${base}${localizedPath(lang, `/categories/${encodeURIComponent(slug)}`)}`,
         lastModified: row.created_at ? new Date(row.created_at) : undefined,
-        changeFrequency: 'weekly' as const,
+        changeFrequency: 'weekly',
         priority: 0.6,
-      };
-    })
-    .filter((e): e is NonNullable<typeof e> => e != null);
+      });
+    }
+  }
+  return entries;
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteBaseUrl();
   const now = new Date();
 
-  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
-    url: path === '/' ? base : `${base}${path}`,
-    lastModified: now,
-    changeFrequency: path === '/' ? 'daily' : 'monthly',
-    priority: path === '/' ? 1 : 0.7,
-  }));
+  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.flatMap((path) =>
+    SUPPORTED_LANGS.map((lang) => ({
+      url: `${base}${localizedPath(lang, path)}`,
+      lastModified: now,
+      changeFrequency: path === '/' ? 'daily' : 'monthly',
+      priority: path === '/' ? 1 : 0.7,
+    }))
+  ) as MetadataRoute.Sitemap;
 
   const [books, categories] = await Promise.all([
     fetchAllBookEntries(base),

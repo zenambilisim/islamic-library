@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Folder, X, Loader2 } from 'lucide-react';
 import { useSupabaseCategories } from '../../hooks/useSupabaseCategories';
 import { resolveAppLanguage } from '../../hooks/useSupabaseBooks';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 import type { Category, SearchFilters } from '../../types';
 
 interface FilterSidebarProps {
@@ -23,6 +24,7 @@ const FilterSidebar = ({
   initialCategories,
 }: FilterSidebarProps) => {
   const { t, i18n } = useTranslation();
+  const { lp } = useLocalizedPath();
   const language = resolveAppLanguage(i18n.language);
   const { categories, loading, error } = useSupabaseCategories(language, {
     initialCategories,
@@ -117,7 +119,7 @@ const FilterSidebar = ({
               {categories.map((category) => (
                 <li key={category.id}>
                   <Link
-                    href={`/categories/${encodeURIComponent(category.slug)}`}
+                    href={lp(`/categories/${encodeURIComponent(category.slug)}`)}
                     onClick={() => onCategoryNavigate?.()}
                     className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-ink transition-colors hover:bg-[var(--surface-2)]"
                   >

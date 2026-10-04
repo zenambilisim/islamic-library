@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Folder } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 import type { Category } from '@/types';
 
 interface CategoryCardProps {
@@ -12,10 +13,11 @@ interface CategoryCardProps {
 
 const CategoryCard = ({ category, index = 0 }: CategoryCardProps) => {
   const { t } = useTranslation();
+  const { lp } = useLocalizedPath();
 
   return (
     <Link
-      href={`/categories/${encodeURIComponent(category.slug)}`}
+      href={lp(`/categories/${encodeURIComponent(category.slug)}`)}
       className="group flex h-full animate-fade-in flex-col rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-card"
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
     >

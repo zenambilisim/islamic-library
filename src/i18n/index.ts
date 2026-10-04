@@ -6,6 +6,7 @@ import en from './locales/en.json';
 import ru from './locales/ru.json';
 import az from './locales/az.json';
 import {
+  DEFAULT_LANG,
   normalizeLanguage,
   resolveClientLanguage,
   setLanguageCookie,
@@ -14,9 +15,9 @@ import {
 
 const detectInitialLanguage = (): SupportedLanguage => {
   if (typeof window === 'undefined') {
-    return 'tr';
+    return DEFAULT_LANG;
   }
-  return resolveClientLanguage('tr');
+  return resolveClientLanguage(DEFAULT_LANG);
 };
 
 const resources = {
@@ -30,7 +31,7 @@ if (!i18n.isInitialized) {
   i18n.use(initReactI18next).init({
     resources,
     lng: detectInitialLanguage(),
-    fallbackLng: 'tr',
+    fallbackLng: DEFAULT_LANG,
     interpolation: {
       escapeValue: false,
     },

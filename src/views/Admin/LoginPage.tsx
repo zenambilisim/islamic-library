@@ -76,7 +76,7 @@ const LoginPage = () => {
       </div>
       <div className="w-full max-w-md space-y-6">
         <Link
-          href="/"
+          href="/en"
           className="mx-auto flex w-fit flex-col items-center gap-3 text-center transition-opacity hover:opacity-90"
         >
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-2 shadow-soft">
@@ -190,7 +190,7 @@ const LoginPage = () => {
         </section>
 
         <Link
-          href="/"
+          href="/en"
           className="flex items-center justify-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-accent"
         >
           <ArrowLeft size={18} strokeWidth={2} />

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { BookMarked, Loader2 } from 'lucide-react';
 import type { Book, ReadingStatus } from '@/types';
 import { useUserAuth } from '@/contexts/UserAuthContext';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 import BookCard from '@/components/books/BookCard';
 import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import LibraryHero from '@/components/library/LibraryHero';
@@ -15,6 +16,7 @@ import ReadingListTabs from '@/components/library/ReadingListTabs';
 const MyLibraryPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const { lp } = useLocalizedPath();
   const { user, isLoading: authLoading, logout } = useUserAuth();
   const [activeTab, setActiveTab] = useState<ReadingStatus>('want_to_read');
   const [books, setBooks] = useState<Book[]>([]);
@@ -29,7 +31,7 @@ const MyLibraryPage = () => {
           { credentials: 'include' },
         );
         if (res.status === 401) {
-          router.replace(`/user/login?from=${encodeURIComponent('/library')}`);
+          router.replace(`/user/login?from=${encodeURIComponent(lp('/library'))}`);
           return;
         }
         const data = await res.json();
@@ -47,21 +49,21 @@ const MyLibraryPage = () => {
         setIsLoading(false);
       }
     },
-    [router],
+    [router, lp],
   );
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.replace(`/user/login?from=${encodeURIComponent('/library')}`);
+      router.replace(`/user/login?from=${encodeURIComponent(lp('/library'))}`);
       return;
     }
     void loadList(activeTab);
-  }, [authLoading, user, activeTab, loadList, router]);
+  }, [authLoading, user, activeTab, loadList, router, lp]);
 
   const handleLogout = async () => {
     await logout();
-    router.push('/');
+    router.push(lp('/'));
     router.refresh();
   };
 
@@ -110,7 +112,7 @@ const MyLibraryPage = () => {
                 {t('readingList.emptyListDesc')}
               </p>
               <Link
-                href="/"
+                href={lp('/')}
                 className="mt-6 inline-flex h-11 items-center rounded-full bg-ink px-5 text-sm font-semibold text-cream transition-transform hover:-translate-y-px"
               >
                 {t('readingList.browseCatalog')}

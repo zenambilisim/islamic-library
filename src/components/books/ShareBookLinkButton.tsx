@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link2, Loader2, Check } from 'lucide-react';
+import { localizedPath, normalizeLanguage } from '@/lib/locale';
 
 interface ShareBookLinkButtonProps {
   bookId: string;
-  /** Varsa paylaşım URL’i `/books/{slug}?lang=` olur */
+  /** Varsa paylaşım URL’i `/{locale}/books/{slug}` olur */
   bookSlug?: string | null;
-  /** Slug ile birlikte dil (kitabın language_code değeri) */
+  /** Slug ile birlikte dil (kitabın language_code / UI locale) */
   bookLanguage?: string;
   bookTitle?: string;
   /** Örn. modal: outline; sayfa: solid */
@@ -19,7 +20,7 @@ interface ShareBookLinkButtonProps {
 export default function ShareBookLinkButton({
   bookId,
   bookSlug,
-  bookLanguage = 'tr',
+  bookLanguage = 'en',
   bookTitle,
   variant = 'outline',
   className = '',
@@ -39,8 +40,9 @@ export default function ShareBookLinkButton({
     const pathSeg = hasSlug
       ? encodeURIComponent(bookSlug!.trim())
       : encodeURIComponent(bookId);
-    const langQs = hasSlug ? `?lang=${encodeURIComponent(bookLanguage)}` : '';
-    const url = `${window.location.origin}/books/${pathSeg}${langQs}`;
+    const locale = normalizeLanguage(bookLanguage);
+    const path = localizedPath(locale, `/books/${pathSeg}`);
+    const url = `${window.location.origin}${path}`;
     const title = bookTitle?.trim() || document.title;
 
     setBusy(true);

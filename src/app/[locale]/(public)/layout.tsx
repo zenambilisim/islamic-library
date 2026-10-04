@@ -1,17 +1,19 @@
-import { cookies } from 'next/headers';
 import PublicClientShell from './PublicClientShell';
-import { getRequestLanguage } from '@/lib/locale';
+import { normalizeLanguage } from '@/lib/locale';
 
 /**
  * (public) route grubu – Header, Footer ve provider'lar burada.
+ * Dil kaynağı: URL [locale] segmenti.
  */
 export default async function PublicLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
-  const cookieStore = await cookies();
-  const initialLang = getRequestLanguage(cookieStore);
+  const { locale } = await params;
+  const initialLang = normalizeLanguage(locale);
 
   return <PublicClientShell initialLang={initialLang}>{children}</PublicClientShell>;
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { BookOpen, ChevronLeft, Folder } from 'lucide-react';
 import { useSupabaseBooksByCategory } from '@/hooks/useSupabaseBooks';
 import { useLoadMoreOnScroll } from '@/hooks/useLoadMoreOnScroll';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 import BookCard from '@/components/books/BookCard';
 import BookGridSkeleton from '@/components/books/BookGridSkeleton';
 import HeroPattern from '@/components/home/HeroPattern';
@@ -21,6 +22,7 @@ export function CategoryDetailSection({
   initialHasMore?: boolean;
 }) {
   const { t } = useTranslation();
+  const { lp } = useLocalizedPath();
   const { books, loading, error, loadMore, hasMore, loadingMore } = useSupabaseBooksByCategory(
     category.slug,
     { initialBooks, initialHasMore },
@@ -36,7 +38,7 @@ export function CategoryDetailSection({
     <div className="min-h-screen bg-cream">
       <div className="content-layout">
         <Link
-          href="/categories"
+          href={lp('/categories')}
           className="inline-flex w-fit items-center gap-1 text-sm font-medium text-ink-muted transition-colors hover:text-accent"
         >
           <ChevronLeft size={18} strokeWidth={2} aria-hidden />

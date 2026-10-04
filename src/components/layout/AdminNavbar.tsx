@@ -29,7 +29,7 @@ const AdminNavbar = () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } finally {
-      router.push('/');
+      router.push('/en');
       router.refresh();
     }
   };
@@ -100,7 +100,7 @@ const AdminNavbar = () => {
             <ThemeToggle size="sm" />
 
             <Link
-              href="/"
+              href="/en"
               className="hidden items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-ink-muted transition-colors hover:text-ink md:inline-flex"
             >
               <Home size={15} />
@@ -160,7 +160,7 @@ const AdminNavbar = () => {
             ))}
             <div className="mt-2 flex gap-2 border-t border-[var(--border)] pt-2">
               <Link
-                href="/"
+                href="/en"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--border)] py-2 text-sm font-medium text-ink"
               >

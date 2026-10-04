@@ -3,6 +3,13 @@ import type { Metadata } from 'next';
 import { getBookForPublicPage } from '@/lib/books';
 import { convertSupabaseBookToBook } from '@/lib/converters-server';
 import {
+  DEFAULT_LANG,
+  SUPPORTED_LANGS,
+  localizedPath,
+  normalizeLanguage,
+  toOgLocale,
+} from '@/lib/locale';
+import {
   SITE_NAME,
   absoluteAssetUrl,
   absoluteUrl,
@@ -10,8 +17,8 @@ import {
 } from '@/lib/seo';
 import PublicBookDetailPage from '@/views/PublicBookDetailPage';
 
-async function loadBook(segment: string, langQuery: string | undefined) {
-  const { book: rawBook, error } = await getBookForPublicPage(segment, langQuery);
+async function loadBook(segment: string, lang: string) {
+  const { book: rawBook, error } = await getBookForPublicPage(segment, lang);
   if (error || !rawBook) return null;
   return convertSupabaseBookToBook(rawBook);
 }
@@ -38,13 +45,11 @@ function bookDescription(model: {
 
 export async function generateMetadata({
   params,
-  searchParams,
 }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const { lang } = await searchParams;
+  const { locale, slug } = await params;
+  const lang = normalizeLanguage(locale);
   const model = await loadBook(slug, lang);
   if (!model) {
     return {
@@ -54,10 +59,8 @@ export async function generateMetadata({
   }
 
   const desc = bookDescription(model);
-
   const pathSeg = encodeURIComponent(slug);
-  const langQs = lang ? `?lang=${encodeURIComponent(lang)}` : '';
-  const pagePath = `/books/${pathSeg}${langQs}`;
+  const pagePath = localizedPath(lang, `/books/${pathSeg}`);
   const pageUrl = absoluteUrl(pagePath);
 
   const authorList =
@@ -66,20 +69,29 @@ export async function generateMetadata({
       ? model.author.split(',').map((s) => s.trim()).filter(Boolean)
       : []);
 
-  // og:image → `opengraph-image.tsx` (kapaklı paylaşım kartı)
+  const languages: Record<string, string> = {};
+  for (const l of SUPPORTED_LANGS) {
+    languages[l] = absoluteUrl(localizedPath(l, `/books/${pathSeg}`));
+  }
+  languages['x-default'] = absoluteUrl(
+    localizedPath(DEFAULT_LANG, `/books/${pathSeg}`)
+  );
 
   return {
     title: model.title,
     description: desc,
     authors: authorList.map((name) => ({ name })),
-    alternates: { canonical: pageUrl },
+    alternates: {
+      canonical: pageUrl,
+      languages,
+    },
     openGraph: {
       title: model.title,
       description: desc,
       type: 'book',
       url: pageUrl,
       siteName: SITE_NAME,
-      locale: 'tr_TR',
+      locale: toOgLocale(lang),
     },
     twitter: {
       card: 'summary_large_image',
@@ -91,19 +103,16 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
-  searchParams,
 }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
-  const { lang } = await searchParams;
+  const { locale, slug } = await params;
+  const lang = normalizeLanguage(locale);
   const model = await loadBook(slug, lang);
   if (!model) notFound();
 
   const pathSeg = encodeURIComponent(slug);
-  const langQs = lang ? `?lang=${encodeURIComponent(lang)}` : '';
-  const pageUrl = absoluteUrl(`/books/${pathSeg}${langQs}`);
+  const pageUrl = absoluteUrl(localizedPath(lang, `/books/${pathSeg}`));
   const coverAbs = isUsableCover(model.coverImage)
     ? absoluteAssetUrl(model.coverImage)
     : undefined;

@@ -5,10 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import type { Language } from '@/types';
 import { setLanguageCookie, normalizeLanguage } from '@/lib/locale';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
-  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
   { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'az', name: 'Azərbaycan', flag: '🇦🇿' },
 ];
@@ -22,6 +23,7 @@ type LanguageSelectorProps = {
 export function LanguageSelector({ variant = 'default', className = '' }: LanguageSelectorProps) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { switchLocalePath } = useLocalizedPath();
 
   const currentLangCode = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
@@ -29,9 +31,8 @@ export function LanguageSelector({ variant = 'default', className = '' }: Langua
 
   const handleLanguageChange = (langCode: Language) => {
     setLanguageCookie(langCode);
-    void i18n.changeLanguage(langCode).then(() => {
-      router.refresh();
-    });
+    void i18n.changeLanguage(langCode);
+    router.push(switchLocalePath(langCode));
   };
 
   return (

@@ -15,8 +15,6 @@ import {
 import i18n from '@/i18n';
 import {
   normalizeLanguage,
-  readLanguageCookieFromDocument,
-  resolveClientLanguage,
   setLanguageCookie,
   type SupportedLanguage,
 } from '@/lib/locale';
@@ -39,6 +37,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
 /**
  * Sadece provider + Header/Footer ve modallar için client sınırı.
  * children (sayfa içeriği) sunucuda render edilir, SEO tam kalır.
+ * Dil kaynağı: URL [locale] (initialLang).
  */
 export default function PublicClientShell({
   children,
@@ -48,23 +47,8 @@ export default function PublicClientShell({
   initialLang: SupportedLanguage;
 }) {
   useLayoutEffect(() => {
-    const cookieLang = readLanguageCookieFromDocument();
-
-    // Kullanıcı dil seçti, router.refresh henüz yeni cookie’yi SSR’a taşımadı:
-    // stale initialLang ile geri zorlama.
-    if (cookieLang && cookieLang !== initialLang) {
-      document.documentElement.lang = cookieLang;
-      if (normalizeLanguage(i18n.resolvedLanguage || i18n.language) !== cookieLang) {
-        void i18n.changeLanguage(cookieLang);
-      }
-      return;
-    }
-
-    const target = resolveClientLanguage(initialLang);
-    if (!cookieLang) {
-      setLanguageCookie(target);
-    }
-
+    const target = normalizeLanguage(initialLang);
+    setLanguageCookie(target);
     document.documentElement.lang = target;
     if (normalizeLanguage(i18n.resolvedLanguage || i18n.language) !== target) {
       void i18n.changeLanguage(target);

@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { getBookForPublicPage } from '@/lib/books';
 import { convertSupabaseBookToBook } from '@/lib/converters-server';
+import { normalizeLanguage } from '@/lib/locale';
 import { loadCoverDataUrl } from '@/lib/og-cover';
 import { SITE_NAME } from '@/lib/seo';
 
@@ -12,10 +13,11 @@ export const contentType = 'image/png';
 export default async function Image({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
-  const { book: raw } = await getBookForPublicPage(slug);
+  const { locale, slug } = await params;
+  const lang = normalizeLanguage(locale);
+  const { book: raw } = await getBookForPublicPage(slug, lang);
   const model = raw ? convertSupabaseBookToBook(raw) : null;
 
   const title = model?.title?.trim() || 'Kitap';

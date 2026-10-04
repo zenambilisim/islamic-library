@@ -1,21 +1,32 @@
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
 import CategoriesPage from '@/views/CategoriesPage';
 import { getBooks, getCategories } from '@/lib/books';
 import { convertSupabaseCategoryToCategory } from '@/lib/converters-server';
-import { getRequestLanguage } from '@/lib/locale';
+import { normalizeLanguage } from '@/lib/locale';
 import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Kategoriler',
-  description:
-    'Kuran, hadis, tefsir, fıkıh, tasavvuf ve diğer İslami ilimleri kategorilere göre keşfedin.',
-  path: '/categories',
-});
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildPageMetadata({
+    title: 'Kategoriler',
+    description:
+      'Kuran, hadis, tefsir, fıkıh, tasavvuf ve diğer İslami ilimleri kategorilere göre keşfedin.',
+    path: '/categories',
+    locale,
+  });
+}
 
-export default async function Page() {
-  const cookieStore = await cookies();
-  const lang = getRequestLanguage(cookieStore);
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const lang = normalizeLanguage(locale);
 
   const [categoriesResult, totalResult] = await Promise.all([
     getCategories(lang),

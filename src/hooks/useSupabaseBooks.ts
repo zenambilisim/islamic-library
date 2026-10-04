@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import type { Book, Language, SearchFilters } from '../types';
 
 export function resolveAppLanguage(i18nLng: string | undefined): Language {
-  const base = (i18nLng || 'tr').split('-')[0].toLowerCase();
+  const base = (i18nLng || 'en').split('-')[0].toLowerCase();
   if (base === 'tr' || base === 'en' || base === 'ru' || base === 'az') return base;
-  return 'tr';
+  return 'en';
 }
 
 interface UseSupabaseBooksReturn {

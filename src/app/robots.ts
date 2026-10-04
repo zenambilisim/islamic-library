@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { getSiteBaseUrl } from '@/lib/site-url';
+import { SUPPORTED_LANGS } from '@/lib/locale';
 
 export default function robots(): MetadataRoute.Robots {
   const base = getSiteBaseUrl();
+  const libraryPaths = SUPPORTED_LANGS.map((l) => `/${l}/library`);
 
   return {
     rules: [
@@ -10,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: ['/', '/api/storage/'],
         // /api/storage/ açık: WhatsApp/Telegram OG crawler’ları kapak görseline erişebilsin
-        disallow: ['/admin/', '/user/', '/library', '/api/'],
+        disallow: ['/admin/', '/user/', '/library', ...libraryPaths, '/api/'],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

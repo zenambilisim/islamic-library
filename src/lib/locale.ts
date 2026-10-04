@@ -2,18 +2,31 @@ import type { Language } from '@/types';
 
 export const LANG_COOKIE = 'il_lang';
 
-export const SUPPORTED_LANGS = ['tr', 'en', 'ru', 'az'] as const;
+export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'az'] as const;
 
 export type SupportedLanguage = (typeof SUPPORTED_LANGS)[number];
+
+export const DEFAULT_LANG: SupportedLanguage = 'en';
+
+const OG_LOCALE_MAP: Record<SupportedLanguage, string> = {
+  en: 'en_US',
+  tr: 'tr_TR',
+  ru: 'ru_RU',
+  az: 'az_AZ',
+};
 
 export function isSupportedLanguage(value: string): value is SupportedLanguage {
   return (SUPPORTED_LANGS as readonly string[]).includes(value);
 }
 
 export function normalizeLanguage(value: string | null | undefined): SupportedLanguage {
-  if (!value) return 'tr';
+  if (!value) return DEFAULT_LANG;
   const base = value.trim().toLowerCase().split('-')[0] ?? '';
-  return isSupportedLanguage(base) ? base : 'tr';
+  return isSupportedLanguage(base) ? base : DEFAULT_LANG;
+}
+
+export function toOgLocale(lang: string | null | undefined): string {
+  return OG_LOCALE_MAP[normalizeLanguage(lang)];
 }
 
 /** CookieStore (next/headers) veya RequestCookies uyumlu */
@@ -23,6 +36,45 @@ type CookieReader = {
 
 export function getRequestLanguage(cookies: CookieReader): SupportedLanguage {
   return normalizeLanguage(cookies.get(LANG_COOKIE)?.value);
+}
+
+/**
+ * Path'in ilk segmentinden locale oku.
+ * Desteklenmeyen veya yoksa null.
+ */
+export function getLocaleFromPathname(pathname: string): SupportedLanguage | null {
+  const segment = pathname.split('/').filter(Boolean)[0] ?? '';
+  return isSupportedLanguage(segment) ? segment : null;
+}
+
+/**
+ * Locale önekini path'ten çıkarır.
+ * `/en/categories` → `/categories`, `/tr` → `/`
+ */
+export function stripLocaleFromPathname(pathname: string): string {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length === 0) return '/';
+  if (!isSupportedLanguage(parts[0])) {
+    return pathname.startsWith('/') ? pathname : `/${pathname}` || '/';
+  }
+  const rest = parts.slice(1).join('/');
+  return rest ? `/${rest}` : '/';
+}
+
+/**
+ * Locale önekli path üretir.
+ * localizedPath('en', '/categories') → '/en/categories'
+ * localizedPath('tr', '/') → '/tr'
+ */
+export function localizedPath(
+  locale: string | null | undefined,
+  path: string = '/'
+): string {
+  const lang = normalizeLanguage(locale);
+  const bare = path.startsWith('/') ? path : `/${path}`;
+  const stripped = getLocaleFromPathname(bare) ? stripLocaleFromPathname(bare) : bare;
+  if (!stripped || stripped === '/') return `/${lang}`;
+  return `/${lang}${stripped}`;
 }
 
 /** Client: document.cookie içinden dil oku */
@@ -47,10 +99,9 @@ function readLanguageFromLocalStorage(): SupportedLanguage | null {
 
 /**
  * Client dil kaynağı: cookie → localStorage → SSR/fallback.
- * Cookie yoksa localStorage tercihi geri yüklenir (middleware’in tr basması eski davranışı).
  */
 export function resolveClientLanguage(
-  fallback: SupportedLanguage = 'tr'
+  fallback: SupportedLanguage = DEFAULT_LANG
 ): SupportedLanguage {
   if (typeof window === 'undefined') return fallback;
   return (

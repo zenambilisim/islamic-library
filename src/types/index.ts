@@ -1,6 +1,6 @@
 export interface Book {
   id: string;
-  /** URL yolu; paylaşım linkleri `/books/{slug}?lang=` kullanır */
+  /** URL yolu; paylaşım linkleri `/{locale}/books/{slug}` kullanır */
   slug?: string;
   title: string;
   /** Tüm yazarların virgülle birleşik gösterimi */

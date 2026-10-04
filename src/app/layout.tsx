@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getRequestTheme, THEME_INIT_SCRIPT } from '@/lib/theme';
+import { getRequestLanguage } from '@/lib/locale';
 import { rootMetadata } from '@/lib/seo';
 import YandexMetrika from '@/components/analytics/YandexMetrika';
 import './globals.css';
@@ -15,10 +16,11 @@ export default async function RootLayout({
 }) {
   const cookieStore = await cookies();
   const initialTheme = getRequestTheme(cookieStore);
+  const initialLang = getRequestLanguage(cookieStore);
 
   return (
     <html
-      lang="tr"
+      lang={initialLang}
       className={initialTheme === 'dark' ? 'dark' : undefined}
       data-theme={initialTheme}
       suppressHydrationWarning

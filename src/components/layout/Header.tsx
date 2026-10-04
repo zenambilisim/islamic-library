@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
@@ -11,8 +11,9 @@ import SiteLogo from '@/components/layout/SiteLogo';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import type { Language } from '../../types';
 import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 
-const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
+const LANG_CODES: Language[] = ['en', 'tr', 'ru', 'az'];
 
 const Header = () => {
   const { t, i18n } = useTranslation();
@@ -20,25 +21,28 @@ const Header = () => {
   const { user, isLoading: authLoading } = useUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { searchInput, setSearchInput, submitSearch, clearSearch, placeholder } = useSearch();
-
-  const pathname = usePathname();
+  const { barePath, lp, switchLocalePath } = useLocalizedPath();
 
   const currentLangCode = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
   const navigationItems = [
-    { key: 'home', label: t('navigation.home'), href: '/' },
-    { key: 'categories', label: t('navigation.categories'), href: '/categories' },
-    { key: 'authors', label: t('navigation.authors'), href: '/authors' },
-    { key: 'usefulInfo', label: t('navigation.usefulInfo'), href: '/useful-info' },
-    { key: 'about', label: t('navigation.about'), href: '/about' },
-    { key: 'contact', label: t('navigation.contact'), href: '/contact' },
+    { key: 'home', label: t('navigation.home'), path: '/' },
+    { key: 'categories', label: t('navigation.categories'), path: '/categories' },
+    { key: 'authors', label: t('navigation.authors'), path: '/authors' },
+    { key: 'usefulInfo', label: t('navigation.usefulInfo'), path: '/useful-info' },
+    { key: 'about', label: t('navigation.about'), path: '/about' },
+    { key: 'contact', label: t('navigation.contact'), path: '/contact' },
   ];
+
+  const libraryHref = lp('/library');
+
+  const isActive = (path: string) =>
+    path === '/' ? barePath === '/' : barePath === path || barePath.startsWith(`${path}/`);
 
   const handleLanguageChange = (langCode: Language) => {
     setLanguageCookie(langCode);
-    void i18n.changeLanguage(langCode).then(() => {
-      router.refresh();
-    });
+    void i18n.changeLanguage(langCode);
+    router.push(switchLocalePath(langCode));
   };
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -56,7 +60,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--bg)_80%,transparent)] backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto max-w-site px-4 md:px-6">
         <div className="flex h-[var(--header-h)] items-center gap-4 md:gap-6">
-          <Link href="/" onClick={handleLogoClick} className="flex shrink-0 items-center gap-3">
+          <Link href={lp('/')} onClick={handleLogoClick} className="flex shrink-0 items-center gap-3">
             <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-[var(--border)] bg-[var(--bg-elev)] p-1">
               <SiteLogo size={42} className="h-full w-full" />
             </div>
@@ -112,9 +116,9 @@ const Header = () => {
             {!authLoading &&
               (user ? (
                 <Link
-                  href="/library"
+                  href={libraryHref}
                   className={`hidden items-center gap-1.5 rounded-[11px] border px-3 py-2 text-sm font-medium transition-colors md:inline-flex ${
-                    pathname === '/library'
+                    isActive('/library')
                       ? 'border-accent bg-accent text-accent-fg'
                       : 'border-[var(--border)] bg-[var(--surface)] text-ink hover:bg-[var(--surface-2)]'
                   }`}
@@ -151,9 +155,9 @@ const Header = () => {
             {navigationItems.map((item) => (
               <li key={item.key}>
                 <Link
-                  href={item.href}
+                  href={lp(item.path)}
                   className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                    pathname === item.href
+                    isActive(item.path)
                       ? 'bg-ink text-cream'
                       : 'text-ink-muted hover:bg-[var(--surface-2)] hover:text-ink'
                   }`}
@@ -202,9 +206,9 @@ const Header = () => {
           {navigationItems.map((item) => (
             <Link
               key={item.key}
-              href={item.href}
+              href={lp(item.path)}
               className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${
-                pathname === item.href ? 'bg-accent-soft text-accent' : 'text-ink hover:bg-[var(--surface-2)]'
+                isActive(item.path) ? 'bg-accent-soft text-accent' : 'text-ink hover:bg-[var(--surface-2)]'
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
@@ -215,7 +219,7 @@ const Header = () => {
             <div className="mt-2 border-t border-[var(--border)] pt-2">
               {user ? (
                 <Link
-                  href="/library"
+                  href={libraryHref}
                   className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-ink"
                   onClick={() => setIsMenuOpen(false)}
                 >

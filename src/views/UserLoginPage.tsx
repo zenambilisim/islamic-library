@@ -24,7 +24,7 @@ import {
   adminLinkBack,
 } from '@/components/admin/admin-classes';
 import type { Language } from '@/types';
-import { setLanguageCookie } from '@/lib/locale';
+import { localizedPath, normalizeLanguage, setLanguageCookie } from '@/lib/locale';
 
 type Mode = 'login' | 'signup';
 
@@ -47,8 +47,8 @@ const UserLoginPage = () => {
     message: string;
   }>({ type: null, message: '' });
 
-  const redirectTo = searchParams.get('from') || '/library';
-  const currentLang = (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0] as Language;
+  const currentLang = normalizeLanguage(i18n.resolvedLanguage || i18n.language) as Language;
+  const redirectTo = searchParams.get('from') || localizedPath(currentLang, '/library');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -124,7 +124,7 @@ const UserLoginPage = () => {
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center px-4 py-6 pb-12 md:py-10">
         <Link
-          href="/"
+          href="/en"
           className="mb-6 flex w-fit flex-col items-center gap-3 text-center transition-opacity hover:opacity-90"
         >
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-editorial border border-[var(--border)] bg-[var(--bg-elev)] p-2 shadow-soft">
@@ -287,7 +287,7 @@ const UserLoginPage = () => {
           </form>
         </section>
 
-        <Link href="/" className={`${adminLinkBack} mt-auto pt-6`}>
+        <Link href="/en" className={`${adminLinkBack} mt-auto pt-6`}>
           <ArrowLeft size={18} strokeWidth={2} aria-hidden />
           {t('userAuth.backToHome')}
         </Link>

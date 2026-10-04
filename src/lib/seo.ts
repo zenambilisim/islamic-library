@@ -1,14 +1,20 @@
 import type { Metadata } from 'next';
 import { SITE_LOGO_PATH } from '@/lib/site-branding';
 import { getSiteBaseUrl } from '@/lib/site-url';
+import {
+  DEFAULT_LANG,
+  SUPPORTED_LANGS,
+  localizedPath,
+  normalizeLanguage,
+  toOgLocale,
+  type SupportedLanguage,
+} from '@/lib/locale';
 
 export const SITE_NAME = 'Islamic Library';
 export const SITE_TAGLINE = 'İslami Dijital Kütüphane';
 
 export const DEFAULT_DESCRIPTION =
   'Kuran, hadis, tefsir, fıkıh ve tasavvuf eserlerini ücretsiz okuyun ve indirin. Islamic Library — açık erişimli İslami dijital kütüphane.';
-
-const OG_LOCALE = 'tr_TR';
 
 /** Absolute URL for a site path (leading slash optional). */
 export function absoluteUrl(path = '/'): string {
@@ -26,10 +32,21 @@ export function absoluteAssetUrl(pathOrUrl: string): string | undefined {
   return absoluteUrl(pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`);
 }
 
+function buildLanguageAlternates(barePath: string): Record<string, string> {
+  const languages: Record<string, string> = {};
+  for (const lang of SUPPORTED_LANGS) {
+    languages[lang] = absoluteUrl(localizedPath(lang, barePath));
+  }
+  languages['x-default'] = absoluteUrl(localizedPath(DEFAULT_LANG, barePath));
+  return languages;
+}
+
 type PageMetaInput = {
   title: string;
   description: string;
+  /** Locale-less path, e.g. `/about` or `/categories/foo` */
   path: string;
+  locale?: string;
   /** When false, title is used as-is (no template). Default true. */
   useTemplate?: boolean;
   image?: string;
@@ -41,22 +58,29 @@ export function buildPageMetadata({
   title,
   description,
   path,
+  locale = DEFAULT_LANG,
   useTemplate = true,
   image,
   noIndex = false,
 }: PageMetaInput): Metadata {
-  const url = absoluteUrl(path);
+  const lang = normalizeLanguage(locale);
+  const bare = path.startsWith('/') ? path : `/${path}`;
+  const localized = localizedPath(lang, bare);
+  const url = absoluteUrl(localized);
   const ogImage = absoluteAssetUrl(image || SITE_LOGO_PATH);
   const fullTitle = useTemplate ? undefined : title;
 
   return {
     title: useTemplate ? title : fullTitle,
     description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: buildLanguageAlternates(bare),
+    },
     ...(noIndex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       type: 'website',
-      locale: OG_LOCALE,
+      locale: toOgLocale(lang),
       siteName: SITE_NAME,
       title: useTemplate ? `${title} | ${SITE_NAME}` : title,
       description,
@@ -84,6 +108,7 @@ export function buildPageMetadata({
 export function rootMetadata(): Metadata {
   const base = getSiteBaseUrl();
   const ogImage = absoluteAssetUrl(SITE_LOGO_PATH);
+  const homePath = localizedPath(DEFAULT_LANG, '/');
 
   return {
     metadataBase: new URL(base),
@@ -97,13 +122,17 @@ export function rootMetadata(): Metadata {
       icon: SITE_LOGO_PATH,
       apple: SITE_LOGO_PATH,
     },
+    alternates: {
+      canonical: absoluteUrl(homePath),
+      languages: buildLanguageAlternates('/'),
+    },
     openGraph: {
       type: 'website',
-      locale: OG_LOCALE,
+      locale: toOgLocale(DEFAULT_LANG),
       siteName: SITE_NAME,
       title: `${SITE_NAME} - ${SITE_TAGLINE}`,
       description: DEFAULT_DESCRIPTION,
-      url: base,
+      url: absoluteUrl(homePath),
       ...(ogImage
         ? {
             images: [
@@ -164,15 +193,15 @@ export function buildBookJsonLd(book: BookJsonLdInput): Record<string, unknown> 
   };
 }
 
-export function buildWebsiteJsonLd(): Record<string, unknown> {
+export function buildWebsiteJsonLd(locale: SupportedLanguage = DEFAULT_LANG): Record<string, unknown> {
   const base = getSiteBaseUrl();
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
     description: DEFAULT_DESCRIPTION,
-    url: base,
-    inLanguage: ['tr', 'en', 'az', 'ru'],
+    url: absoluteUrl(localizedPath(locale, '/')),
+    inLanguage: [...SUPPORTED_LANGS],
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,

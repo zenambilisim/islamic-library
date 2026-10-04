@@ -4,15 +4,17 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
 import SiteLogo from '@/components/layout/SiteLogo';
+import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 
 const Footer = () => {
   const { t } = useTranslation();
+  const { lp } = useLocalizedPath();
 
   const quickLinks = [
-    { key: 'home', label: t('navigation.home'), href: '/' },
-    { key: 'categories', label: t('navigation.categories'), href: '/categories' },
-    { key: 'authors', label: t('navigation.authors'), href: '/authors' },
-    { key: 'about', label: t('navigation.about'), href: '/about' },
+    { key: 'home', label: t('navigation.home'), href: lp('/') },
+    { key: 'categories', label: t('navigation.categories'), href: lp('/categories') },
+    { key: 'authors', label: t('navigation.authors'), href: lp('/authors') },
+    { key: 'about', label: t('navigation.about'), href: lp('/about') },
   ];
 
   const currentYear = new Date().getFullYear();

@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import CategoryBySlugPage from '@/views/CategoryBySlugPage';
@@ -7,7 +6,7 @@ import {
   convertSupabaseBookToBook,
   convertSupabaseCategoryToCategory,
 } from '@/lib/converters-server';
-import { getRequestLanguage } from '@/lib/locale';
+import { normalizeLanguage } from '@/lib/locale';
 import { buildPageMetadata } from '@/lib/seo';
 import { serializeBook } from '@/lib/serialize-book';
 import type { SupabaseBook } from '@/lib/supabase';
@@ -17,11 +16,10 @@ const CATEGORY_PAGE_SIZE = 12;
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const cookieStore = await cookies();
-  const lang = getRequestLanguage(cookieStore);
+  const { locale, slug } = await params;
+  const lang = normalizeLanguage(locale);
   const { category: raw } = await getCategoryBySlug(slug, lang);
 
   if (!raw) {
@@ -40,13 +38,17 @@ export async function generateMetadata({
     title: category.name,
     description: desc,
     path: `/categories/${encodeURIComponent(slug)}`,
+    locale: lang,
   });
 }
 
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const cookieStore = await cookies();
-  const lang = getRequestLanguage(cookieStore);
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}) {
+  const { locale, slug } = await params;
+  const lang = normalizeLanguage(locale);
 
   const { category: rawCategory, error } = await getCategoryBySlug(slug, lang);
   if (error || !rawCategory) {

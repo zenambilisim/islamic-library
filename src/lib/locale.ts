@@ -62,8 +62,63 @@ export function stripLocaleFromPathname(pathname: string): string {
 }
 
 /**
- * Locale önekli path üretir.
+ * Dosya sistemi yolu (İngilizce) → her dilde görünen ilk segment.
+ * localizedPath('tr', '/authors') → '/tr/yazarlar'
+ */
+const SECTION_SLUGS: Record<string, Record<SupportedLanguage, string>> = {
+  authors: { en: 'authors', tr: 'yazarlar', ru: 'avtory', az: 'muellifler' },
+  categories: { en: 'categories', tr: 'kategoriler', ru: 'kategorii', az: 'kateqoriyalar' },
+  books: { en: 'books', tr: 'kitaplar', ru: 'knigi', az: 'kitablar' },
+  about: { en: 'about', tr: 'hakkimizda', ru: 'o-nas', az: 'haqqimizda' },
+  contact: { en: 'contact', tr: 'iletisim', ru: 'kontakty', az: 'elaqe' },
+  'useful-info': {
+    en: 'useful-info',
+    tr: 'faydali-bilgiler',
+    ru: 'poleznaya-informatsiya',
+    az: 'faydali-melumatlar',
+  },
+  library: { en: 'library', tr: 'kutuphanem', ru: 'biblioteka', az: 'kitabxanam' },
+};
+
+const SLUG_TO_INTERNAL = new Map<string, string>();
+for (const [internal, byLang] of Object.entries(SECTION_SLUGS)) {
+  SLUG_TO_INTERNAL.set(internal, internal);
+  for (const slug of Object.values(byLang)) {
+    const prev = SLUG_TO_INTERNAL.get(slug);
+    if (prev && prev !== internal) {
+      throw new Error(`Duplicate section slug: ${slug}`);
+    }
+    SLUG_TO_INTERNAL.set(slug, internal);
+  }
+}
+
+/** Görünen bölüm adı hangi dile ait (`yazarlar` → tr, `authors` → en). */
+export function localeForSectionSlug(segment: string): SupportedLanguage | null {
+  for (const byLang of Object.values(SECTION_SLUGS)) {
+    for (const lang of SUPPORTED_LANGS) {
+      if (byLang[lang] === segment) return lang;
+    }
+  }
+  return null;
+}
+
+/** `/tr/yazarlar` veya `/yazarlar` → `/authors` (locale öneki düşer). */
+export function toInternalPath(path: string): string {
+  const withSlash = path.startsWith('/') ? path : `/${path}`;
+  const stripped = getLocaleFromPathname(withSlash)
+    ? stripLocaleFromPathname(withSlash)
+    : withSlash;
+  const parts = stripped.split('/').filter(Boolean);
+  if (parts.length === 0) return '/';
+  const internal = SLUG_TO_INTERNAL.get(parts[0]);
+  if (internal) parts[0] = internal;
+  return `/${parts.join('/')}`;
+}
+
+/**
+ * Locale önekli, bölüm adı dile çevrilmiş path.
  * localizedPath('en', '/categories') → '/en/categories'
+ * localizedPath('tr', '/authors') → '/tr/yazarlar'
  * localizedPath('tr', '/') → '/tr'
  */
 export function localizedPath(
@@ -71,10 +126,12 @@ export function localizedPath(
   path: string = '/'
 ): string {
   const lang = normalizeLanguage(locale);
-  const bare = path.startsWith('/') ? path : `/${path}`;
-  const stripped = getLocaleFromPathname(bare) ? stripLocaleFromPathname(bare) : bare;
-  if (!stripped || stripped === '/') return `/${lang}`;
-  return `/${lang}${stripped}`;
+  const internal = toInternalPath(path);
+  const parts = internal.split('/').filter(Boolean);
+  if (parts.length === 0) return `/${lang}`;
+  const publicSlug = SECTION_SLUGS[parts[0]]?.[lang];
+  if (publicSlug) parts[0] = publicSlug;
+  return `/${lang}/${parts.join('/')}`;
 }
 
 /** Client: document.cookie içinden dil oku */

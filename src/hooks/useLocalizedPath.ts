@@ -8,6 +8,7 @@ import {
   localizedPath,
   normalizeLanguage,
   stripLocaleFromPathname,
+  toInternalPath,
   type SupportedLanguage,
 } from '@/lib/locale';
 
@@ -30,7 +31,7 @@ export function useLocalizedPath() {
   return {
     locale,
     pathname,
-    barePath: stripLocaleFromPathname(pathname),
+    barePath: toInternalPath(pathname),
     lp: (path: string) => localizedPath(locale, path),
     switchLocalePath: (nextLocale: string) =>
       localizedPath(nextLocale, stripLocaleFromPathname(pathname)),

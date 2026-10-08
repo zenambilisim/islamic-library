@@ -6,9 +6,10 @@ import {
   LANG_COOKIE,
   getLocaleFromPathname,
   isSupportedLanguage,
+  localeForSectionSlug,
   localizedPath,
   normalizeLanguage,
-  stripLocaleFromPathname,
+  toInternalPath,
   type SupportedLanguage,
 } from '@/lib/locale';
 
@@ -105,7 +106,13 @@ export function middleware(request: NextRequest) {
   const pathLocale = getLocaleFromPathname(pathname);
 
   if (!pathLocale) {
-    const locale = resolveRedirectLocale(request);
+    const first = pathname.split('/').filter(Boolean)[0];
+    const fromSlug = first ? localeForSectionSlug(first) : null;
+    const fromQuery = request.nextUrl.searchParams.get('lang');
+    const locale =
+      fromQuery && isSupportedLanguage(fromQuery.trim().toLowerCase())
+        ? (fromQuery.trim().toLowerCase() as SupportedLanguage)
+        : (fromSlug ?? resolveRedirectLocale(request));
     const barePath = pathname === '/' ? '/' : pathname;
     const targetPath = localizedPath(locale, barePath);
     const url = request.nextUrl.clone();
@@ -117,21 +124,34 @@ export function middleware(request: NextRequest) {
     return withLangCookie(NextResponse.redirect(url, 308), locale);
   }
 
-  // Valid locale prefix: sync cookie, then auth for library
-  const bare = stripLocaleFromPathname(pathname);
-  let response = NextResponse.next();
+  // `/tr/yazarlar` tarayıcıda kalır; sayfa dosyası `/tr/authors` altındadır.
+  const internalBare = toInternalPath(pathname);
+  const publicPath = localizedPath(pathLocale, internalBare);
+  const internalPath =
+    internalBare === '/' ? `/${pathLocale}` : `/${pathLocale}${internalBare}`;
+
+  if (internalBare === '/library' && !userToken) {
+    const loginUrl = new URL(USER_LOGIN, request.url);
+    loginUrl.searchParams.set('from', localizedPath(pathLocale, '/library'));
+    return NextResponse.redirect(loginUrl);
+  }
+
+  let response: NextResponse;
+  if (publicPath !== pathname) {
+    const url = request.nextUrl.clone();
+    url.pathname = publicPath;
+    response = NextResponse.redirect(url, 308);
+  } else if (internalPath !== pathname) {
+    const url = request.nextUrl.clone();
+    url.pathname = internalPath;
+    response = NextResponse.rewrite(url);
+  } else {
+    response = NextResponse.next();
+  }
 
   const cookieLang = request.cookies.get(LANG_COOKIE)?.value;
   if (normalizeLanguage(cookieLang) !== pathLocale) {
     response = withLangCookie(response, pathLocale);
-  }
-
-  if (bare === '/library') {
-    if (!userToken) {
-      const loginUrl = new URL(USER_LOGIN, request.url);
-      loginUrl.searchParams.set('from', localizedPath(pathLocale, '/library'));
-      return NextResponse.redirect(loginUrl);
-    }
   }
 
   return response;

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Home, KeyRound, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import SiteLogo from '@/components/layout/SiteLogo';
 import ThemeToggle from '@/components/layout/ThemeToggle';
-import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
+import { normalizeLanguage, reloadWithLanguage } from '@/lib/locale';
 import type { Language } from '@/types';
 
 const LANG_CODES: Language[] = ['tr', 'en', 'ru', 'az'];
@@ -20,8 +20,8 @@ const AdminNavbar = () => {
   const currentLang = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
   const handleLanguageChange = (code: Language) => {
-    setLanguageCookie(code);
-    void i18n.changeLanguage(code);
+    if (code === currentLang) return;
+    reloadWithLanguage(code);
   };
 
   const handleLogout = async () => {

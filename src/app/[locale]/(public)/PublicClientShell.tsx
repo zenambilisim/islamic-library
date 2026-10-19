@@ -1,6 +1,7 @@
 'use client';
 
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useState } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import { SearchProvider } from '@/contexts/SearchContext';
 import { BookModalProvider } from '@/contexts/BookModalContext';
 import { UserAuthProvider } from '@/contexts/UserAuthContext';
@@ -12,7 +13,7 @@ import {
   GlobalHikmeChatSidebar,
   HikmeChatBooksProvider,
 } from '@/components/chat/GlobalHikmeChat';
-import i18n from '@/i18n';
+import { createI18nForLocale } from '@/i18n';
 import {
   normalizeLanguage,
   setLanguageCookie,
@@ -46,24 +47,25 @@ export default function PublicClientShell({
   children: React.ReactNode;
   initialLang: SupportedLanguage;
 }) {
+  const lang = normalizeLanguage(initialLang);
+  const [i18nInstance] = useState(() => createI18nForLocale(lang));
+
   useLayoutEffect(() => {
-    const target = normalizeLanguage(initialLang);
-    setLanguageCookie(target);
-    document.documentElement.lang = target;
-    if (normalizeLanguage(i18n.resolvedLanguage || i18n.language) !== target) {
-      void i18n.changeLanguage(target);
-    }
-  }, [initialLang]);
+    setLanguageCookie(lang);
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   return (
-    <UserAuthProvider>
-      <SearchProvider>
-        <BookModalProvider>
-          <HikmeChatBooksProvider>
-            <ShellInner>{children}</ShellInner>
-          </HikmeChatBooksProvider>
-        </BookModalProvider>
-      </SearchProvider>
-    </UserAuthProvider>
+    <I18nextProvider i18n={i18nInstance}>
+      <UserAuthProvider>
+        <SearchProvider>
+          <BookModalProvider>
+            <HikmeChatBooksProvider>
+              <ShellInner>{children}</ShellInner>
+            </HikmeChatBooksProvider>
+          </BookModalProvider>
+        </SearchProvider>
+      </UserAuthProvider>
+    </I18nextProvider>
   );
 }

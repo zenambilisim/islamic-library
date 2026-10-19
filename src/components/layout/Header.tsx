@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, Library, LogIn } from 'lucide-react';
 import { useSearch } from '../../contexts/SearchContext';
@@ -10,20 +9,19 @@ import { useUserAuth } from '@/contexts/UserAuthContext';
 import SiteLogo from '@/components/layout/SiteLogo';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import type { Language } from '../../types';
-import { normalizeLanguage, setLanguageCookie } from '@/lib/locale';
+import { reloadWithLanguage } from '@/lib/locale';
 import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 
 const LANG_CODES: Language[] = ['en', 'tr', 'ru', 'az'];
 
 const Header = () => {
-  const { t, i18n } = useTranslation();
-  const router = useRouter();
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { searchInput, setSearchInput, submitSearch, clearSearch, placeholder } = useSearch();
-  const { barePath, lp, switchLocalePath } = useLocalizedPath();
+  const { locale, barePath, lp, switchLocalePath } = useLocalizedPath();
 
-  const currentLangCode = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+  const currentLangCode = locale;
 
   const navigationItems = [
     { key: 'home', label: t('navigation.home'), path: '/' },
@@ -40,9 +38,8 @@ const Header = () => {
     path === '/' ? barePath === '/' : barePath === path || barePath.startsWith(`${path}/`);
 
   const handleLanguageChange = (langCode: Language) => {
-    setLanguageCookie(langCode);
-    void i18n.changeLanguage(langCode);
-    router.push(switchLocalePath(langCode));
+    if (langCode === currentLangCode) return;
+    reloadWithLanguage(langCode, switchLocalePath(langCode));
   };
 
   const handleSearchSubmit = (e?: React.FormEvent) => {

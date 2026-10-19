@@ -15,5 +15,9 @@ export default async function PublicLayout({
   const { locale } = await params;
   const initialLang = normalizeLanguage(locale);
 
-  return <PublicClientShell initialLang={initialLang}>{children}</PublicClientShell>;
+  return (
+    <PublicClientShell key={initialLang} initialLang={initialLang}>
+      {children}
+    </PublicClientShell>
+  );
 }

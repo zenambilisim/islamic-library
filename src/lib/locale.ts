@@ -2,6 +2,9 @@ import type { Language } from '@/types';
 
 export const LANG_COOKIE = 'il_lang';
 
+/** Middleware → root layout: URL locale'i html lang için iletir */
+export const LOCALE_HEADER = 'x-il-locale';
+
 export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'az'] as const;
 
 export type SupportedLanguage = (typeof SUPPORTED_LANGS)[number];
@@ -183,4 +186,30 @@ export function setLanguageCookie(lang: Language): void {
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * Dili kaydeder ve sayfayı tam yeniler.
+ * Client-side navigasyon RSC içeriğini (kitap/yazar listeleri) yeni dile göre yeniden yüklemez.
+ */
+export function reloadWithLanguage(lang: Language, nextPath?: string): void {
+  if (typeof window === 'undefined') return;
+  setLanguageCookie(lang);
+
+  const search = window.location.search;
+  const hash = window.location.hash;
+
+  if (nextPath) {
+    const pathname = nextPath.startsWith('/') ? nextPath : `/${nextPath}`;
+    const nextUrl = `${pathname}${search}${hash}`;
+    const currentUrl = `${window.location.pathname}${search}${hash}`;
+    if (nextUrl === currentUrl) {
+      window.location.reload();
+      return;
+    }
+    window.location.assign(nextUrl);
+    return;
+  }
+
+  window.location.reload();
 }

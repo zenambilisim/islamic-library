@@ -4,6 +4,7 @@ import { USER_AUTH_COOKIE } from '@/lib/auth-constants';
 import {
   DEFAULT_LANG,
   LANG_COOKIE,
+  LOCALE_HEADER,
   getLocaleFromPathname,
   isSupportedLanguage,
   localeForSectionSlug,
@@ -136,6 +137,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(LOCALE_HEADER, pathLocale);
+
   let response: NextResponse;
   if (publicPath !== pathname) {
     const url = request.nextUrl.clone();
@@ -144,9 +148,13 @@ export function middleware(request: NextRequest) {
   } else if (internalPath !== pathname) {
     const url = request.nextUrl.clone();
     url.pathname = internalPath;
-    response = NextResponse.rewrite(url);
+    response = NextResponse.rewrite(url, {
+      request: { headers: requestHeaders },
+    });
   } else {
-    response = NextResponse.next();
+    response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
   const cookieLang = request.cookies.get(LANG_COOKIE)?.value;

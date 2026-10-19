@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import type { Language } from '@/types';
-import { setLanguageCookie, normalizeLanguage } from '@/lib/locale';
+import { reloadWithLanguage } from '@/lib/locale';
 import { useLocalizedPath } from '@/hooks/useLocalizedPath';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
@@ -21,18 +20,16 @@ type LanguageSelectorProps = {
 };
 
 export function LanguageSelector({ variant = 'default', className = '' }: LanguageSelectorProps) {
-  const { t, i18n } = useTranslation();
-  const router = useRouter();
-  const { switchLocalePath } = useLocalizedPath();
+  const { t } = useTranslation();
+  const { locale, switchLocalePath } = useLocalizedPath();
 
-  const currentLangCode = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+  const currentLangCode = locale;
 
   const currentFlag = LANGUAGES.find((l) => l.code === currentLangCode)?.flag;
 
   const handleLanguageChange = (langCode: Language) => {
-    setLanguageCookie(langCode);
-    void i18n.changeLanguage(langCode);
-    router.push(switchLocalePath(langCode));
+    if (langCode === currentLangCode) return;
+    reloadWithLanguage(langCode, switchLocalePath(langCode));
   };
 
   return (

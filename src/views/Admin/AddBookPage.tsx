@@ -405,10 +405,10 @@ const AddBookPage = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Kapak resmi</label>
-            <p className="text-xs text-gray-500 mb-1">PNG veya JPG</p>
+            <p className="text-xs text-gray-500 mb-1">PNG veya JPG (kayıtta WebP olarak saklanır)</p>
             <input
               type="file"
-              accept="image/png,image/jpeg,image/jpg"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
               onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
               className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-50"
             />

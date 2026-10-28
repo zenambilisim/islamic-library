@@ -212,7 +212,8 @@ const BulkUploadPage = () => {
           <li>
             Her kitap klasörü <code className="text-xs bg-gray-100 px-1 rounded">Kitap Adı - Yazar</code> formatında
             olmalı ve içinde en az <code className="text-xs bg-gray-100 px-1 rounded">.pdf</code> ile{' '}
-            <code className="text-xs bg-gray-100 px-1 rounded">.png</code> bulunmalı.
+            <code className="text-xs bg-gray-100 px-1 rounded">.png</code> bulunmalı. Kapak PNG/JPG
+            yüklemede WebP olarak saklanır.
           </li>
         </ul>
       </div>

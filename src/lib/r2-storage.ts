@@ -194,6 +194,21 @@ export async function r2CreatePresignedUploadUrl(
   return getSignedUrl(getClient(), cmd, { expiresIn: expiresInSeconds });
 }
 
+/** Object gövdesini Buffer olarak oku (kapak dönüşümü vb.). */
+export async function r2GetObjectBuffer(
+  key: string
+): Promise<{ buffer: Buffer; contentType?: string } | null> {
+  const k = key.replace(/^\/+/, '');
+  try {
+    const out = await getClient().send(new GetObjectCommand({ Bucket: bucket, Key: k }));
+    if (!out.Body) return null;
+    const bytes = await out.Body.transformToByteArray();
+    return { buffer: Buffer.from(bytes), contentType: out.ContentType };
+  } catch {
+    return null;
+  }
+}
+
 /** Proxy route için nesneyi oku (stream + içerik tipi) */
 export async function r2GetObjectForProxy(key: string) {
   const k = key.replace(/^\/+/, '');

@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
-import sharp from 'sharp'
 import { countPdfPages } from './pdf-page-count'
 import { normalizeLanguageCode, slugifyAuthorName, slugifyBookTitle } from './author-db'
+import { coverExtFromName, encodeCoverToWebp, shouldConvertCoverToWebp } from './cover-webp'
 import { isR2Configured, r2DeleteBookObjects, r2DeleteKeys, r2PutObject, tryExtractStorageKey } from './r2-storage'
 import { supabase, supabaseAdmin, getDb } from './supabase-server'
 
@@ -693,16 +693,14 @@ export async function uploadBookCover(
   filename: string = 'cover.jpg'
 ) {
   const name = typeof body === 'object' && body && 'name' in body ? (body as File).name : filename;
-  const fileExt = (name.split('.').pop() || 'jpg').toLowerCase();
+  const fileExt = coverExtFromName(name);
   const payload =
     body instanceof Buffer ? body : Buffer.from(await (body as Blob).arrayBuffer());
-  const convertToWebp = fileExt === 'png' || fileExt === 'jpg' || fileExt === 'jpeg';
+  const convertToWebp = shouldConvertCoverToWebp(fileExt);
   const outputExt = convertToWebp ? 'webp' : fileExt;
   const fileName = `${bookId}-cover.${outputExt}`;
   const filePath = `covers/${fileName}`;
-  const outputPayload = convertToWebp
-    ? await sharp(payload).webp({ quality: 80 }).toBuffer()
-    : payload;
+  const outputPayload = convertToWebp ? await encodeCoverToWebp(payload) : payload;
   const contentType =
     outputExt === 'webp' ? 'image/webp' : outputExt === 'png' ? 'image/png' : 'image/jpeg';
 

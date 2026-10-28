@@ -104,6 +104,7 @@ export function getBookCoverUrl(coverPath: string | undefined | null): string {
   const selfProxy = normalizeAppR2ProxyPath(coverPath);
   if (selfProxy) return selfProxy;
   if (coverPath.startsWith('http')) {
+    if (isSupabaseStorageUrl(coverPath)) return coverPath;
     if (isR2Configured()) {
       const key = tryExtractStorageKey(coverPath);
       if (key && (key.startsWith('covers/') || key.startsWith('books/'))) {
@@ -129,6 +130,7 @@ export function getBookFileUrl(bookFilePath: string | undefined | null): string 
   const selfProxy = normalizeAppR2ProxyPath(bookFilePath);
   if (selfProxy) return selfProxy;
   if (bookFilePath.startsWith('http')) {
+    if (isSupabaseStorageUrl(bookFilePath)) return bookFilePath;
     if (isR2Configured()) {
       const key = tryExtractStorageKey(bookFilePath);
       if (key && (key.startsWith('books/') || key.startsWith('covers/'))) {

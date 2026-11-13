@@ -17,7 +17,7 @@ const MyLibraryPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { lp } = useLocalizedPath();
-  const { user, isLoading: authLoading, logout } = useUserAuth();
+  const { user, isLoading: authLoading, logout, deleteAccount, updateProfile, changePassword } = useUserAuth();
   const [activeTab, setActiveTab] = useState<ReadingStatus>('want_to_read');
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +67,14 @@ const MyLibraryPage = () => {
     router.refresh();
   };
 
+  const handleDeleteAccount = async (password: string) => {
+    const result = await deleteAccount(password);
+    if (result.error) return result;
+    router.push(lp('/'));
+    router.refresh();
+    return {};
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center bg-cream">
@@ -81,7 +89,11 @@ const MyLibraryPage = () => {
         <LibraryHero
           displayName={user?.displayName}
           email={user?.email}
+          bio={user?.bio}
           onLogout={() => void handleLogout()}
+          onDeleteAccount={handleDeleteAccount}
+          onUpdateProfile={updateProfile}
+          onChangePassword={changePassword}
         />
 
         <section id="library-books">

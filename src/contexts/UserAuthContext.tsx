@@ -29,6 +29,15 @@ interface UserAuthContextValue {
     displayName: string
   ) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<{ error?: string }>;
+  updateProfile: (patch: {
+    displayName?: string;
+    bio?: string;
+  }) => Promise<{ error?: string }>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<{ error?: string }>;
 }
 
 const UserAuthContext = createContext<UserAuthContextValue | null>(null);
@@ -93,9 +102,77 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (patch: { displayName?: string; bio?: string }) => {
+    const res = await fetch('/api/user/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(patch),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: data.error || 'Profil güncellenemedi.' };
+    }
+    if (data.user) {
+      setUser(data.user);
+    } else {
+      await refreshSession();
+    }
+    return {};
+  }, [refreshSession]);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    const res = await fetch('/api/user/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: data.error || 'Şifre değiştirilemedi.' };
+    }
+    return {};
+  }, []);
+
+  const deleteAccount = useCallback(async (password: string) => {
+    const res = await fetch('/api/user/auth/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: data.error || 'Hesap silinemedi.' };
+    }
+    setUser(null);
+    return {};
+  }, []);
+
   const value = useMemo(
-    () => ({ user, isLoading, refreshSession, login, signup, logout }),
-    [user, isLoading, refreshSession, login, signup, logout]
+    () => ({
+      user,
+      isLoading,
+      refreshSession,
+      login,
+      signup,
+      logout,
+      deleteAccount,
+      updateProfile,
+      changePassword,
+    }),
+    [
+      user,
+      isLoading,
+      refreshSession,
+      login,
+      signup,
+      logout,
+      deleteAccount,
+      updateProfile,
+      changePassword,
+    ]
   );
 
   return <UserAuthContext.Provider value={value}>{children}</UserAuthContext.Provider>;

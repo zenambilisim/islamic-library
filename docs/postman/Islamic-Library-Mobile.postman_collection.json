@@ -42,7 +42,7 @@
               "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"displayName\": \"Okuyucu\"\n}"
             },
             "url": "{{baseUrl}}/api/user/auth/signup",
-            "description": "Yeni okuyucu hesabı. password ≥ 6, displayName zorunlu.\nYanıt: { user, session } — access_token environment'a yazılır."
+            "description": "Kayıt alanları: email, password (≥ 6), displayName. bio kayıtta yok; PATCH /api/user/profile ile yazılır.\nYanıt: { user, session } — access_token environment'a yazılır. Profil için Session (profile) çağırın."
           }
         },
         {
@@ -73,7 +73,7 @@
               "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
             },
             "url": "{{baseUrl}}/api/user/auth/login",
-            "description": "Giriş. session.access_token + refresh_token saklanır.\nMobil: Authorization header ile access_token gönderin."
+            "description": "Giriş alanları: email, password.\nYanıt: { user, session } — access_token + refresh_token saklanır. Profil (displayName, bio) için Session (profile) çağırın."
           }
         },
         {
@@ -118,7 +118,66 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/user/session",
-            "description": "Auth ile mevcut profil. Token yoksa { user: null }."
+            "description": "Okuyucu profili: { user: { id, email, displayName, avatarUrl, bio } }. Token yoksa { user: null }."
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Okuyucu\",\n  \"bio\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/profile",
+            "description": "public.users günceller. displayName (max 80) ve/veya bio (max 500, boş string siler). Kayıtta alınmayan bio burada yazılır.\nYanıt: { user: { id, email, displayName, avatarUrl, bio } }."
+          }
+        },
+        {
+          "name": "Change password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.session?.access_token) pm.environment.set('access_token', j.session.access_token);",
+                  "  if (j.session?.refresh_token) pm.environment.set('refresh_token', j.session.refresh_token);",
+                  "  const next = pm.environment.get('new_password');",
+                  "  if (next) pm.environment.set('password', next);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{new_password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/auth/change-password",
+            "description": "Mevcut şifre + yeni şifre (≥ 6, mevcutten farklı).\n200 { ok, session } — yeni token'lar ve password=new_password environment'a yazılır."
           }
         },
         {
@@ -128,6 +187,41 @@
             "header": [],
             "url": "{{baseUrl}}/api/user/auth/logout",
             "description": "Web cookie temizler. Mobilde token'ları istemciden silin."
+          }
+        },
+        {
+          "name": "Delete account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.environment.unset('access_token');",
+                  "  pm.environment.unset('refresh_token');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{access_token}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/user/auth/delete",
+            "description": "Hesabı kalıcı siler (okuma listesi + profil + auth). Bearer + şifre zorunlu.\n200 { ok: true } — access_token / refresh_token environment'tan silinir."
           }
         }
       ]

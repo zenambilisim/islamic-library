@@ -2,6 +2,8 @@
 
 Okuyucu mobil uygulaması (iOS / Android / React Native / Flutter) için HTTP API rehberi.
 
+Hesap işlemleri (kayıt, profil, şifre, silme): [`MOBILE_API_ACCOUNT.md`](./MOBILE_API_ACCOUNT.md).
+
 **Base URL:** `https://<PRODUCTION_DOMAIN>`  
 Örnek local: `http://localhost:3000`
 
@@ -24,7 +26,9 @@ Authorization: Bearer <access_token>
 ```
 
 4. Access token süresi dolunca → `POST /api/user/auth/refresh`  
-5. Logout: istemcide token’ları sil; isteğe bağlı `POST /api/user/auth/logout` (web cookie temizler)
+5. Logout: istemcide token’ları sil; isteğe bağlı `POST /api/user/auth/logout` (web cookie temizler)  
+6. Şifre değiştirme: `POST /api/user/auth/change-password` (Bearer + mevcut/yeni şifre) → yanıtta yeni `session` gelir; token’ları güncelle  
+7. Hesap silme: `POST /api/user/auth/delete` (Bearer + şifre) → ardından token’ları sil
 
 Cookie (`sb-user-token`) mobilde gerekli değildir; gönderilse de Bearer önceliklidir.
 
@@ -65,6 +69,18 @@ Cookie (`sb-user-token`) mobilde gerekli değildir; gönderilse de Bearer öncel
 ### ReadingStatus
 
 `want_to_read` | `reading` | `read`
+
+### User (okuyucu profili)
+
+`public.users` satırı. `GET /api/user/session` ve `PATCH /api/user/profile` bu şekli döner.
+
+| Alan | Tip | Açıklama |
+|------|-----|----------|
+| `id` | string (UUID) | Auth kullanıcısı ile aynı id |
+| `email` | string \| null | E-posta |
+| `displayName` | string \| null | Kullanıcı adı (`display_name`) |
+| `avatarUrl` | string \| null | Avatar URL (`avatar_url`) |
+| `bio` | string \| null | Biyografi; kayıtta alınmaz, profil güncelleme ile yazılır (max 500) |
 
 ---
 
@@ -151,23 +167,51 @@ Kapak görselleri için `coverImage` çoğu zaman doğrudan yüklenebilir; gerek
 
 ### Kayıt
 
+Alınan alanlar: **e-posta, şifre, kullanıcı adı.** `bio` kayıtta yoktur.
+
 ```http
 POST /api/user/auth/signup
 { "email": "...", "password": "...", "displayName": "..." }
 ```
 
-- `password` ≥ 6 karakter  
-- `displayName` zorunlu  
-- **Yanıt:** `{ user, session }`
+| Alan | Kurallar |
+|------|----------|
+| `email` | Zorunlu |
+| `password` | Zorunlu, ≥ 6 karakter |
+| `displayName` | Zorunlu; `public.users.display_name` olarak yazılır |
+
+**Yanıt:** `{ user, session }` — `session.access_token`, `session.refresh_token`, `session.expires_at`  
+Profil (`displayName`, `bio`, `avatarUrl`) için `GET /api/user/session` kullanın.
+
+| Durum | Anlam |
+|--------|--------|
+| 200 | Hesap oluşturuldu, oturum açıldı |
+| 400 | Alan eksik, şifre kısa veya e-posta zaten kayıtlı |
+| 503 | Auth yapılandırılmamış |
 
 ### Giriş
+
+Alınan alanlar: **e-posta ve şifre.**
 
 ```http
 POST /api/user/auth/login
 { "email": "...", "password": "..." }
 ```
 
-**Yanıt:** `{ user, session }` — `session.access_token`, `session.refresh_token`, `session.expires_at`
+| Alan | Kurallar |
+|------|----------|
+| `email` | Zorunlu |
+| `password` | Zorunlu |
+
+**Yanıt:** `{ user, session }` — `session.access_token`, `session.refresh_token`, `session.expires_at`  
+Profil için `GET /api/user/session`.
+
+| Durum | Anlam |
+|--------|--------|
+| 200 | Oturum açıldı |
+| 400 | E-posta veya şifre yok |
+| 401 | E-posta veya şifre hatalı |
+| 503 | Auth yapılandırılmamış |
 
 ### Token yenile
 
@@ -187,8 +231,34 @@ GET /api/user/session
 Authorization: Bearer <access_token>
 ```
 
-**Yanıt:** `{ user: { id, email, displayName, avatarUrl, bio } }`  
+**Yanıt:** `{ user }` — User modeli (`id`, `email`, `displayName`, `avatarUrl`, `bio`)  
 Token yok/geçersiz → `{ user: null }` (HTTP 200)
+
+### Profil güncelle (Bearer zorunlu)
+
+```http
+PATCH /api/user/profile
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "displayName": "...", "bio": "..." }
+```
+
+| Alan | Kurallar |
+|------|----------|
+| `displayName` | Gönderilirse boş olamaz, max 80 karakter |
+| `bio` | İsteğe bağlı; boş string gönderilirse silinir, max 500 karakter |
+
+En az bir alan gönderilmeli.
+
+**Yanıt:** `{ user }` — User modeli (`id`, `email`, `displayName`, `avatarUrl`, `bio`)
+
+| Durum | Anlam |
+|--------|--------|
+| 200 | Güncellendi |
+| 400 | Geçersiz / boş displayName veya body boş |
+| 401 | Token yok veya geçersiz |
+| 503 | Auth yapılandırılmamış |
 
 ### Çıkış
 
@@ -197,6 +267,53 @@ POST /api/user/auth/logout
 ```
 
 Sunucu cookie temizler; mobilde asıl iş token’ları silmektir.
+
+### Şifre değiştir (Bearer zorunlu)
+
+Mevcut şifre doğrulanır, yeni şifre yazılır. Yanıtta **yeni `session`** gelir; access/refresh token’ları bununla değiştirin.
+
+```http
+POST /api/user/auth/change-password
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "currentPassword": "...", "newPassword": "..." }
+```
+
+| Alan | Kurallar |
+|------|----------|
+| `currentPassword` | Zorunlu; mevcut hesap şifresi |
+| `newPassword` | Zorunlu, ≥ 6 karakter, mevcut şifreden farklı olmalı |
+
+**Yanıt:** `{ ok: true, session }` — `session.access_token`, `session.refresh_token`, `session.expires_at`
+
+| Durum | Anlam |
+|--------|--------|
+| 200 | Güncellendi; yeni token’ları saklayın |
+| 400 | Şifre yok, kısa, aynı, veya hesap e-postası yok |
+| 401 | Token yok/geçersiz veya mevcut şifre hatalı |
+| 503 | Auth yapılandırılmamış |
+
+### Hesap silme (Bearer zorunlu)
+
+Kalıcıdır: okuma listesi, profil ve auth kaydı silinir; oturum kapatılır.
+
+```http
+POST /api/user/auth/delete
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{ "password": "..." }
+```
+
+| Durum | Yanıt |
+|--------|--------|
+| 200 | `{ "ok": true }` — token’ları istemciden silin |
+| 400 | Şifre yok veya hesap e-postası yok — `{ "error": "..." }` |
+| 401 | Token yok/geçersiz veya şifre hatalı |
+| 503 | Auth yapılandırılmamış |
+
+Başarılı yanıttan sonra `access_token` / `refresh_token` secure storage’dan silinmeli; kullanıcı login ekranına alınmalı.
 
 ---
 
@@ -292,6 +409,18 @@ POST /api/download-log  { bookId, format: "pdf" }
 POST /api/user/auth/login
 PUT  /api/user/reading-list  { bookId, status: "reading" }   + Bearer
 GET  /api/user/reading-list?status=reading                   + Bearer
+PATCH /api/user/profile  { displayName, bio }                + Bearer
+POST /api/user/auth/change-password  { currentPassword, newPassword }  + Bearer
+→ session.access_token / refresh_token güncelle
+```
+
+### Hesap sil
+
+```
+POST /api/user/auth/delete  { password }   + Bearer
+→ 200 { ok: true }
+→ access_token / refresh_token sil
+→ login ekranı
 ```
 
 ### Token süresi

@@ -118,7 +118,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/user/session",
-            "description": "Okuyucu profili: { user: { id, email, displayName, avatarUrl, bio } }. Token yoksa { user: null }."
+            "description": "Okuyucu profili: { user: { id, email, displayName, bio } }. Token yoksa { user: null }."
           }
         },
         {
@@ -139,7 +139,7 @@
               "raw": "{\n  \"displayName\": \"Okuyucu\",\n  \"bio\": \"\"\n}"
             },
             "url": "{{baseUrl}}/api/user/profile",
-            "description": "public.users günceller. displayName (max 80) ve/veya bio (max 500, boş string siler). Kayıtta alınmayan bio burada yazılır.\nYanıt: { user: { id, email, displayName, avatarUrl, bio } }."
+            "description": "public.users günceller. displayName (max 80) ve/veya bio (max 500, boş string siler). Kayıtta alınmayan bio burada yazılır.\nYanıt: { user: { id, email, displayName, bio } }."
           }
         },
         {

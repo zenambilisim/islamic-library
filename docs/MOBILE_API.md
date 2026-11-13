@@ -79,7 +79,6 @@ Cookie (`sb-user-token`) mobilde gerekli değildir; gönderilse de Bearer öncel
 | `id` | string (UUID) | Auth kullanıcısı ile aynı id |
 | `email` | string \| null | E-posta |
 | `displayName` | string \| null | Kullanıcı adı (`display_name`) |
-| `avatarUrl` | string \| null | Avatar URL (`avatar_url`) |
 | `bio` | string \| null | Biyografi; kayıtta alınmaz, profil güncelleme ile yazılır (max 500) |
 
 ---
@@ -181,7 +180,7 @@ POST /api/user/auth/signup
 | `displayName` | Zorunlu; `public.users.display_name` olarak yazılır |
 
 **Yanıt:** `{ user, session }` — `session.access_token`, `session.refresh_token`, `session.expires_at`  
-Profil (`displayName`, `bio`, `avatarUrl`) için `GET /api/user/session` kullanın.
+Profil (`displayName`, `bio`) için `GET /api/user/session` kullanın.
 
 | Durum | Anlam |
 |--------|--------|
@@ -231,7 +230,7 @@ GET /api/user/session
 Authorization: Bearer <access_token>
 ```
 
-**Yanıt:** `{ user }` — User modeli (`id`, `email`, `displayName`, `avatarUrl`, `bio`)  
+**Yanıt:** `{ user }` — User modeli (`id`, `email`, `displayName`, `bio`)  
 Token yok/geçersiz → `{ user: null }` (HTTP 200)
 
 ### Profil güncelle (Bearer zorunlu)
@@ -251,7 +250,7 @@ Content-Type: application/json
 
 En az bir alan gönderilmeli.
 
-**Yanıt:** `{ user }` — User modeli (`id`, `email`, `displayName`, `avatarUrl`, `bio`)
+**Yanıt:** `{ user }` — User modeli (`id`, `email`, `displayName`, `bio`)
 
 | Durum | Anlam |
 |--------|--------|

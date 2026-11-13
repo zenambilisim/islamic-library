@@ -14,7 +14,6 @@ export interface PublicUser {
   id: string;
   email?: string | null;
   displayName?: string | null;
-  avatarUrl?: string | null;
   bio?: string | null;
 }
 

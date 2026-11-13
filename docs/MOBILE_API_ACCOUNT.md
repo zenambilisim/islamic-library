@@ -34,7 +34,6 @@ Cookie (`sb-user-token`) mobilde gerekli değildir.
 | `id` | string (UUID) | Auth kullanıcısı ile aynı id |
 | `email` | string \| null | E-posta |
 | `displayName` | string \| null | Kullanıcı adı |
-| `avatarUrl` | string \| null | Avatar URL |
 | `bio` | string \| null | Biyografi (kayıtta yok; profil ile yazılır, max 500) |
 
 ---
@@ -94,7 +93,7 @@ GET /api/user/session
 Authorization: Bearer <access_token>
 ```
 
-**200:** `{ "user": { "id", "email", "displayName", "avatarUrl", "bio" } }`  
+**200:** `{ "user": { "id", "email", "displayName", "bio" } }`  
 Token yok veya geçersiz: `{ "user": null }` (yine HTTP 200).
 
 ---
@@ -139,7 +138,7 @@ Bio’yu sil:
 { "bio": "" }
 ```
 
-**200 yanıt:** `{ "user": { "id", "email", "displayName", "avatarUrl", "bio" } }`
+**200 yanıt:** `{ "user": { "id", "email", "displayName", "bio" } }`
 
 | Durum | Anlam |
 |--------|--------|

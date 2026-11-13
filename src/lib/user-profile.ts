@@ -5,7 +5,6 @@ export interface DbUser {
   id: string;
   email: string | null;
   display_name: string | null;
-  avatar_url: string | null;
   bio: string | null;
   created_at: string;
   updated_at: string;
@@ -15,7 +14,6 @@ export interface PublicUserProfile {
   id: string;
   email?: string | null;
   displayName?: string | null;
-  avatarUrl?: string | null;
   bio?: string | null;
 }
 
@@ -27,7 +25,6 @@ export function dbUserToPublic(
     id: profile?.id ?? fallback.id,
     email: profile?.email ?? fallback.email ?? null,
     displayName: profile?.display_name ?? null,
-    avatarUrl: profile?.avatar_url ?? null,
     bio: profile?.bio ?? null,
   };
 }
